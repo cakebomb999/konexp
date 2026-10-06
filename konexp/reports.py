@@ -4,6 +4,7 @@ Die Klassen halten den kompletten Rohpuffer; unbekannte Bytes bleiben unverände
 Feldkarte: docs/PROTOCOL.md.
 """
 from .device import with_checksum
+from .i18n import tr
 
 DPI_MIN, DPI_MAX, DPI_STEP = 50, 19000, 50
 POLLING_HZ = (125, 250, 500, 1000)
@@ -20,7 +21,7 @@ class _Report:
 
     def __init__(self, raw):
         if len(raw) != self.SIZE or raw[0] != self.RID:
-            raise ValueError(f'kein gültiger Report 0x{self.RID:02x}')
+            raise ValueError(tr('kein gültiger Report 0x{rid:02x}').format(rid=self.RID))
         self.raw = bytearray(raw)
 
     def to_bytes(self):
@@ -28,7 +29,7 @@ class _Report:
 
     def _u8(self, off, val, lo=0, hi=255):
         if not lo <= val <= hi:
-            raise ValueError(f'Wert {val} außerhalb {lo}..{hi}')
+            raise ValueError(tr('Wert {val} außerhalb {lo}..{hi}').format(val=val, lo=lo, hi=hi))
         self.raw[off] = val
 
 
@@ -45,7 +46,7 @@ class Settings(_Report):
     def set_dpi_enabled(self, stage, on):
         mask = self.raw[0x05] & ~(1 << stage) | (on << stage)
         if not mask & 0x1f:
-            raise ValueError('mindestens eine DPI-Stufe muss aktiv sein')
+            raise ValueError(tr('mindestens eine DPI-Stufe muss aktiv sein'))
         self.raw[0x05] = mask
 
     @property
@@ -63,7 +64,8 @@ class Settings(_Report):
     def set_dpi(self, stage, value, y=True):
         """Setzt DPI einer Stufe. Swarm schreibt nur X; wir setzen Y standardmäßig mit."""
         if not (DPI_MIN <= value <= DPI_MAX and value % DPI_STEP == 0):
-            raise ValueError(f'DPI {value}: erlaubt {DPI_MIN}..{DPI_MAX} in {DPI_STEP}er-Schritten')
+            raise ValueError(tr('DPI {value}: erlaubt {lo}..{hi} in {step}er-Schritten').format(
+                value=value, lo=DPI_MIN, hi=DPI_MAX, step=DPI_STEP))
         raw = (value // DPI_STEP).to_bytes(2, 'little')
         self.raw[0x07 + 2 * stage:0x09 + 2 * stage] = raw
         if y:
@@ -95,7 +97,7 @@ class Settings(_Report):
     @effect.setter
     def effect(self, code):
         if code not in EFFECTS:
-            raise ValueError(f'Effekt {code} unbekannt')
+            raise ValueError(tr('Effekt {code} unbekannt').format(code=code))
         self.raw[0x1e] = code
 
     speed = property(lambda s: s.raw[0x1f], lambda s, v: s._u8(0x1f, v, 1, 11))
@@ -117,7 +119,7 @@ class Settings(_Report):
     @sleep_effect.setter
     def sleep_effect(self, code):
         if code not in SLEEP_EFFECTS:
-            raise ValueError(f'Schlaf-Effekt {code} unbekannt')
+            raise ValueError(tr('Schlaf-Effekt {code} unbekannt').format(code=code))
         self.raw[0x22] = code
         self.raw[0x23] = 0
 
@@ -140,9 +142,9 @@ class Settings(_Report):
 
 # --- Report 0x07 ----------------------------------------------------------
 
-BUTTONS = ['Links', 'Rechts', 'Radklick', 'Rad-Tilt links', 'Rad-Tilt rechts', 'Rad hoch',
-           'Rad runter', 'Seitentaste vorn', 'Seitentaste hinten', 'Daumen 1', 'Daumen 2',
-           'Daumen 3', 'Daumen 4', 'Easy-Shift', 'Taste hinter Rad']
+BUTTONS = [tr('Links'), tr('Rechts'), tr('Radklick'), tr('Rad-Tilt links'), tr('Rad-Tilt rechts'), tr('Rad hoch'),
+           tr('Rad runter'), tr('Seitentaste vorn'), tr('Seitentaste hinten'), tr('Daumen 1'), tr('Daumen 2'),
+           tr('Daumen 3'), tr('Daumen 4'), tr('Easy-Shift'), tr('Taste hinter Rad')]
 N_BUTTONS = len(BUTTONS)
 
 
@@ -157,7 +159,7 @@ class Buttons(_Report):
 
     def set_entry(self, k, entry, shift=False):
         if len(entry) != 4:
-            raise ValueError('Eintrag = 4 Bytes [b0, b1, b2, typ]')
+            raise ValueError(tr('Eintrag = 4 Bytes [b0, b1, b2, typ]'))
         o = 3 + 4 * (k + (N_BUTTONS if shift else 0))
         self.raw[o:o + 4] = bytes(entry)
 

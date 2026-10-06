@@ -8,6 +8,7 @@ Werksreset über Report 0x09 wird bewusst NICHT verwendet; stattdessen werden di
 über KoneXP.write() geschrieben.
 """
 from .device import with_checksum
+from .i18n import tr
 
 # Report 0x06, Profil 0, 174 B inkl. Checksumme
 SETTINGS_P0_HEX = (
@@ -36,7 +37,7 @@ BUTTONS_P0_HEX = (
 def settings(profile):
     """Werks-Report 0x06 für Profil 0..4 (mit gültiger Checksumme)."""
     if not 0 <= profile <= 4:
-        raise ValueError('Profil 0..4')
+        raise ValueError(tr('Profil 0..4'))
     buf = bytearray.fromhex(SETTINGS_P0_HEX)
     buf[2] = profile
     buf[0x9f:0xa2] = bytes.fromhex(PROFILE_COLORS[profile])
@@ -46,7 +47,7 @@ def settings(profile):
 def buttons(profile):
     """Werks-Report 0x07 für Profil 0..4 (mit gültiger Checksumme)."""
     if not 0 <= profile <= 4:
-        raise ValueError('Profil 0..4')
+        raise ValueError(tr('Profil 0..4'))
     buf = bytearray.fromhex(BUTTONS_P0_HEX)
     buf[2] = profile
     return with_checksum(buf)

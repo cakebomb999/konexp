@@ -24,6 +24,10 @@ geschrieben und gelten danach auch ohne laufende Software.
 Noch nicht unterstützt: Makro-Editor (Makros werden angezeigt und bleiben erhalten), Lift-off-Kalibrierung,
 AIMO (Software-Beleuchtung), Host-Funktionen wie „Programm öffnen“ (führt unter Windows Swarm aus).
 
+Die Oberfläche ist standardmäßig Englisch. Deutsch per `--lang de` (GUI), `KONEXP_LANG=de` (GUI und CLI)
+oder *View → Sprache / Language* (wirkt nach Neustart).
+Übersetzungen liegen in `konexp/locale/*.po` (gettext); nach Textänderungen `python3 -m konexp.i18n extract` ausführen.
+
 ## Installation
 
 Voraussetzungen: Linux, Python ≥ 3.10, für die Oberfläche PySide6

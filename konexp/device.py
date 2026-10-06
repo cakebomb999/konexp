@@ -9,6 +9,8 @@ import glob
 import os
 import time
 
+from .i18n import tr
+
 VID, PID = 0x1E7D, 0x2C8B
 
 # Report-ID -> Gesamtlänge inkl. ID (aus dem Report-Descriptor von Interface 3)
@@ -58,7 +60,7 @@ def find_node():
         phys = next((l for l in ue.splitlines() if l.startswith('HID_PHYS=')), '')
         if f'{VID:08X}:{PID:08X}' in ue and phys.endswith('/input3'):
             return '/dev/' + os.path.basename(d)
-    raise KoneXPError('Kone XP (Interface 3) nicht gefunden')
+    raise KoneXPError(tr('Kone XP (Interface 3) nicht gefunden'))
 
 
 class KoneXP:
@@ -67,7 +69,8 @@ class KoneXP:
         try:
             self.fd = os.open(self.node, os.O_RDWR)
         except PermissionError as e:
-            raise KoneXPError(f'Kein Zugriff auf {self.node} – udev-Regel installiert? ({e})')
+            raise KoneXPError(tr('Kein Zugriff auf {node} – udev-Regel installiert? ({err})').format(
+                node=self.node, err=e))
         self.backup_dir = backup_dir
 
     def close(self):
@@ -90,9 +93,10 @@ class KoneXP:
 
     def _set(self, data):
         if data[0] not in WRITABLE:
-            raise KoneXPError(f'Report 0x{data[0]:02x} ist gesperrt')
+            raise KoneXPError(tr('Report 0x{rid:02x} ist gesperrt').format(rid=data[0]))
         if len(data) != SIZES[data[0]]:
-            raise KoneXPError(f'Report 0x{data[0]:02x}: Länge {len(data)} != {SIZES[data[0]]}')
+            raise KoneXPError(tr('Report 0x{rid:02x}: Länge {got} != {want}').format(
+                rid=data[0], got=len(data), want=SIZES[data[0]]))
         buf = bytearray(data)
         fcntl.ioctl(self.fd, _ioc(3, 0x06, len(buf)), buf)  # HIDIOCSFEATURE
         self._wait_ack()
@@ -104,10 +108,10 @@ class KoneXP:
             if status == ACK_OK:
                 return
             if status == ACK_ERR:
-                raise KoneXPError('Gerät meldet Fehler (Ack 0x02)')
+                raise KoneXPError(tr('Gerät meldet Fehler (Ack 0x02)'))
             if status != ACK_BUSY:
                 return  # unbekannter Status: wie Swarm nicht weiter warten
-        raise KoneXPError('Timeout: Gerät bleibt busy')
+        raise KoneXPError(tr('Timeout: Gerät bleibt busy'))
 
     def select(self, profile, req):
         self._set(bytes([0x04, profile, req, 0x00]))
@@ -169,12 +173,12 @@ class KoneXP:
         if after != data:
             if before is not None:
                 self._set(before)
-            raise KoneXPError(f'Verify fehlgeschlagen für 0x{rid:02x}, Backup zurückgeschrieben')
+            raise KoneXPError(tr('Verify fehlgeschlagen für 0x{rid:02x}, Backup zurückgeschrieben').format(rid=rid))
         return after
 
     def set_active_profile(self, profile):
         if not 0 <= profile <= 4:
-            raise KoneXPError('Profil 0..4')
+            raise KoneXPError(tr('Profil 0..4'))
         self._set(bytes([0x05, 0x04, profile, 0x05]))
         if self.active_profile() != profile:
-            raise KoneXPError('Profilwechsel nicht übernommen')
+            raise KoneXPError(tr('Profilwechsel nicht übernommen'))

@@ -3,14 +3,15 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QColorDialog, QComboBox, QFormLayout, QGroupBox, QHBoxLayout, QLabel, QPushButton,
                                QSlider, QSpinBox, QVBoxLayout, QWidget)
 
+from ..i18n import tr
 from ..reports import EFFECTS, LED_COUNT, SLEEP_EFFECTS
 from .model import LED_GROUPS, R06, led_label
 from .tab_base import TabBase
 from .widgets import LedGrid, LedImageView, argb_color
 
 AIMO = 9
-AIMO_WARN = ('AIMO wird unter Windows von Swarm (Software) berechnet. Unter Linux läuft dafür nichts – '
-             'die Beleuchtung bleibt dann ohne den erwarteten Effekt.')
+AIMO_WARN = tr('AIMO wird unter Windows von Swarm (Software) berechnet. Unter Linux läuft dafür nichts – '
+               'die Beleuchtung bleibt dann ohne den erwarteten Effekt.')
 
 
 def _slider_spin(lo, hi):
@@ -29,7 +30,7 @@ def _slider_spin(lo, hi):
 
 
 class LightTab(TabBase):
-    TITLE = 'Beleuchtung'
+    TITLE = tr('Beleuchtung')
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -37,49 +38,50 @@ class LightTab(TabBase):
         left = QVBoxLayout()
         lay.addLayout(left, 1)
 
-        eff = QGroupBox('Effekt')
+        eff = QGroupBox(tr('Effekt'))
         f = QFormLayout(eff)
         self.effect = QComboBox()
         for code, name in EFFECTS.items():
             self.effect.addItem(name, code)
         self.effect.currentIndexChanged.connect(self._on_effect)
-        f.addRow('Effekt:', self.effect)
+        f.addRow(tr('Effekt:'), self.effect)
         self.aimo_warn = QLabel(AIMO_WARN)
         self.aimo_warn.setWordWrap(True)
         self.aimo_warn.setStyleSheet('color: #d06000')
         f.addRow('', self.aimo_warn)
         w, self.speed = _slider_spin(1, 11)
         self.speed.valueChanged.connect(self._on_speed)
-        f.addRow('Geschwindigkeit:', w)
+        f.addRow(tr('Geschwindigkeit:'), w)
         w, self.bright = _slider_spin(0, 255)
         self.bright.valueChanged.connect(self._on_bright)
-        f.addRow('Helligkeit:', w)
+        f.addRow(tr('Helligkeit:'), w)
         self.timeout = QSpinBox()
         self.timeout.setRange(0, 255)
-        self.timeout.setSpecialValueText('aus')
+        self.timeout.setSpecialValueText(tr('aus'))
         self.timeout.valueChanged.connect(self._on_timeout)
-        f.addRow('LED-Timeout – Wert (vermutl. Minuten):', self.timeout)
+        f.addRow(tr('LED-Timeout – Wert (vermutl. Minuten):'), self.timeout)
         self.sleep = QComboBox()
         for code, name in SLEEP_EFFECTS.items():
             self.sleep.addItem(name, code)
         self.sleep.currentIndexChanged.connect(self._on_sleep)
-        f.addRow('Effekt nach Timeout:', self.sleep)
+        f.addRow(tr('Effekt nach Timeout:'), self.sleep)
         left.addWidget(eff)
 
-        leds = QGroupBox('LED-Farben (Klick auf LED = Farbe wählen)')
+        leds = QGroupBox(tr('LED-Farben (Klick auf LED = Farbe wählen)'))
         v = QVBoxLayout(leds)
         self.grid = LedGrid()
-        self.grid.ledClicked.connect(lambda i: self._pick([i], f'LED {i}: {led_label(i)}'))
+        self.grid.ledClicked.connect(
+            lambda i: self._pick([i], tr('LED {index}: {label}').format(index=i, label=led_label(i))))
         v.addWidget(self.grid, 1)
         row = QHBoxLayout()
-        row.addWidget(QLabel('Gruppe setzen:'))
+        row.addWidget(QLabel(tr('Gruppe setzen:')))
         for name, members in LED_GROUPS.items():
             b = QPushButton(name)
             b.clicked.connect(lambda _=False, m=members, n=name: self._pick(m, n))
             row.addWidget(b)
         row.addStretch(1)
         v.addLayout(row)
-        hint = QLabel('Farbe inkl. Alpha (Intensität). Bei Colorwave/AIMO überschreibt der Effekt die Farben.')
+        hint = QLabel(tr('Farbe inkl. Alpha (Intensität). Bei Colorwave/AIMO überschreibt der Effekt die Farben.'))
         hint.setStyleSheet('color: gray')
         v.addWidget(hint)
         left.addWidget(leds, 1)
@@ -87,7 +89,8 @@ class LightTab(TabBase):
         self.image = None
         if LedImageView.available():
             self.image = LedImageView()
-            self.image.ledClicked.connect(lambda i: self._pick([i], f'LED {i}: {led_label(i)}'))
+            self.image.ledClicked.connect(
+                lambda i: self._pick([i], tr('LED {index}: {label}').format(index=i, label=led_label(i))))
             lay.addWidget(self.image)
 
     def _colors(self):
@@ -112,7 +115,7 @@ class LightTab(TabBase):
     def _set_combo(combo, code):
         idx = combo.findData(code)
         if idx < 0:
-            combo.addItem(f'unbekannt ({code})', code)
+            combo.addItem(tr('unbekannt ({code})').format(code=code), code)
             idx = combo.findData(code)
         combo.setCurrentIndex(idx)
 
@@ -123,7 +126,8 @@ class LightTab(TabBase):
         if self.config is None:
             return
         start = argb_color(self.settings.led(leds[0]))
-        col = QColorDialog.getColor(start, self, f'Farbe – {title}', QColorDialog.ShowAlphaChannel)
+        col = QColorDialog.getColor(start, self, tr('Farbe – {title}').format(title=title),
+                                    QColorDialog.ShowAlphaChannel)
         if not col.isValid():
             return
         self.config.set_leds(self.profile, leds, (col.alpha(), col.red(), col.green(), col.blue()))

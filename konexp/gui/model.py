@@ -13,6 +13,7 @@ from dataclasses import dataclass
 
 from .. import defaults
 from ..device import SEL_SETTINGS, KoneXP, KoneXPError, checksum_ok
+from ..i18n import tr
 from ..functions import MACRO_MODES, NAMES, describe
 from ..reports import (BUTTONS, DPI_STEP, EFFECTS, LED_COUNT, N_BUTTONS, POLLING_HZ, SLEEP_EFFECTS,
                        Advanced, Buttons, Settings)
@@ -25,14 +26,14 @@ R06, R07, R11 = 0x06, 0x07, 0x11
 EASY_SHIFT = (0x00, 0x00, 0x01, 0x0a)
 EASY_SHIFT_KEY = 13
 DISABLED = (0, 0, 0, 0)
-DCU_MODES = {0: 'Very Low', 1: 'Low', 2: 'kalibriert (Custom)'}
+DCU_MODES = {0: 'Very Low', 1: 'Low', 2: tr('kalibriert (Custom)')}
 EASY_AIM_MIN, EASY_AIM_MAX = 100, 19000
 
-UDEV_HINT = (
+UDEV_HINT = tr(
     'Zugriff auf die Maus fehlt. udev-Regel installieren:\n'
-    f'  sudo cp {UDEV_RULE} /etc/udev/rules.d/\n'
+    '  sudo cp {rule} /etc/udev/rules.d/\n'
     '  sudo udevadm control --reload && sudo udevadm trigger\n'
-    'Danach Maus neu einstecken.')
+    'Danach Maus neu einstecken.').format(rule=UDEV_RULE)
 
 # --- LEDs -------------------------------------------------------------------
 # Index → Plugin-Bild / AIMO-Gitter (Spalte, Zeile) siehe docs/PROTOCOL.md „LEDs“.
@@ -45,30 +46,31 @@ LED_GRID = ([(i // 2, i % 2) for i in range(8)] + [(4, 0), (6, 0)]
             + [(7 + (i - 10) // 2, (i - 10) % 2) for i in range(10, 18)] + [(5, 0), (5, 1)])
 LED_WHEEL, LED_DPI = 18, 19
 LED_GROUPS = {
-    'alle': list(range(LED_COUNT)),
-    'Leiste links': list(range(0, 9)),
-    'Leiste rechts': list(range(9, 18)),
-    'Rad': [LED_WHEEL],
-    'DPI-LED': [LED_DPI],
+    tr('alle'): list(range(LED_COUNT)),
+    tr('Leiste links'): list(range(0, 9)),
+    tr('Leiste rechts'): list(range(9, 18)),
+    tr('Rad'): [LED_WHEEL],
+    tr('DPI-LED'): [LED_DPI],
 }
 
 
 def led_label(i):
     if i == LED_WHEEL:
-        return 'Mausrad'
+        return tr('Mausrad')
     if i == LED_DPI:
-        return 'DPI-LED'
-    side = 'links' if i < 9 else 'rechts'
+        return tr('DPI-LED')
+    side = tr('links') if i < 9 else tr('rechts')
     col, row = LED_GRID[i]
-    return f'Leiste {side}, Spalte {col}, {"vorn" if row == 0 else "hinten"}'
+    return tr('Leiste {side}, Spalte {col}, {row}').format(side=side, col=col,
+                                                           row=tr('vorn') if row == 0 else tr('hinten'))
 
 
 # --- Tasten-Funktionen --------------------------------------------------------
 
 TYPE_GROUPS = {
-    0x00: 'Allgemein', 0x01: 'Maus / Browser', 0x02: 'DPI / Easy-Aim', 0x03: 'Multimedia',
-    0x04: 'Navigation / Modifier', 0x05: 'System', 0x08: 'Profile / Beleuchtung',
-    0x09: 'Easy-Wheel', 0x0a: 'Easy-Shift', 0x0b: 'Host-Funktionen (wirken unter Linux nicht)',
+    0x00: tr('Allgemein'), 0x01: tr('Maus / Browser'), 0x02: tr('DPI / Easy-Aim'), 0x03: tr('Multimedia'),
+    0x04: tr('Navigation / Modifier'), 0x05: tr('System'), 0x08: tr('Profile / Beleuchtung'),
+    0x09: tr('Easy-Wheel'), 0x0a: tr('Easy-Shift'), 0x0b: tr('Host-Funktionen (wirken unter Linux nicht)'),
 }
 
 
@@ -80,12 +82,12 @@ def entry_text(entry):
     """Klartext für einen 0x07-Eintrag [b0, b1, b2, typ]."""
     b0, b1, b2, typ = entry
     if typ == 0x06:
-        return 'Shortcut ' + shortcut_text(b1, b2)
+        return tr('Shortcut {keys}').format(keys=shortcut_text(b1, b2))
     if typ == 0x07:
-        return f'Makro ({MACRO_MODES.get(b2, f"Modus {b2}")})'
+        return tr('Makro ({mode})').format(mode=MACRO_MODES.get(b2, tr('Modus {n}').format(n=b2)))
     text = describe(entry)
     if typ == 0x0b:
-        text += ' – wirkt unter Linux nicht'
+        text = tr('{name} – wirkt unter Linux nicht').format(name=text)
     return text
 
 
@@ -95,21 +97,22 @@ def function_catalog():
     for (typ, b2), name in sorted(NAMES.items()):
         entry = (0, 0, b2, typ)
         if typ == 0x0b:
-            name += ' – wirkt unter Linux nicht'
+            name = tr('{name} – wirkt unter Linux nicht').format(name=name)
         groups.setdefault(typ, []).append((entry, name))
-    return [(TYPE_GROUPS.get(t, f'typ 0x{t:02x}'), items) for t, items in sorted(groups.items())]
+    return [(TYPE_GROUPS.get(t, tr('typ 0x{t:02x}').format(t=t)), items) for t, items in sorted(groups.items())]
 
 
 def easy_aim_entry(dpi):
     if not (EASY_AIM_MIN <= dpi <= EASY_AIM_MAX and dpi % DPI_STEP == 0):
-        raise ValueError(f'Easy-Aim: {EASY_AIM_MIN}..{EASY_AIM_MAX} in {DPI_STEP}er-Schritten')
+        raise ValueError(tr('Easy-Aim: {lo}..{hi} in {step}er-Schritten').format(
+            lo=EASY_AIM_MIN, hi=EASY_AIM_MAX, step=DPI_STEP))
     hi, lo = (dpi // DPI_STEP).to_bytes(2, 'big')
     return (hi, lo, 0x0c, 0x02)
 
 
 def shortcut_entry(usage, mods):
     if not 0 < usage <= 0xff or not 0 <= mods <= 0x0f:
-        raise ValueError('ungültiger Shortcut')
+        raise ValueError(tr('ungültiger Shortcut'))
     return (0, usage, mods, 0x06)
 
 
@@ -125,11 +128,11 @@ def _dpi(b):
 
 def _mask(b):
     on = [str(i + 1) for i in range(5) if b[0] >> i & 1]
-    return 'Stufen ' + (','.join(on) or '–') + (f' (0x{b[0]:02x})' if b[0] & 0xe0 else '')
+    return tr('Stufen') + ' ' + (','.join(on) or '–') + (f' (0x{b[0]:02x})' if b[0] & 0xe0 else '')
 
 
 def _onoff(b):
-    return ('an' if b[0] & 1 else 'aus') + (f' (0x{b[0]:02x})' if b[0] & 0xfe else '')
+    return (tr('an') if b[0] & 1 else tr('aus')) + (f' (0x{b[0]:02x})' if b[0] & 0xfe else '')
 
 
 def _polling(b):
@@ -137,15 +140,15 @@ def _polling(b):
 
 
 def _effect(b):
-    return EFFECTS.get(b[0], f'unbekannt ({b[0]})')
+    return EFFECTS.get(b[0], tr('unbekannt ({n})').format(n=b[0]))
 
 
 def _sleep(b):
-    return SLEEP_EFFECTS.get(b[0], f'unbekannt ({b[0]})')
+    return SLEEP_EFFECTS.get(b[0], tr('unbekannt ({n})').format(n=b[0]))
 
 
 def _timeout(b):
-    return 'aus' if b[0] == 0 else str(b[0])
+    return tr('aus') if b[0] == 0 else str(b[0])
 
 
 def _argb(b):
@@ -157,40 +160,40 @@ def _dec(b):
 
 
 def _stage(b):
-    return f'Stufe {b[0] + 1}'
+    return tr('Stufe {n}').format(n=b[0] + 1)
 
 
 FIELDS06 = [
-    (0x03, 1, 'unbekannt 0x03 (Sensitivity X?)', _hex),
-    (0x04, 1, 'unbekannt 0x04 (Sensitivity Y?)', _hex),
-    (0x05, 1, 'DPI-Stufen aktiv', _mask),
-    (0x06, 1, 'aktive DPI-Stufe', _stage),
-    *[(0x07 + 2 * i, 2, f'DPI Stufe {i + 1} (X)', _dpi) for i in range(5)],
-    *[(0x11 + 2 * i, 2, f'DPI Stufe {i + 1} (Y)', _dpi) for i in range(5)],
-    (0x1b, 1, 'Angle Snapping', _onoff),
-    (0x1c, 1, 'unbekannt 0x1c', _hex),
-    (0x1d, 1, 'Polling-Rate', _polling),
-    (0x1e, 1, 'Lichteffekt', _effect),
-    (0x1f, 1, 'Effekt-Geschwindigkeit', _dec),
-    (0x20, 1, 'Helligkeit', _dec),
-    (0x21, 1, 'LED-Timeout (Wert)', _timeout),
-    (0x22, 1, 'Effekt nach Timeout', _sleep),
-    (0x23, 1, 'Timeout-Flag 0x23', _hex),
+    (0x03, 1, tr('unbekannt 0x03 (Sensitivity X?)'), _hex),
+    (0x04, 1, tr('unbekannt 0x04 (Sensitivity Y?)'), _hex),
+    (0x05, 1, tr('DPI-Stufen aktiv'), _mask),
+    (0x06, 1, tr('aktive DPI-Stufe'), _stage),
+    *[(0x07 + 2 * i, 2, tr('DPI Stufe {n} (X)').format(n=i + 1), _dpi) for i in range(5)],
+    *[(0x11 + 2 * i, 2, tr('DPI Stufe {n} (Y)').format(n=i + 1), _dpi) for i in range(5)],
+    (0x1b, 1, tr('Angle Snapping'), _onoff),
+    (0x1c, 1, tr('unbekannt 0x1c'), _hex),
+    (0x1d, 1, tr('Polling-Rate'), _polling),
+    (0x1e, 1, tr('Lichteffekt'), _effect),
+    (0x1f, 1, tr('Effekt-Geschwindigkeit'), _dec),
+    (0x20, 1, tr('Helligkeit'), _dec),
+    (0x21, 1, tr('LED-Timeout (Wert)'), _timeout),
+    (0x22, 1, tr('Effekt nach Timeout'), _sleep),
+    (0x23, 1, tr('Timeout-Flag 0x23'), _hex),
 ]
 for _i in range(LED_COUNT):
     _o = 0x24 + 6 * _i
-    FIELDS06 += [(_o, 1, f'LED {_i} Byte +0', _hex),
-                 (_o + 1, 4, f'LED {_i} Farbe ({led_label(_i)})', _argb),
-                 (_o + 5, 1, f'LED {_i} Byte +5', _hex)]
+    FIELDS06 += [(_o, 1, tr('LED {i} Byte +0').format(i=_i), _hex),
+                 (_o + 1, 4, tr('LED {i} Farbe ({label})').format(i=_i, label=led_label(_i)), _argb),
+                 (_o + 5, 1, tr('LED {i} Byte +5').format(i=_i), _hex)]
 FIELDS06 += [
-    (0x9c, 1, 'Profilfarbe aktiv', _hex),
-    (0x9d, 1, 'unbekannt 0x9d', _hex),
-    (0x9e, 4, 'Profilfarbe', _argb),
-    (0xa2, 1, 'Tasten-Preset-Index', _hex),
-    (0xa3, 1, 'AIMO-Parameter', _hex),
-    (0xa4, 1, 'DPI-Stufen-Flag 0xa4', _hex),
-    (0xa5, 1, 'unbekannt 0xa5', _hex),
-    (0xa6, 6, 'Reserve 0xa6–0xab', _hex),
+    (0x9c, 1, tr('Profilfarbe aktiv'), _hex),
+    (0x9d, 1, tr('unbekannt 0x9d'), _hex),
+    (0x9e, 4, tr('Profilfarbe'), _argb),
+    (0xa2, 1, tr('Tasten-Preset-Index'), _hex),
+    (0xa3, 1, tr('AIMO-Parameter'), _hex),
+    (0xa4, 1, tr('DPI-Stufen-Flag 0xa4'), _hex),
+    (0xa5, 1, tr('unbekannt 0xa5'), _hex),
+    (0xa6, 6, tr('Reserve 0xa6–0xab'), _hex),
 ]
 
 
@@ -199,18 +202,19 @@ def _entry_fmt(b):
 
 
 FIELDS07 = [(3 + 4 * (k + (N_BUTTONS if sh else 0)), 4,
-             f'Taste {k + 1} „{BUTTONS[k]}“ ({"Easy-Shift" if sh else "normal"})', _entry_fmt)
+             tr('Taste {n} „{name}“ ({layer})').format(
+                 n=k + 1, name=BUTTONS[k], layer=tr('Easy-Shift') if sh else tr('normal')), _entry_fmt)
             for sh in (False, True) for k in range(N_BUTTONS)]
 
-FIELDS11 = [(0x02, 1, 'Debounce (ms)', _dec)]
+FIELDS11 = [(0x02, 1, tr('Debounce (ms)'), _dec)]
 
 FIELDS = {R06: FIELDS06, R07: FIELDS07, R11: FIELDS11}
 
 # Bytes ohne bekannte Bedeutung (Expertenansicht, read-only)
-UNKNOWN06 = [(0x03, 'Sensitivity X? (unbekannt)'), (0x04, 'Sensitivity Y? (unbekannt)'),
-             (0x1c, 'unbekannt'), (0x23, 'Timeout-Flag (GUI setzt 0)'), (0x9c, 'Profilfarbe aktiv?'),
-             (0x9d, 'unbekannt (Intensität?)'), (0xa2, 'Tasten-Preset-Index'),
-             (0xa3, 'AIMO-Parameter'), (0xa4, 'DPI-Stufen-Flag (Auto?)'), (0xa5, 'unbekannt')]
+UNKNOWN06 = [(0x03, tr('Sensitivity X? (unbekannt)')), (0x04, tr('Sensitivity Y? (unbekannt)')),
+             (0x1c, tr('unbekannt')), (0x23, tr('Timeout-Flag (GUI setzt 0)')), (0x9c, tr('Profilfarbe aktiv?')),
+             (0x9d, tr('unbekannt (Intensität?)')), (0xa2, tr('Tasten-Preset-Index')),
+             (0xa3, tr('AIMO-Parameter')), (0xa4, tr('DPI-Stufen-Flag (Auto?)')), (0xa5, tr('unbekannt'))]
 
 
 @dataclass
@@ -223,7 +227,7 @@ class Change:
 
     @property
     def profile_label(self):
-        return 'global' if self.profile is None else f'P{self.profile + 1}'
+        return tr('global') if self.profile is None else f'P{self.profile + 1}'
 
 
 def diff_report(rid, old, new):
@@ -236,7 +240,7 @@ def diff_report(rid, old, new):
             changes.append((name, fmt(a), fmt(b)))
     for off in range(3, len(old) - 2):
         if off not in covered and old[off] != new[off]:
-            changes.append((f'Byte 0x{off:02x}', f'{old[off]:02x}', f'{new[off]:02x}'))
+            changes.append((tr('Byte 0x{off:02x}').format(off=off), f'{old[off]:02x}', f'{new[off]:02x}'))
     return changes
 
 
@@ -353,7 +357,8 @@ class Config:
         b.set_entry(k, tuple(entry), shift)
         if not shift and entry[3] == 0x0a and b.entry(k, True) != DISABLED:
             b.set_entry(k, DISABLED, True)
-            notes.append(f'Taste {k + 1} (Easy-Shift-Ebene) auf „Deaktiviert“ gesetzt (Easy-Shift-Regel).')
+            notes.append(tr('Taste {n} (Easy-Shift-Ebene) auf „Deaktiviert“ gesetzt (Easy-Shift-Regel).')
+                         .format(n=k + 1))
         return notes
 
     def easy_shift_ok(self, p):
@@ -385,21 +390,22 @@ class Config:
 
 def parse_backup(d):
     if d.get('format') != 'konexp-backup':
-        raise ValueError('keine konexp-Backup-Datei')
+        raise ValueError(tr('keine konexp-Backup-Datei'))
     settings, buttons = [], []
     for p in range(NPROFILES):
         for rid, cls, lst in ((R06, Settings, settings), (R07, Buttons, buttons)):
             raw = bytes.fromhex(d[f'r{rid:02x}'][p])
             obj = cls(raw)
             if obj.raw[2] != p:
-                raise ValueError(f'Report 0x{rid:02x} an Position {p} gehört zu Profil {obj.raw[2]}')
+                raise ValueError(tr('Report 0x{rid:02x} an Position {p} gehört zu Profil {q}').format(
+                    rid=rid, p=p, q=obj.raw[2]))
             if not checksum_ok(raw):
-                raise ValueError(f'Report 0x{rid:02x} P{p + 1}: Checksumme falsch')
+                raise ValueError(tr('Report 0x{rid:02x} P{n}: Checksumme falsch').format(rid=rid, n=p + 1))
             lst.append(obj)
     raw = bytes.fromhex(d['r11'])
     adv = Advanced(raw)
     if not checksum_ok(raw):
-        raise ValueError('Report 0x11: Checksumme falsch')
+        raise ValueError(tr('Report 0x11: Checksumme falsch'))
     return settings, buttons, adv
 
 
@@ -421,7 +427,7 @@ def _noop(*_):
 
 class DeviceBackend:
     """Echte Maus. Alle Zugriffe serialisiert über einen Lock (Worker-Thread + Poll-Timer)."""
-    name = 'Maus'
+    name = tr('Maus')
     demo = False
 
     def __init__(self, node=None, backup_dir=BACKUP_DIR):
@@ -446,7 +452,7 @@ class DeviceBackend:
             return fn()
         except OSError as e:
             self.close()
-            raise KoneXPError(f'E/A-Fehler: {e}') from e
+            raise KoneXPError(tr('E/A-Fehler: {err}').format(err=e)) from e
 
     def read_all(self, progress=_noop):
         with self.lock:
@@ -455,25 +461,25 @@ class DeviceBackend:
     def _read_all(self, progress):
         dev = self._open()
         n, step = 2 * NPROFILES + 3, 0
-        progress(step, n, 'aktives Profil (0x05)')
+        progress(step, n, tr('aktives Profil (0x05)'))
         r05 = dev.get(0x05)
         r06, r07 = [], []
         for p in range(NPROFILES):
             step += 1
-            progress(step, n, f'P{p + 1} Einstellungen (0x06)')
+            progress(step, n, tr('P{n} Einstellungen (0x06)').format(n=p + 1))
             r06.append(dev.read_settings(p))
             step += 1
-            progress(step, n, f'P{p + 1} Tasten (0x07)')
+            progress(step, n, tr('P{n} Tasten (0x07)').format(n=p + 1))
             r07.append(dev.read_buttons(p))
         step += 1
-        progress(step, n, 'Debounce (0x11)')
+        progress(step, n, tr('Debounce (0x11)'))
         r11 = dev.get(0x11)
         try:
             r0f = dev.get(0x0f)
         except OSError:
             r0f = None
         dev.select(r05[2], SEL_SETTINGS)  # GET 0x06 ohne Select liefert wieder das aktive Profil
-        progress(n, n, 'fertig')
+        progress(n, n, tr('fertig'))
         return Snapshot(r05, r06, r07, r11, r0f)
 
     def write(self, data):
@@ -533,7 +539,7 @@ def demo_snapshot():
 
 class DemoBackend:
     """Ohne Maus: Demo-Daten als Gerät, Writes nur im Speicher."""
-    name = 'Demo'
+    name = tr('Demo')
     demo = True
 
     def __init__(self, delay=0.05):
@@ -548,7 +554,7 @@ class DemoBackend:
     def read_all(self, progress=_noop):
         n = 2 * NPROFILES + 3
         for i in range(n):
-            progress(i, n, 'Demo-Daten')
+            progress(i, n, tr('Demo-Daten'))
             time.sleep(self.delay / 4)
         s = self.snap
         return Snapshot(s.r05, list(s.r06), list(s.r07), s.r11, s.r0f)
@@ -557,7 +563,7 @@ class DemoBackend:
         from ..device import CHECKSUMMED, WRITABLE, with_checksum
         rid = data[0]
         if rid not in WRITABLE:
-            raise KoneXPError(f'Report 0x{rid:02x} ist gesperrt')
+            raise KoneXPError(tr('Report 0x{rid:02x} ist gesperrt').format(rid=rid))
         if rid in CHECKSUMMED:
             data = with_checksum(data)
         time.sleep(self.delay)
@@ -606,7 +612,7 @@ def run_plan(backend, plan, progress=_noop, base=None):
     for i, (key, data) in enumerate(plan):
         rid, p = key
         label = f'0x{rid:02x}' + ('' if p is None else f' P{p + 1}')
-        progress(i, len(plan), f'schreibe {label}')
+        progress(i, len(plan), tr('schreibe {label}').format(label=label))
         try:
             if base is not None and key in base:
                 data = merge_onto(backend.read_report(key), base[key], data)
@@ -614,5 +620,5 @@ def run_plan(backend, plan, progress=_noop, base=None):
         except (KoneXPError, OSError, ValueError) as e:
             return done, f'{label}: {e}'
         done.append((key, back if back is not None else data))
-    progress(len(plan), len(plan), 'fertig')
+    progress(len(plan), len(plan), tr('fertig'))
     return done, None

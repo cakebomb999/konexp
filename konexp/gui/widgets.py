@@ -9,6 +9,7 @@ from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QImage, QPainter, QPainterPath, QPen, QPixmap, QIcon
 from PySide6.QtWidgets import QPushButton, QSizePolicy, QWidget
 
+from ..i18n import tr
 from .model import LED_DPI, LED_GRID, LED_IMAGES, LED_WHEEL, RES_DIR, led_label
 from ..reports import LED_COUNT
 
@@ -107,11 +108,11 @@ class LedGrid(QWidget):
                 p.drawRoundedRect(rc, 5, 5)
             lum = col.red() * 0.3 + col.green() * 0.59 + col.blue() * 0.11
             p.setPen(QColor('black') if lum > 140 and col.alpha() > 100 else QColor('white'))
-            p.drawText(rc, Qt.AlignCenter, {LED_WHEEL: 'Rad', LED_DPI: 'DPI'}.get(i, str(i)))
+            p.drawText(rc, Qt.AlignCenter, {LED_WHEEL: tr('Rad'), LED_DPI: 'DPI'}.get(i, str(i)))
         p.setPen(QColor(170, 170, 170))
-        p.drawText(QRectF(r.x() + 8, r.y(), r.width() - 16, 18), Qt.AlignLeft, '◀ links')
-        p.drawText(QRectF(r.x(), r.y(), r.width(), 18), Qt.AlignCenter, 'obere Reihe = vorn (Kabelseite)')
-        p.drawText(QRectF(r.x() + 8, r.y(), r.width() - 16, 18), Qt.AlignRight, 'rechts ▶')
+        p.drawText(QRectF(r.x() + 8, r.y(), r.width() - 16, 18), Qt.AlignLeft, tr('◀ links'))
+        p.drawText(QRectF(r.x(), r.y(), r.width(), 18), Qt.AlignCenter, tr('obere Reihe = vorn (Kabelseite)'))
+        p.drawText(QRectF(r.x() + 8, r.y(), r.width() - 16, 18), Qt.AlignRight, tr('rechts ▶'))
 
     def _hit(self, pos):
         _, rects = self._layout()
@@ -122,7 +123,7 @@ class LedGrid(QWidget):
 
     def mouseMoveEvent(self, e):
         i = self._hit(e.position())
-        self.setToolTip(f'LED {i}: {led_label(i)}' if i is not None else '')
+        self.setToolTip(tr('LED {index}: {label}').format(index=i, label=led_label(i)) if i is not None else '')
 
     def mousePressEvent(self, e):
         i = self._hit(e.position())
@@ -230,7 +231,7 @@ class ButtonMap(QWidget):
         p.setBrush(QColor(55, 55, 62))
         p.drawRoundedRect(QRectF(15, 170, 110, 160), 18, 18)     # Daumen-Inset
         p.setPen(QColor(150, 150, 150))
-        p.drawText(QRectF(15, 335, 110, 20), Qt.AlignCenter, 'Daumenseite')
+        p.drawText(QRectF(15, 335, 110, 20), Qt.AlignCenter, tr('Daumenseite'))
 
     def paintEvent(self, _):
         p = QPainter(self)

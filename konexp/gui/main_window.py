@@ -3,12 +3,13 @@ import os
 import time
 
 from PySide6.QtCore import QTimer
-from PySide6.QtGui import QAction, QColor
+from PySide6.QtGui import QAction, QActionGroup, QColor
 from PySide6.QtWidgets import (QButtonGroup, QColorDialog, QDialog, QFileDialog, QHBoxLayout, QLabel, QMainWindow,
                                QFrame, QMessageBox, QProgressBar, QPushButton, QScrollArea, QTabWidget, QVBoxLayout,
                                QWidget)
 
 from ..device import KoneXPError
+from ..i18n import LANGUAGES, language, save_language, tr
 from .dialogs import DiffDialog
 from .model import BACKUP_DIR, NPROFILES, UDEV_HINT, Config, load_backup, run_plan, save_backup
 from .tab_buttons import ButtonsTab
@@ -29,7 +30,7 @@ class MainWindow(QMainWindow):
         self.config = None
         self.profile = 0
         self.task = None
-        self.setWindowTitle('Kone XP Konfiguration' + (' – DEMO' if backend.demo else ''))
+        self.setWindowTitle(tr('Kone XP Konfiguration') + (' – DEMO' if backend.demo else ''))
         self.resize(1100, 720)
 
         central = QWidget()
@@ -38,7 +39,7 @@ class MainWindow(QMainWindow):
 
         # Profilleiste
         bar = QHBoxLayout()
-        bar.addWidget(QLabel('Profil:'))
+        bar.addWidget(QLabel(tr('Profil:')))
         self.pgroup = QButtonGroup(self)
         self.pbuttons = []
         for p in range(NPROFILES):
@@ -50,10 +51,10 @@ class MainWindow(QMainWindow):
             self.pbuttons.append(b)
         self.pbuttons[0].setChecked(True)
         self.pgroup.idClicked.connect(self.select_profile)
-        self.btn_active = QPushButton('Als aktiv setzen')
+        self.btn_active = QPushButton(tr('Als aktiv setzen'))
         self.btn_active.clicked.connect(self.set_active)
         bar.addWidget(self.btn_active)
-        self.btn_color = ColorButton('Profilfarbe…')
+        self.btn_color = ColorButton(tr('Profilfarbe…'))
         self.btn_color.clicked.connect(self.pick_profile_color)
         bar.addWidget(self.btn_color)
         bar.addStretch(1)
@@ -80,10 +81,10 @@ class MainWindow(QMainWindow):
         bottom = QHBoxLayout()
         self.dirty_label = QLabel()
         bottom.addWidget(self.dirty_label, 1)
-        self.btn_discard = QPushButton('Verwerfen')
-        self.btn_discard.setToolTip('Änderungen verwerfen und alles neu von der Maus laden')
+        self.btn_discard = QPushButton(tr('Verwerfen'))
+        self.btn_discard.setToolTip(tr('Änderungen verwerfen und alles neu von der Maus laden'))
         self.btn_discard.clicked.connect(self.discard)
-        self.btn_apply = QPushButton('Übernehmen')
+        self.btn_apply = QPushButton(tr('Übernehmen'))
         self.btn_apply.setDefault(True)
         self.btn_apply.clicked.connect(self.apply)
         bottom.addWidget(self.btn_discard)
@@ -108,30 +109,45 @@ class MainWindow(QMainWindow):
     # --- Menüs -----------------------------------------------------------
 
     def _menus(self):
-        m = self.menuBar().addMenu('&Datei')
-        self.act_reload = m.addAction('Neu laden', self.discard)
+        m = self.menuBar().addMenu(tr('&Datei'))
+        self.act_reload = m.addAction(tr('Neu laden'), self.discard)
         m.addSeparator()
-        m.addAction('Beenden', self.close)
+        m.addAction(tr('Beenden'), self.close)
 
-        m = self.menuBar().addMenu('&Werkzeuge')
-        self.act_backup = m.addAction('Backup aller Profile speichern…', self.save_backup)
-        self.act_restore = m.addAction('Backup wiederherstellen…', self.restore_backup)
+        m = self.menuBar().addMenu(tr('&Werkzeuge'))
+        self.act_backup = m.addAction(tr('Backup aller Profile speichern…'), self.save_backup)
+        self.act_restore = m.addAction(tr('Backup wiederherstellen…'), self.restore_backup)
         m.addSeparator()
-        self.act_factory = m.addAction('Profil auf Werkseinstellung', self.factory_profile)
+        self.act_factory = m.addAction(tr('Profil auf Werkseinstellung'), self.factory_profile)
 
-        m = self.menuBar().addMenu('&Ansicht')
-        self.act_expert = QAction('Expertenmodus', self, checkable=True)
+        m = self.menuBar().addMenu(tr('&Ansicht'))
+        self.act_expert = QAction(tr('Expertenmodus'), self, checkable=True)
         self.act_expert.toggled.connect(self.set_expert)
         m.addAction(self.act_expert)
-        self.act_live = QAction('Profilwechsel an der Maus verfolgen (alle 2 s)', self, checkable=True)
+        self.act_live = QAction(tr('Profilwechsel an der Maus verfolgen (alle 2 s)'), self, checkable=True)
         self.act_live.setChecked(True)
         self.act_live.toggled.connect(lambda on: self.poll.start() if on and self.config else self.poll.stop())
         m.addAction(self.act_live)
+        lm = m.addMenu('Sprache / Language')
+        lgroup = QActionGroup(self)
+        for code, name in LANGUAGES.items():
+            a = lm.addAction(name, lambda c=code: self.set_language(c))
+            a.setCheckable(True)
+            a.setChecked(code == language())
+            lgroup.addAction(a)
 
-        m = self.menuBar().addMenu('&Hilfe')
-        m.addAction('Über', lambda: QMessageBox.about(
-            self, 'Kone XP', 'ROCCAT Kone XP – Linux-Konfiguration\n\nSchreibt nur Reports 0x07, 0x06, 0x11 '
-            '(und 0x05 für das aktive Profil). Werksreset über Report 0x09 wird nicht verwendet.'))
+        m = self.menuBar().addMenu(tr('&Hilfe'))
+        m.addAction(tr('Über'), lambda: QMessageBox.about(
+            self, 'Kone XP', tr('ROCCAT Kone XP – Linux-Konfiguration\n\nSchreibt nur Reports 0x07, 0x06, 0x11 '
+                                '(und 0x05 für das aktive Profil). Werksreset über Report 0x09 wird nicht verwendet.')))
+
+    def set_language(self, code):
+        if code == language():
+            return
+        save_language(code)
+        QMessageBox.information(self, 'Sprache / Language',
+                                'Die Sprache wird nach einem Neustart umgestellt.\n'
+                                'The language changes after a restart.')
 
     # --- Zustand ---------------------------------------------------------
 
@@ -150,7 +166,7 @@ class MainWindow(QMainWindow):
         for p, b in enumerate(self.pbuttons):
             text = f'P{p + 1}'
             if has and p == c.active:
-                text += ' ● aktiv'
+                text += ' ' + tr('● aktiv')
             if has and c.profile_dirty(p):
                 text += ' *'
             b.setText(text)
@@ -165,7 +181,7 @@ class MainWindow(QMainWindow):
         if has:
             self.btn_color.set_color(QColor(*c.settings[self.profile].profile_color))
             n = len(c.changes())
-            self.dirty_label.setText(f'{n} ungespeicherte Änderung(en)' if n else 'keine Änderungen')
+            self.dirty_label.setText(tr('{n} ungespeicherte Änderung(en)').format(n=n) if n else tr('keine Änderungen'))
         else:
             self.dirty_label.setText('')
         self.tabs.setEnabled(has)
@@ -204,7 +220,7 @@ class MainWindow(QMainWindow):
 
     def run_task(self, fn, on_done, label):
         if self.busy:
-            QMessageBox.information(self, 'Bitte warten', 'Es läuft bereits ein Gerätezugriff.')
+            QMessageBox.information(self, tr('Bitte warten'), tr('Es läuft bereits ein Gerätezugriff.'))
             return
         self.task = Task(fn, self)
         self.task.progress.connect(self._on_progress)
@@ -228,19 +244,21 @@ class MainWindow(QMainWindow):
         self.refresh_chrome()
 
     def _on_failed(self, label, msg):
-        self.status(f'{label} fehlgeschlagen')
-        hint = '' if self.backend.demo else '\n\n' + UDEV_HINT + '\n\nOhne Maus testen: python3 -m konexp.gui --demo'
-        QMessageBox.critical(self, label, f'{label} fehlgeschlagen:\n{msg}{hint}')
+        self.status(tr('{label} fehlgeschlagen').format(label=label))
+        hint = ('' if self.backend.demo
+                else '\n\n' + UDEV_HINT + '\n\n' + tr('Ohne Maus testen: python3 -m konexp.gui --demo'))
+        QMessageBox.critical(self, label, tr('{label} fehlgeschlagen:\n{msg}').format(label=label, msg=msg) + hint)
 
     # --- Laden / Schreiben -----------------------------------------------
 
     def reload(self):
         self.poll.stop()
-        self.run_task(self.backend.read_all, self._loaded, 'Laden')
+        self.run_task(self.backend.read_all, self._loaded, tr('Laden'))
 
     def _loaded(self, snap):
         self.config = Config(snap)
-        self.status(f'{self.backend.name}: 5 Profile geladen, aktiv P{self.config.active + 1}')
+        self.status(tr('{name}: 5 Profile geladen, aktiv P{n}')
+                    .format(name=self.backend.name, n=self.config.active + 1))
         self.profile = self.config.active
         self.pbuttons[self.profile].setChecked(True)
         self.refresh_all()
@@ -249,7 +267,8 @@ class MainWindow(QMainWindow):
 
     def discard(self):
         if self.config and self.config.dirty:
-            r = QMessageBox.question(self, 'Verwerfen', 'Alle ungespeicherten Änderungen verwerfen und neu laden?')
+            r = QMessageBox.question(self, tr('Verwerfen'),
+                                     tr('Alle ungespeicherten Änderungen verwerfen und neu laden?'))
             if r != QMessageBox.Yes:
                 return
         self.reload()
@@ -260,8 +279,9 @@ class MainWindow(QMainWindow):
             return
         bad = [p for p in range(NPROFILES) if c.profile_dirty(p) and not c.easy_shift_ok(p)]
         if bad:
-            r = QMessageBox.warning(self, 'Easy-Shift', 'In ' + ', '.join(f'P{p + 1}' for p in bad)
-                                    + ' ist Taste 14 keine Easy-Shift-Taste. Trotzdem schreiben?',
+            r = QMessageBox.warning(self, tr('Easy-Shift'),
+                                    tr('In {profiles} ist Taste 14 keine Easy-Shift-Taste. Trotzdem schreiben?')
+                                    .format(profiles=', '.join(f'P{p + 1}' for p in bad)),
                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if r != QMessageBox.Yes:
                 return
@@ -271,7 +291,8 @@ class MainWindow(QMainWindow):
         if dlg.exec() != QDialog.Accepted:
             return
         self.poll.stop()
-        self.run_task(lambda prog: run_plan(self.backend, plan, prog, base=dict(c.orig)), self._written, 'Schreiben')
+        self.run_task(lambda prog: run_plan(self.backend, plan, prog, base=dict(c.orig)), self._written,
+                      tr('Schreiben'))
 
     def _written(self, result):
         done, err = result
@@ -279,11 +300,12 @@ class MainWindow(QMainWindow):
             self.config.mark_written(key, data)
         self.refresh_all()
         if err:
-            self.status(f'Schreiben abgebrochen nach {len(done)} Report(s)')
-            QMessageBox.critical(self, 'Schreiben', f'Fehler: {err}\n\n{len(done)} Report(s) wurden geschrieben, '
-                                 'der Rest nicht (bleibt als Änderung markiert).')
+            self.status(tr('Schreiben abgebrochen nach {n} Report(s)').format(n=len(done)))
+            QMessageBox.critical(self, tr('Schreiben'),
+                                 tr('Fehler: {err}\n\n{n} Report(s) wurden geschrieben, '
+                                    'der Rest nicht (bleibt als Änderung markiert).').format(err=err, n=len(done)))
         else:
-            self.status(f'{len(done)} Report(s) geschrieben und verifiziert')
+            self.status(tr('{n} Report(s) geschrieben und verifiziert').format(n=len(done)))
         if self.act_live.isChecked():
             self.poll.start()
 
@@ -293,11 +315,11 @@ class MainWindow(QMainWindow):
 
         def done(_):
             self.config.active = p
-            self.status(f'P{p + 1} ist jetzt aktiv')
+            self.status(tr('P{n} ist jetzt aktiv').format(n=p + 1))
             self.refresh_chrome()
             if self.act_live.isChecked():
                 self.poll.start()
-        self.run_task(lambda prog: self.backend.set_active_profile(p), done, 'Profil aktivieren')
+        self.run_task(lambda prog: self.backend.set_active_profile(p), done, tr('Profil aktivieren'))
 
     def poll_active(self):
         if self.config is None or self.busy:
@@ -308,14 +330,14 @@ class MainWindow(QMainWindow):
             a = None
         if a is not None and 0 <= a < NPROFILES and a != self.config.active:
             self.config.active = a
-            self.status(f'Profil an der Maus gewechselt → P{a + 1}')
+            self.status(tr('Profil an der Maus gewechselt → P{n}').format(n=a + 1))
             self.refresh_chrome()
 
     def pick_profile_color(self):
         if self.config is None:
             return
         s = self.config.settings[self.profile]
-        col = QColorDialog.getColor(QColor(*s.profile_color), self, f'Profilfarbe P{self.profile + 1}')
+        col = QColorDialog.getColor(QColor(*s.profile_color), self, tr('Profilfarbe P{n}').format(n=self.profile + 1))
         if col.isValid():
             s.set_profile_color(col.red(), col.green(), col.blue())
             self.on_changed()
@@ -324,39 +346,42 @@ class MainWindow(QMainWindow):
 
     def save_backup(self):
         if self.config.dirty:
-            QMessageBox.information(self, 'Backup', 'Gespeichert wird der zuletzt von der Maus gelesene '
-                                                    'Zustand, nicht die ungespeicherten Änderungen.')
+            QMessageBox.information(self, tr('Backup'), tr('Gespeichert wird der zuletzt von der Maus gelesene '
+                                                           'Zustand, nicht die ungespeicherten Änderungen.'))
         os.makedirs(BACKUP_DIR, exist_ok=True)
         name = os.path.join(BACKUP_DIR, f'kone-xp-backup-{time.strftime("%Y%m%d-%H%M%S")}.json')
-        fn, _ = QFileDialog.getSaveFileName(self, 'Backup speichern', name, 'Kone-XP-Backup (*.json)')
+        fn, _ = QFileDialog.getSaveFileName(self, tr('Backup speichern'), name, tr('Kone-XP-Backup (*.json)'))
         if fn:
             save_backup(self.config, fn)
-            self.status(f'Backup gespeichert: {fn}')
+            self.status(tr('Backup gespeichert: {path}').format(path=fn))
 
     def restore_backup(self):
-        fn, _ = QFileDialog.getOpenFileName(self, 'Backup wiederherstellen', BACKUP_DIR, 'Kone-XP-Backup (*.json)')
+        fn, _ = QFileDialog.getOpenFileName(self, tr('Backup wiederherstellen'), BACKUP_DIR,
+                                              tr('Kone-XP-Backup (*.json)'))
         if not fn:
             return
         try:
             self.config.apply_backup(load_backup(fn))
         except (OSError, ValueError, KeyError, IndexError) as e:
-            QMessageBox.critical(self, 'Backup', f'Backup ungültig: {e}')
+            QMessageBox.critical(self, tr('Backup'), tr('Backup ungültig: {err}').format(err=e))
             return
         self.refresh_all()
-        QMessageBox.information(self, 'Backup', 'Backup in den Editor geladen. Mit „Übernehmen“ prüfen und schreiben.')
+        QMessageBox.information(self, tr('Backup'),
+                                tr('Backup in den Editor geladen. Mit „Übernehmen“ prüfen und schreiben.'))
 
     def factory_profile(self):
         p = self.profile
-        r = QMessageBox.question(self, 'Werkseinstellung',
-                                 f'P{p + 1} (Einstellungen + Tasten) im Editor auf Werkswerte setzen?\n'
-                                 'Geschrieben wird erst mit „Übernehmen“. Makros (0x08) bleiben unberührt.')
+        r = QMessageBox.question(self, tr('Werkseinstellung'),
+                                 tr('P{n} (Einstellungen + Tasten) im Editor auf Werkswerte setzen?\n'
+                                    'Geschrieben wird erst mit „Übernehmen“. Makros (0x08) bleiben unberührt.')
+                                 .format(n=p + 1))
         if r == QMessageBox.Yes:
             self.config.load_factory(p)
             self.refresh_all()
 
     def closeEvent(self, e):
         if self.config and self.config.dirty:
-            r = QMessageBox.question(self, 'Beenden', 'Ungespeicherte Änderungen verwerfen und beenden?')
+            r = QMessageBox.question(self, tr('Beenden'), tr('Ungespeicherte Änderungen verwerfen und beenden?'))
             if r != QMessageBox.Yes:
                 e.ignore()
                 return

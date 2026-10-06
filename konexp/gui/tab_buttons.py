@@ -4,6 +4,7 @@ from PySide6.QtGui import QBrush, QColor, QFont
 from PySide6.QtWidgets import (QAbstractItemView, QComboBox, QDialog, QHBoxLayout, QHeaderView, QLabel, QMessageBox,
                                QTableWidget, QTableWidgetItem, QVBoxLayout)
 
+from ..i18n import tr
 from ..reports import BUTTONS, N_BUTTONS
 from .dialogs import EasyAimDialog, ShortcutDialog
 from .model import EASY_SHIFT_KEY, R07, easy_aim_entry, entry_text, function_catalog, is_host, shortcut_entry
@@ -29,11 +30,11 @@ class FunctionCombo(QComboBox):
         model = self.model()
         known = {e for _, items in CATALOG for e, _n in items}
         if self.entry not in known:
-            self.addItem(entry_text(self.entry) + '  (aktuell)', ('entry', self.entry))
+            self.addItem(tr('{entry}  (aktuell)').format(entry=entry_text(self.entry)), ('entry', self.entry))
             if is_host(self.entry) or self.entry[3] not in (0x02, 0x06):
                 self.setItemData(0, QBrush(QColor('#d06000')), Qt.ForegroundRole)
         for group, items in CATALOG:
-            self.addItem(f'— {group} —', None)
+            self.addItem(tr('— {group} —').format(group=group), None)
             it = model.item(self.count() - 1)
             it.setEnabled(False)
             f = QFont(self.font())
@@ -41,21 +42,21 @@ class FunctionCombo(QComboBox):
             it.setFont(f)
             for e, name in items:
                 self.addItem('   ' + name, ('entry', e))
-        self.addItem('— Weitere —', None)
+        self.addItem(tr('— Weitere —'), None)
         it = model.item(self.count() - 1)
         it.setEnabled(False)
-        self.addItem('   Tastatur-Shortcut…', SHORTCUT)
-        self.addItem('   Easy-Aim eigener DPI-Wert…', EASYAIM)
+        self.addItem('   ' + tr('Tastatur-Shortcut…'), SHORTCUT)
+        self.addItem('   ' + tr('Easy-Aim eigener DPI-Wert…'), EASYAIM)
         for i in range(self.count()):
             if self.itemData(i) == ('entry', self.entry):
                 self.setCurrentIndex(i)
                 break
-        self.setToolTip(entry_text(self.entry) + f'\nRoh: {bytes(self.entry).hex(" ")}')
+        self.setToolTip(entry_text(self.entry) + '\n' + tr('Roh: {hex}').format(hex=bytes(self.entry).hex(' ')))
         self.blockSignals(False)
 
 
 class ButtonsTab(TabBase):
-    TITLE = 'Tasten'
+    TITLE = tr('Tasten')
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -67,7 +68,7 @@ class ButtonsTab(TabBase):
         lay.addLayout(right, 1)
         self.table = QTableWidget(N_BUTTONS, 3)
         self.table.setMinimumHeight(320)
-        self.table.setHorizontalHeaderLabels(['Taste', 'Normal', 'Easy-Shift-Ebene'])
+        self.table.setHorizontalHeaderLabels([tr('Taste'), tr('Normal'), tr('Easy-Shift-Ebene')])
         self.table.setVerticalHeaderLabels([str(k + 1) for k in range(N_BUTTONS)])
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -89,8 +90,8 @@ class ButtonsTab(TabBase):
         self.info = QLabel()
         self.info.setWordWrap(True)
         right.addWidget(self.info)
-        note = QLabel('Makros werden nur angezeigt (Bearbeitung nicht unterstützt). Host-Funktionen (typ 0b) '
-                      'führt unter Windows Swarm aus – unter Linux passiert nichts.')
+        note = QLabel(tr('Makros werden nur angezeigt (Bearbeitung nicht unterstützt). Host-Funktionen (typ 0b) '
+                        'führt unter Windows Swarm aus – unter Linux passiert nichts.'))
         note.setWordWrap(True)
         note.setStyleSheet('color: gray')
         right.addWidget(note)
@@ -110,11 +111,14 @@ class ButtonsTab(TabBase):
         warn = [k for k in range(N_BUTTONS) for sh in (False, True) if is_host(b.entry(k, sh))]
         msgs = []
         if not self.config.easy_shift_ok(self.profile):
-            msgs.append('<span style="color:#c00000"><b>Warnung:</b> Taste 14 ist keine Easy-Shift-Taste – '
-                        'die Easy-Shift-Ebene ist so nicht erreichbar.</span>')
+            msgs.append('<span style="color:#c00000"><b>' + tr('Warnung:') + '</b> '
+                        + tr('Taste 14 ist keine Easy-Shift-Taste – die Easy-Shift-Ebene ist so nicht erreichbar.')
+                        + '</span>')
         if warn:
-            msgs.append('<span style="color:#d06000">Host-Funktionen (ohne Wirkung unter Linux) auf Taste '
-                        + ', '.join(str(k + 1) for k in sorted(set(warn))) + '.</span>')
+            keys = ', '.join(str(k + 1) for k in sorted(set(warn)))
+            msgs.append('<span style="color:#d06000">'
+                        + tr('Host-Funktionen (ohne Wirkung unter Linux) auf Taste {keys}.').format(keys=keys)
+                        + '</span>')
         self.info.setText('<br>'.join(msgs))
         self.info.setVisible(bool(msgs))
         self.map.set_warn(set(warn) | (set() if self.config.easy_shift_ok(self.profile) else {EASY_SHIFT_KEY}))
@@ -144,15 +148,15 @@ class ButtonsTab(TabBase):
         if new is not None and tuple(new) != old:
             if k == EASY_SHIFT_KEY and not shift and new[3] != 0x0a:
                 r = QMessageBox.warning(
-                    self, 'Easy-Shift-Taste',
-                    'Taste 14 ist die Easy-Shift-Taste. Ohne sie ist die Easy-Shift-Ebene aller Tasten '
-                    'nicht mehr erreichbar.\n\nTrotzdem ändern?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                    self, tr('Easy-Shift-Taste'),
+                    tr('Taste 14 ist die Easy-Shift-Taste. Ohne sie ist die Easy-Shift-Ebene aller Tasten '
+                       'nicht mehr erreichbar.\n\nTrotzdem ändern?'), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if r != QMessageBox.Yes:
                     new = None
         if new is not None and tuple(new) != old:
             notes = self.config.set_button(self.profile, k, shift, new)
             if notes:
-                QMessageBox.information(self, 'Tasten', '\n'.join(notes))
+                QMessageBox.information(self, tr('Tasten'), '\n'.join(notes))
             self.edit()
         # Combo nach dem Signal neu aufbauen (nicht innerhalb des eigenen activated-Handlers)
         QTimer.singleShot(0, self.refresh)

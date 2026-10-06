@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QButtonGroup, QCheckBox, QGridLayout, QHBoxLayout, QLabel, QMessageBox,
                                QPushButton, QRadioButton, QSlider, QSpinBox, QVBoxLayout)
 
+from ..i18n import tr
 from ..reports import DPI_MAX, DPI_MIN, DPI_STEP
 from .model import R06
 from .tab_base import TabBase
@@ -15,7 +16,7 @@ class DpiTab(TabBase):
         super().__init__(parent)
         lay = QVBoxLayout(self)
         grid = QGridLayout()
-        for c, h in enumerate(['Stufe', 'DPI', '', 'aktiv', 'Y (Experte)']):
+        for c, h in enumerate([tr('Stufe'), 'DPI', '', tr('aktiv'), tr('Y (Experte)')]):
             lbl = QLabel(f'<b>{h}</b>')
             grid.addWidget(lbl, 0, c)
             if c == 4:
@@ -23,7 +24,7 @@ class DpiTab(TabBase):
         self.checks, self.sliders, self.spins, self.radios, self.ylabels = [], [], [], [], []
         self.radio_group = QButtonGroup(self)
         for i in range(5):
-            cb = QCheckBox(f'Stufe {i + 1}')
+            cb = QCheckBox(tr('Stufe {n}').format(n=i + 1))
             sl = QSlider(Qt.Horizontal)
             sl.setRange(DPI_MIN // DPI_STEP, DPI_MAX // DPI_STEP)
             sl.setMinimumWidth(260)
@@ -55,13 +56,13 @@ class DpiTab(TabBase):
         row = QHBoxLayout()
         self.y_info = QLabel()
         self.y_info.setWordWrap(True)
-        self.align_btn = QPushButton('Y an X angleichen')
+        self.align_btn = QPushButton(tr('Y an X angleichen'))
         self.align_btn.clicked.connect(self._align)
         row.addWidget(self.y_info, 1)
         row.addWidget(self.align_btn)
         lay.addLayout(row)
-        note = QLabel('Swarm zeigt je Stufe nur einen Wert (X). Diese GUI setzt beim Ändern X und Y gleich. '
-                      'Wertebereich 50–19000 DPI in 50er-Schritten.')
+        note = QLabel(tr('Swarm zeigt je Stufe nur einen Wert (X). Diese GUI setzt beim Ändern X und Y gleich. '
+                        'Wertebereich 50–19000 DPI in 50er-Schritten.'))
         note.setWordWrap(True)
         note.setStyleSheet('color: gray')
         lay.addWidget(note)
@@ -83,8 +84,10 @@ class DpiTab(TabBase):
             self.ylabels[i].setVisible(self.expert)
         self.y_header.setVisible(self.expert)
         show = self.expert and bool(mismatch)
-        self.y_info.setText('Y-DPI weicht ab bei Stufe ' + ', '.join(str(i + 1) for i in mismatch)
-                            + ' (Swarm schreibt nur X; Wirkung von Y ungeprüft).' if mismatch else '')
+        stages = ', '.join(str(i + 1) for i in mismatch)
+        self.y_info.setText(
+            tr('Y-DPI weicht ab bei Stufe {stages} (Swarm schreibt nur X; Wirkung von Y ungeprüft).')
+            .format(stages=stages) if mismatch else '')
         self.y_info.setVisible(show)
         self.align_btn.setVisible(show)
 
@@ -98,8 +101,8 @@ class DpiTab(TabBase):
             return
         s = self.settings
         if not on and s.dpi_active == i:
-            QMessageBox.warning(self, 'DPI', 'Die aktive Stufe kann nicht deaktiviert werden. '
-                                             'Zuerst eine andere Stufe als aktiv wählen.')
+            QMessageBox.warning(self, 'DPI', tr('Die aktive Stufe kann nicht deaktiviert werden. '
+                                                'Zuerst eine andere Stufe als aktiv wählen.'))
             self.refresh()
             return
         try:

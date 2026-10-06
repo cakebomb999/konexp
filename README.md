@@ -6,7 +6,7 @@ Command line tool and Qt GUI for the **ROCCAT Kone XP** (USB `1e7d:2c8b`), repla
 ROCCAT Swarm. Settings are written straight into the mouse's onboard memory and stay active without any
 software running.
 
-![Buttons tab](docs/screenshot-tasten.png)
+![Buttons tab](docs/screenshot-buttons.png)
 
 ## Features
 
@@ -24,7 +24,9 @@ software running.
 Not supported yet: macro editor (existing macros are shown and preserved), lift-off calibration,
 AIMO (software-driven lighting), host functions such as "open program" (Swarm runs those on Windows).
 
-The user interface is currently in German.
+The user interface is in English by default; German is available via `--lang de` (GUI), `KONEXP_LANG=de`
+(GUI and CLI) or *View → Sprache / Language* (takes effect after a restart).
+Translations live in `konexp/locale/*.po` (gettext); after changing texts run `python3 -m konexp.i18n extract`.
 
 ## Installation
 

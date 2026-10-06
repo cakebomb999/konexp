@@ -1,0 +1,1360 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: en\n"
+
+#: konexp/cli.py:17
+msgid ""
+"Kommandozeile: python3 -m konexp <befehl> …\n"
+"\n"
+"  status                      alle Profile: aktive DPI-Stufe, DPI, Polling, Licht, DPI-/Profil-Tasten\n"
+"  profile <0-4>               aktives Profil setzen\n"
+"  dpi <profil> <stufe> <dpi>  DPI einer Stufe setzen (X und Y)\n"
+"  dpi-active <profil> <stufe> aktive DPI-Stufe setzen\n"
+"  restore <datei.bin>         gesichertes Backup zurückschreiben\n"
+msgstr ""
+"Command line: python3 -m konexp <command> …\n"
+"\n"
+"  status                      all profiles: active DPI stage, DPI, polling, lighting, DPI/profile buttons\n"
+"  profile <0-4>               set active profile\n"
+"  dpi <profile> <stage> <dpi> set DPI of a stage (X and Y)\n"
+"  dpi-active <profile> <stage> set active DPI stage\n"
+"  restore <file.bin>          restore saved backup\n"
+
+#: konexp/cli.py:29
+msgid "aktives Profil: {num} (Index {idx})"
+msgstr "active profile: {num} (index {idx})"
+
+#: konexp/cli.py:37
+msgid "{mark}P{p}: DPI {dpis} | {hz} Hz | Angle Snapping {snap} | Effekt {effect}"
+msgstr "{mark}P{p}: DPI {dpis} | {hz} Hz | Angle Snapping {snap} | Effect {effect}"
+
+#: konexp/cli.py:39 konexp/gui/model.py:135
+msgid "an"
+msgstr "on"
+
+#: konexp/cli.py:39 konexp/gui/model.py:151 konexp/gui/model.py:135 konexp/gui/tab_light.py:60
+msgid "aus"
+msgstr "off"
+
+#: konexp/cli.py:41
+msgid "      {name:<18} {func:<28} Easy-Shift: {shift}"
+msgstr "      {name:<18} {func:<28} Easy-Shift: {shift}"
+
+#: konexp/cli.py:76
+msgid "Fehler: {err}"
+msgstr "Error: {err}"
+
+#: konexp/cli.py:55
+msgid "Profil {num} aktiv"
+msgstr "Profile {num} active"
+
+#: konexp/cli.py:61
+msgid "P{p} Stufe {stage}: {value} DPI"
+msgstr "P{p} stage {stage}: {value} DPI"
+
+#: konexp/cli.py:67
+msgid "P{p}: aktive Stufe {stage} ({dpi} DPI)"
+msgstr "P{p}: active stage {stage} ({dpi} DPI)"
+
+#: konexp/cli.py:71
+msgid "{path} zurückgeschrieben"
+msgstr "{path} restored"
+
+#: konexp/defaults.py:40 konexp/defaults.py:50 konexp/device.py:181
+msgid "Profil 0..4"
+msgstr "Profile 0..4"
+
+#: konexp/device.py:63
+msgid "Kone XP (Interface 3) nicht gefunden"
+msgstr "Kone XP (Interface 3) not found"
+
+#: konexp/device.py:114
+msgid "Timeout: Gerät bleibt busy"
+msgstr "Timeout: device remains busy"
+
+#: konexp/device.py:184
+msgid "Profilwechsel nicht übernommen"
+msgstr "Profile switch not applied"
+
+#: konexp/device.py:111
+msgid "Gerät meldet Fehler (Ack 0x02)"
+msgstr "Device reports error (Ack 0x02)"
+
+#: konexp/device.py:96 konexp/gui/model.py:566
+msgid "Report 0x{rid:02x} ist gesperrt"
+msgstr "Report 0x{rid:02x} is locked"
+
+#: konexp/device.py:98
+msgid "Report 0x{rid:02x}: Länge {got} != {want}"
+msgstr "Report 0x{rid:02x}: length {got} != {want}"
+
+#: konexp/device.py:176
+msgid "Verify fehlgeschlagen für 0x{rid:02x}, Backup zurückgeschrieben"
+msgstr "Verify failed for 0x{rid:02x}, backup restored"
+
+#: konexp/device.py:72
+msgid "Kein Zugriff auf {node} – udev-Regel installiert? ({err})"
+msgstr "No access to {node} — udev rule installed? ({err})"
+
+#: konexp/functions.py:10
+msgid "Deaktiviert"
+msgstr "Disabled"
+
+#: konexp/functions.py:11
+msgid "Linksklick"
+msgstr "Left click"
+
+#: konexp/functions.py:11
+msgid "Rechtsklick (Menü)"
+msgstr "Right click (menu)"
+
+#: konexp/functions.py:11
+msgid "Mittelklick"
+msgstr "Middle click"
+
+#: konexp/functions.py:12
+msgid "Doppelklick"
+msgstr "Double click"
+
+#: konexp/functions.py:12
+msgid "Browser vor"
+msgstr "Browser forward"
+
+#: konexp/functions.py:12
+msgid "Browser zurück"
+msgstr "Browser back"
+
+#: konexp/functions.py:13
+msgid "Tilt links"
+msgstr "Tilt left"
+
+#: konexp/functions.py:13
+msgid "Tilt rechts"
+msgstr "Tilt right"
+
+#: konexp/functions.py:13
+msgid "Scroll hoch"
+msgstr "Scroll up"
+
+#: konexp/functions.py:14
+msgid "Scroll runter"
+msgstr "Scroll down"
+
+#: konexp/functions.py:18
+msgid "Vorheriger Titel"
+msgstr "Previous track"
+
+#: konexp/functions.py:18
+msgid "Nächster Titel"
+msgstr "Next track"
+
+#: konexp/functions.py:19
+msgid "Stop"
+msgstr "Stop"
+
+#: konexp/functions.py:19
+msgid "Ton aus"
+msgstr "Mute"
+
+#: konexp/functions.py:19
+msgid "Lauter"
+msgstr "Volume up"
+
+#: konexp/functions.py:19
+msgid "Leiser"
+msgstr "Volume down"
+
+#: konexp/functions.py:20
+msgid "Browser Suche"
+msgstr "Browser search"
+
+#: konexp/functions.py:20
+msgid "Browser Stop"
+msgstr "Browser stop"
+
+#: konexp/functions.py:20
+msgid "Browser Neu laden"
+msgstr "Browser reload"
+
+#: konexp/functions.py:21
+msgid "Neuer Tab"
+msgstr "New tab"
+
+#: konexp/functions.py:21
+msgid "Neues Fenster"
+msgstr "New window"
+
+#: konexp/functions.py:21
+msgid "Computer"
+msgstr "Computer"
+
+#: konexp/functions.py:22
+msgid "Rechner"
+msgstr "Calculator"
+
+#: konexp/functions.py:22
+msgid "E-Mail"
+msgstr "Email"
+
+#: konexp/functions.py:23 konexp/gui/hidkeys.py:17
+msgid "Pos1"
+msgstr "Home"
+
+#: konexp/functions.py:23 konexp/gui/hidkeys.py:18
+msgid "Ende"
+msgstr "End"
+
+#: konexp/functions.py:23 konexp/gui/hidkeys.py:17
+msgid "Bild hoch"
+msgstr "Page Up"
+
+#: konexp/functions.py:24 konexp/gui/hidkeys.py:18
+msgid "Bild runter"
+msgstr "Page Down"
+
+#: konexp/functions.py:25
+msgid "Strg links"
+msgstr "Left Ctrl"
+
+#: konexp/functions.py:25
+msgid "Shift links"
+msgstr "Left Shift"
+
+#: konexp/functions.py:25
+msgid "Alt links"
+msgstr "Left Alt"
+
+#: konexp/functions.py:26
+msgid "Herunterfahren"
+msgstr "Shut down"
+
+#: konexp/functions.py:26
+msgid "Ruhezustand"
+msgstr "Sleep"
+
+#: konexp/functions.py:26
+msgid "Aufwachen"
+msgstr "Wake up"
+
+#: konexp/functions.py:27
+msgid "Nächstes Profil"
+msgstr "Next profile"
+
+#: konexp/functions.py:27
+msgid "Vorheriges Profil"
+msgstr "Previous profile"
+
+#: konexp/functions.py:29
+msgid "Helligkeit umschalten"
+msgstr "Toggle brightness"
+
+#: konexp/functions.py:30
+msgid "Easy-Wheel Lautstärke"
+msgstr "Easy-Wheel volume"
+
+#: konexp/functions.py:31
+msgid "Easy-Wheel Alt-Tab"
+msgstr "Easy-Wheel Alt-Tab"
+
+#: konexp/functions.py:33
+msgid "Mikrofon stumm (Host)"
+msgstr "Mute microphone (host)"
+
+#: konexp/functions.py:40
+msgid "solange gedrückt"
+msgstr "while pressed"
+
+#: konexp/functions.py:40
+msgid "bei Druck"
+msgstr "on press"
+
+#: konexp/functions.py:39
+msgid "Strg"
+msgstr "Ctrl"
+
+#: konexp/functions.py:16
+msgid "Easy-Aim DPI-Stufe {n}"
+msgstr "Easy-Aim DPI stage {n}"
+
+#: konexp/functions.py:28
+msgid "Profil {n}"
+msgstr "Profile {n}"
+
+#: konexp/functions.py:50 konexp/gui/model.py:87
+msgid "Makro ({mode})"
+msgstr "Macro ({mode})"
+
+#: konexp/functions.py:52
+msgid "Easy-Aim {dpi} DPI"
+msgstr "Easy-Aim {dpi} DPI"
+
+#: konexp/functions.py:54
+msgid "Host-Funktion 0x{code:02x}"
+msgstr "Host function 0x{code:02x}"
+
+#: konexp/functions.py:55
+msgid "unbekannt typ 0x{typ:02x} b2 0x{code:02x}"
+msgstr "unknown type 0x{typ:02x} b2 0x{code:02x}"
+
+#: konexp/functions.py:47
+msgid "Taste HID 0x{code:02x} mit {mods}"
+msgstr "Key HID 0x{code:02x} with {mods}"
+
+#: konexp/functions.py:48
+msgid "Taste HID 0x{code:02x}"
+msgstr "Key HID 0x{code:02x}"
+
+#: konexp/reports.py:145
+msgid "Links"
+msgstr "Left"
+
+#: konexp/reports.py:145
+msgid "Rechts"
+msgstr "Right"
+
+#: konexp/reports.py:145
+msgid "Radklick"
+msgstr "Wheel click"
+
+#: konexp/reports.py:145
+msgid "Rad-Tilt links"
+msgstr "Wheel tilt left"
+
+#: konexp/reports.py:145
+msgid "Rad-Tilt rechts"
+msgstr "Wheel tilt right"
+
+#: konexp/reports.py:145
+msgid "Rad hoch"
+msgstr "Wheel up"
+
+#: konexp/reports.py:146
+msgid "Rad runter"
+msgstr "Wheel down"
+
+#: konexp/reports.py:146
+msgid "Seitentaste vorn"
+msgstr "Side button forward"
+
+#: konexp/reports.py:146
+msgid "Seitentaste hinten"
+msgstr "Side button back"
+
+#: konexp/reports.py:146
+msgid "Daumen 1"
+msgstr "Thumb 1"
+
+#: konexp/reports.py:146
+msgid "Daumen 2"
+msgstr "Thumb 2"
+
+#: konexp/reports.py:147
+msgid "Daumen 3"
+msgstr "Thumb 3"
+
+#: konexp/reports.py:147
+msgid "Daumen 4"
+msgstr "Thumb 4"
+
+#: konexp/reports.py:147 konexp/gui/main_window.py:282 konexp/gui/model.py:73 konexp/gui/model.py:206
+msgid "Easy-Shift"
+msgstr "Easy-Shift"
+
+#: konexp/reports.py:147
+msgid "Taste hinter Rad"
+msgstr "Button behind wheel"
+
+#: konexp/reports.py:49
+msgid "mindestens eine DPI-Stufe muss aktiv sein"
+msgstr "at least one DPI stage must be active"
+
+#: konexp/reports.py:162
+msgid "Eintrag = 4 Bytes [b0, b1, b2, typ]"
+msgstr "entry = 4 bytes [b0, b1, b2, type]"
+
+#: konexp/reports.py:24
+msgid "kein gültiger Report 0x{rid:02x}"
+msgstr "not a valid report 0x{rid:02x}"
+
+#: konexp/reports.py:32
+msgid "Wert {val} außerhalb {lo}..{hi}"
+msgstr "value {val} outside {lo}..{hi}"
+
+#: konexp/reports.py:67
+msgid "DPI {value}: erlaubt {lo}..{hi} in {step}er-Schritten"
+msgstr "DPI {value}: allowed {lo}..{hi} in {step}-step increments"
+
+#: konexp/reports.py:100
+msgid "Effekt {code} unbekannt"
+msgstr "effect {code} unknown"
+
+#: konexp/reports.py:122
+msgid "Schlaf-Effekt {code} unbekannt"
+msgstr "sleep effect {code} unknown"
+
+#: konexp/gui/__main__.py:9
+msgid "Kone-XP-Konfiguration"
+msgstr "Kone XP Configuration"
+
+#: konexp/gui/__main__.py:11
+msgid "ohne Maus: Werksdaten + Beispielprofil, Writes nur im Speicher"
+msgstr "without mouse: factory data + example profile, writes to memory only"
+
+#: konexp/gui/__main__.py:12
+msgid "hidraw-Gerät (Standard: automatisch, Interface 3)"
+msgstr "hidraw device (default: auto-detect, interface 3)"
+
+#: konexp/gui/__main__.py:13
+msgid "nach MS Millisekunden beenden (Tests)"
+msgstr "exit after MS milliseconds (for testing)"
+
+#: konexp/gui/__main__.py:15
+msgid "vor dem Beenden Screenshot speichern (mit --quit-after)"
+msgstr "save screenshot before exit (with --quit-after)"
+
+#: konexp/gui/__main__.py:17
+msgid "Sprache der Oberfläche (Standard: Einstellung, sonst Englisch)"
+msgstr "UI language (default: saved setting, otherwise English)"
+
+#: konexp/gui/dialogs.py:17
+msgid "Änderungen übernehmen"
+msgstr "Apply changes"
+
+#: konexp/gui/dialogs.py:41 konexp/gui/main_window.py:295 konexp/gui/main_window.py:304
+msgid "Schreiben"
+msgstr "Write"
+
+#: konexp/gui/dialogs.py:42
+msgid "Abbrechen"
+msgstr "Cancel"
+
+#: konexp/gui/dialogs.py:53
+msgid "Tastatur-Shortcut"
+msgstr "Keyboard shortcut"
+
+#: konexp/gui/dialogs.py:63
+msgid "Taste:"
+msgstr "Key:"
+
+#: konexp/gui/dialogs.py:71
+msgid "Modifier:"
+msgstr "Modifier:"
+
+#: konexp/gui/dialogs.py:86
+msgid "Easy-Aim: eigener DPI-Wert"
+msgstr "Easy-Aim: custom DPI value"
+
+#: konexp/gui/dialogs.py:94
+msgid "DPI, solange die Taste gehalten wird:"
+msgstr "DPI while button is held:"
+
+#: konexp/gui/dialogs.py:26 konexp/gui/tab_sensor.py:17
+msgid "Profil"
+msgstr "Profile"
+
+#: konexp/gui/dialogs.py:26
+msgid "Report"
+msgstr "Report"
+
+#: konexp/gui/dialogs.py:26
+msgid "Feld"
+msgstr "Field"
+
+#: konexp/gui/dialogs.py:26
+msgid "alt"
+msgstr "old"
+
+#: konexp/gui/dialogs.py:26
+msgid "neu"
+msgstr "new"
+
+#: konexp/gui/dialogs.py:73
+msgid "Tastennamen nach deutschem Layout; gespeichert wird die HID-Usage."
+msgstr "Key names follow German layout; HID usage is saved."
+
+#: konexp/gui/dialogs.py:21
+msgid "{n} Änderung(en) werden in den Demo-Speicher geschrieben."
+msgstr "{n} change(s) will be written to demo memory."
+
+#: konexp/gui/dialogs.py:23
+msgid "{n} Änderung(en) werden auf die Maus geschrieben."
+msgstr "{n} change(s) will be written to the mouse."
+
+#: konexp/gui/dialogs.py:37
+msgid "Jeder Report wird vorher gesichert ({dir}), nach dem Schreiben zurückgelesen und bei Abweichung automatisch wiederhergestellt."
+msgstr "Each report is saved first ({dir}), re-read after writing, and automatically restored if it differs."
+
+#: konexp/gui/dialogs.py:24
+msgid "Reihenfolge: {order}"
+msgstr "Order: {order}"
+
+#: konexp/gui/hidkeys.py:13
+msgid "Rücktaste"
+msgstr "Backspace"
+
+#: konexp/gui/hidkeys.py:13
+msgid "Leertaste"
+msgstr "Space"
+
+#: konexp/gui/hidkeys.py:15
+msgid "Feststell"
+msgstr "Caps Lock"
+
+#: konexp/gui/hidkeys.py:17
+msgid "Druck"
+msgstr "Print Screen"
+
+#: konexp/gui/hidkeys.py:17
+msgid "Rollen"
+msgstr "Scroll Lock"
+
+#: konexp/gui/hidkeys.py:17
+msgid "Einfg"
+msgstr "Insert"
+
+#: konexp/gui/hidkeys.py:18
+msgid "Entf"
+msgstr "Delete"
+
+#: konexp/gui/hidkeys.py:18
+msgid "Pfeil rechts"
+msgstr "Right arrow"
+
+#: konexp/gui/hidkeys.py:18
+msgid "Pfeil links"
+msgstr "Left arrow"
+
+#: konexp/gui/hidkeys.py:19
+msgid "Pfeil runter"
+msgstr "Down arrow"
+
+#: konexp/gui/hidkeys.py:19
+msgid "Pfeil hoch"
+msgstr "Up arrow"
+
+#: konexp/gui/hidkeys.py:19
+msgid "Num"
+msgstr "Num Lock"
+
+#: konexp/gui/hidkeys.py:22
+msgid "Num Enter"
+msgstr "Num Enter"
+
+#: konexp/gui/hidkeys.py:25
+msgid "Menü"
+msgstr "Menu"
+
+#: konexp/gui/hidkeys.py:20 konexp/gui/hidkeys.py:20 konexp/gui/hidkeys.py:21 konexp/gui/hidkeys.py:21 konexp/gui/hidkeys.py:24 konexp/gui/hidkeys.py:24 konexp/gui/hidkeys.py:23
+msgid "Num {key}"
+msgstr "Num {key}"
+
+#: konexp/gui/main_window.py:54
+msgid "Als aktiv setzen"
+msgstr "Set as active"
+
+#: konexp/gui/main_window.py:57
+msgid "Profilfarbe…"
+msgstr "Profile color…"
+
+#: konexp/gui/main_window.py:84 konexp/gui/main_window.py:270
+msgid "Verwerfen"
+msgstr "Discard"
+
+#: konexp/gui/main_window.py:85
+msgid "Änderungen verwerfen und alles neu von der Maus laden"
+msgstr "Discard changes and reload all data from mouse"
+
+#: konexp/gui/main_window.py:87
+msgid "Übernehmen"
+msgstr "Apply"
+
+#: konexp/gui/main_window.py:112
+msgid "&Datei"
+msgstr "&File"
+
+#: konexp/gui/main_window.py:113
+msgid "Neu laden"
+msgstr "Reload"
+
+#: konexp/gui/main_window.py:115 konexp/gui/main_window.py:384
+msgid "Beenden"
+msgstr "Exit"
+
+#: konexp/gui/main_window.py:117
+msgid "&Werkzeuge"
+msgstr "&Tools"
+
+#: konexp/gui/main_window.py:118
+msgid "Backup aller Profile speichern…"
+msgstr "Save backup of all profiles…"
+
+#: konexp/gui/main_window.py:119
+msgid "Backup wiederherstellen…"
+msgstr "Restore backup…"
+
+#: konexp/gui/main_window.py:121
+msgid "Profil auf Werkseinstellung"
+msgstr "Reset profile to factory defaults"
+
+#: konexp/gui/main_window.py:123
+msgid "&Ansicht"
+msgstr "&View"
+
+#: konexp/gui/main_window.py:124
+msgid "Expertenmodus"
+msgstr "Expert mode"
+
+#: konexp/gui/main_window.py:127
+msgid "Profilwechsel an der Maus verfolgen (alle 2 s)"
+msgstr "Track profile changes on mouse (every 2 s)"
+
+#: konexp/gui/main_window.py:139
+msgid "&Hilfe"
+msgstr "&Help"
+
+#: konexp/gui/main_window.py:140
+msgid "Über"
+msgstr "About"
+
+#: konexp/gui/main_window.py:256
+msgid "Laden"
+msgstr "Loading"
+
+#: konexp/gui/main_window.py:322
+msgid "Profil aktivieren"
+msgstr "Activate profile"
+
+#: konexp/gui/main_window.py:353
+msgid "Backup speichern"
+msgstr "Save backup"
+
+#: konexp/gui/main_window.py:353 konexp/gui/main_window.py:360
+msgid "Kone-XP-Backup (*.json)"
+msgstr "Kone XP Backup (*.json)"
+
+#: konexp/gui/main_window.py:359
+msgid "Backup wiederherstellen"
+msgstr "Restore backup"
+
+#: konexp/gui/main_window.py:369 konexp/gui/main_window.py:349 konexp/gui/main_window.py:366
+msgid "Backup"
+msgstr "Backup"
+
+#: konexp/gui/main_window.py:370
+msgid "Backup in den Editor geladen. Mit „Übernehmen“ prüfen und schreiben."
+msgstr "Backup loaded into the editor. Review and write with “Apply”."
+
+#: konexp/gui/main_window.py:374
+msgid "Werkseinstellung"
+msgstr "Factory defaults"
+
+#: konexp/gui/main_window.py:33
+msgid "Kone XP Konfiguration"
+msgstr "Kone XP Configuration"
+
+#: konexp/gui/main_window.py:42
+msgid "Profil:"
+msgstr "Profile:"
+
+#: konexp/gui/main_window.py:223
+msgid "Bitte warten"
+msgstr "Please wait"
+
+#: konexp/gui/main_window.py:223
+msgid "Es läuft bereits ein Gerätezugriff."
+msgstr "Device access is already in progress."
+
+#: konexp/gui/main_window.py:249
+msgid "Ohne Maus testen: python3 -m konexp.gui --demo"
+msgstr "Test without mouse: python3 -m konexp.gui --demo"
+
+#: konexp/gui/main_window.py:271
+msgid "Alle ungespeicherten Änderungen verwerfen und neu laden?"
+msgstr "Discard all unsaved changes and reload?"
+
+#: konexp/gui/main_window.py:349
+msgid "Gespeichert wird der zuletzt von der Maus gelesene Zustand, nicht die ungespeicherten Änderungen."
+msgstr "The backup saves the last state read from the mouse, not unsaved changes."
+
+#: konexp/gui/main_window.py:384
+msgid "Ungespeicherte Änderungen verwerfen und beenden?"
+msgstr "Discard unsaved changes and exit?"
+
+#: konexp/gui/main_window.py:141
+msgid ""
+"ROCCAT Kone XP – Linux-Konfiguration\n"
+"\n"
+"Schreibt nur Reports 0x07, 0x06, 0x11 (und 0x05 für das aktive Profil). Werksreset über Report 0x09 wird nicht verwendet."
+msgstr ""
+"ROCCAT Kone XP – Linux Configuration\n"
+"\n"
+"Only writes reports 0x07, 0x06, 0x11 (and 0x05 for active profile). Factory reset via report 0x09 is not used."
+
+#: konexp/gui/main_window.py:169
+msgid "● aktiv"
+msgstr "● active"
+
+#: konexp/gui/main_window.py:184
+msgid "keine Änderungen"
+msgstr "no changes"
+
+#: konexp/gui/main_window.py:247
+msgid "{label} fehlgeschlagen"
+msgstr "{label} failed"
+
+#: konexp/gui/main_window.py:260
+msgid "{name}: 5 Profile geladen, aktiv P{n}"
+msgstr "{name}: 5 profiles loaded, active P{n}"
+
+#: konexp/gui/main_window.py:340
+msgid "Profilfarbe P{n}"
+msgstr "Profile color P{n}"
+
+#: konexp/gui/main_window.py:375
+msgid ""
+"P{n} (Einstellungen + Tasten) im Editor auf Werkswerte setzen?\n"
+"Geschrieben wird erst mit „Übernehmen“. Makros (0x08) bleiben unberührt."
+msgstr ""
+"Reset P{n} (settings + buttons) to factory values in editor?\n"
+"Actual write happens with “Apply”. Macros (0x08) remain unchanged."
+
+#: konexp/gui/main_window.py:250
+msgid ""
+"{label} fehlgeschlagen:\n"
+"{msg}"
+msgstr ""
+"{label} failed:\n"
+"{msg}"
+
+#: konexp/gui/main_window.py:283
+msgid "In {profiles} ist Taste 14 keine Easy-Shift-Taste. Trotzdem schreiben?"
+msgstr "Button 14 is not an Easy-Shift button in {profiles}. Write anyway?"
+
+#: konexp/gui/main_window.py:303
+msgid "Schreiben abgebrochen nach {n} Report(s)"
+msgstr "Write cancelled after {n} report(s)"
+
+#: konexp/gui/main_window.py:305
+msgid ""
+"Fehler: {err}\n"
+"\n"
+"{n} Report(s) wurden geschrieben, der Rest nicht (bleibt als Änderung markiert)."
+msgstr ""
+"Error: {err}\n"
+"\n"
+"{n} report(s) written, rest not (remains marked as changed)."
+
+#: konexp/gui/main_window.py:308
+msgid "{n} Report(s) geschrieben und verifiziert"
+msgstr "{n} report(s) written and verified"
+
+#: konexp/gui/main_window.py:318
+msgid "P{n} ist jetzt aktiv"
+msgstr "P{n} is now active"
+
+#: konexp/gui/main_window.py:333
+msgid "Profil an der Maus gewechselt → P{n}"
+msgstr "Profile changed on mouse → P{n}"
+
+#: konexp/gui/main_window.py:356
+msgid "Backup gespeichert: {path}"
+msgstr "Backup saved: {path}"
+
+#: konexp/gui/main_window.py:184
+msgid "{n} ungespeicherte Änderung(en)"
+msgstr "{n} unsaved change(s)"
+
+#: konexp/gui/main_window.py:366
+msgid "Backup ungültig: {err}"
+msgstr "Backup invalid: {err}"
+
+#: konexp/gui/model.py:29
+msgid "kalibriert (Custom)"
+msgstr "calibrated (custom)"
+
+#: konexp/gui/model.py:49
+msgid "alle"
+msgstr "all"
+
+#: konexp/gui/model.py:50
+msgid "Leiste links"
+msgstr "Left strip"
+
+#: konexp/gui/model.py:51
+msgid "Leiste rechts"
+msgstr "Right strip"
+
+#: konexp/gui/model.py:52 konexp/gui/widgets.py:111
+msgid "Rad"
+msgstr "Wheel"
+
+#: konexp/gui/model.py:53 konexp/gui/model.py:61
+msgid "DPI-LED"
+msgstr "DPI LED"
+
+#: konexp/gui/model.py:71
+msgid "Allgemein"
+msgstr "General"
+
+#: konexp/gui/model.py:71
+msgid "Maus / Browser"
+msgstr "Mouse / Browser"
+
+#: konexp/gui/model.py:71
+msgid "DPI / Easy-Aim"
+msgstr "DPI / Easy-Aim"
+
+#: konexp/gui/model.py:71
+msgid "Multimedia"
+msgstr "Multimedia"
+
+#: konexp/gui/model.py:72
+msgid "Navigation / Modifier"
+msgstr "Navigation / Modifier"
+
+#: konexp/gui/model.py:72
+msgid "System"
+msgstr "System"
+
+#: konexp/gui/model.py:72
+msgid "Profile / Beleuchtung"
+msgstr "Profile / Lighting"
+
+#: konexp/gui/model.py:73
+msgid "Easy-Wheel"
+msgstr "Easy-Wheel"
+
+#: konexp/gui/model.py:73
+msgid "Host-Funktionen (wirken unter Linux nicht)"
+msgstr "Host functions (have no effect on Linux)"
+
+#: konexp/gui/model.py:430
+msgid "Maus"
+msgstr "Mouse"
+
+#: konexp/gui/model.py:542
+msgid "Demo"
+msgstr "Demo"
+
+#: konexp/gui/model.py:32
+msgid ""
+"Zugriff auf die Maus fehlt. udev-Regel installieren:\n"
+"  sudo cp {rule} /etc/udev/rules.d/\n"
+"  sudo udevadm control --reload && sudo udevadm trigger\n"
+"Danach Maus neu einstecken."
+msgstr ""
+"No access to mouse. Install udev rule:\n"
+"  sudo cp {rule} /etc/udev/rules.d/\n"
+"  sudo udevadm control --reload && sudo udevadm trigger\n"
+"Then reconnect the mouse."
+
+#: konexp/gui/model.py:59
+msgid "Mausrad"
+msgstr "Mouse wheel"
+
+#: konexp/gui/model.py:62
+msgid "links"
+msgstr "left"
+
+#: konexp/gui/model.py:62
+msgid "rechts"
+msgstr "right"
+
+#: konexp/gui/model.py:167
+msgid "unbekannt 0x03 (Sensitivity X?)"
+msgstr "unknown 0x03 (Sensitivity X?)"
+
+#: konexp/gui/model.py:168
+msgid "unbekannt 0x04 (Sensitivity Y?)"
+msgstr "unknown 0x04 (Sensitivity Y?)"
+
+#: konexp/gui/model.py:169
+msgid "DPI-Stufen aktiv"
+msgstr "DPI stages active"
+
+#: konexp/gui/model.py:170
+msgid "aktive DPI-Stufe"
+msgstr "active DPI stage"
+
+#: konexp/gui/model.py:173 konexp/gui/tab_sensor.py:24
+msgid "Angle Snapping"
+msgstr "Angle Snapping"
+
+#: konexp/gui/model.py:174
+msgid "unbekannt 0x1c"
+msgstr "unknown 0x1c"
+
+#: konexp/gui/model.py:175
+msgid "Polling-Rate"
+msgstr "Polling rate"
+
+#: konexp/gui/model.py:176
+msgid "Lichteffekt"
+msgstr "Lighting effect"
+
+#: konexp/gui/model.py:177
+msgid "Effekt-Geschwindigkeit"
+msgstr "Effect speed"
+
+#: konexp/gui/model.py:178
+msgid "Helligkeit"
+msgstr "Brightness"
+
+#: konexp/gui/model.py:179
+msgid "LED-Timeout (Wert)"
+msgstr "LED timeout (value)"
+
+#: konexp/gui/model.py:180
+msgid "Effekt nach Timeout"
+msgstr "Effect after timeout"
+
+#: konexp/gui/model.py:181
+msgid "Timeout-Flag 0x23"
+msgstr "Timeout flag 0x23"
+
+#: konexp/gui/model.py:189
+msgid "Profilfarbe aktiv"
+msgstr "Profile color active"
+
+#: konexp/gui/model.py:190
+msgid "unbekannt 0x9d"
+msgstr "unknown 0x9d"
+
+#: konexp/gui/model.py:191
+msgid "Profilfarbe"
+msgstr "Profile color"
+
+#: konexp/gui/model.py:192 konexp/gui/model.py:216
+msgid "Tasten-Preset-Index"
+msgstr "Button preset index"
+
+#: konexp/gui/model.py:193 konexp/gui/model.py:217
+msgid "AIMO-Parameter"
+msgstr "AIMO parameter"
+
+#: konexp/gui/model.py:194
+msgid "DPI-Stufen-Flag 0xa4"
+msgstr "DPI stages flag 0xa4"
+
+#: konexp/gui/model.py:195
+msgid "unbekannt 0xa5"
+msgstr "unknown 0xa5"
+
+#: konexp/gui/model.py:196
+msgid "Reserve 0xa6–0xab"
+msgstr "Reserved 0xa6–0xab"
+
+#: konexp/gui/model.py:209
+msgid "Debounce (ms)"
+msgstr "Debounce (ms)"
+
+#: konexp/gui/model.py:214
+msgid "Sensitivity X? (unbekannt)"
+msgstr "Sensitivity X? (unknown)"
+
+#: konexp/gui/model.py:214
+msgid "Sensitivity Y? (unbekannt)"
+msgstr "Sensitivity Y? (unknown)"
+
+#: konexp/gui/model.py:215 konexp/gui/model.py:217
+msgid "unbekannt"
+msgstr "unknown"
+
+#: konexp/gui/model.py:215
+msgid "Timeout-Flag (GUI setzt 0)"
+msgstr "Timeout flag (GUI sets 0)"
+
+#: konexp/gui/model.py:215
+msgid "Profilfarbe aktiv?"
+msgstr "Profile color active?"
+
+#: konexp/gui/model.py:216
+msgid "unbekannt (Intensität?)"
+msgstr "Unknown (intensity?)"
+
+#: konexp/gui/model.py:217
+msgid "DPI-Stufen-Flag (Auto?)"
+msgstr "DPI stages flag (auto?)"
+
+#: konexp/gui/model.py:623 konexp/gui/model.py:482
+msgid "fertig"
+msgstr "Done"
+
+#: konexp/gui/model.py:64
+msgid "Leiste {side}, Spalte {col}, {row}"
+msgstr "Strip {side}, column {col}, {row}"
+
+#: konexp/gui/model.py:115
+msgid "ungültiger Shortcut"
+msgstr "invalid shortcut"
+
+#: konexp/gui/model.py:163 konexp/gui/tab_dpi.py:27
+msgid "Stufe {n}"
+msgstr "Stage {n}"
+
+#: konexp/gui/model.py:230
+msgid "global"
+msgstr "global"
+
+#: konexp/gui/model.py:393
+msgid "keine konexp-Backup-Datei"
+msgstr "not a konexp backup file"
+
+#: konexp/gui/model.py:408
+msgid "Report 0x11: Checksumme falsch"
+msgstr "Report 0x11: checksum incorrect"
+
+#: konexp/gui/model.py:464
+msgid "aktives Profil (0x05)"
+msgstr "active profile (0x05)"
+
+#: konexp/gui/model.py:475
+msgid "Debounce (0x11)"
+msgstr "Debounce (0x11)"
+
+#: konexp/gui/model.py:65
+msgid "vorn"
+msgstr "front"
+
+#: konexp/gui/model.py:65
+msgid "hinten"
+msgstr "back"
+
+#: konexp/gui/model.py:85
+msgid "Shortcut {keys}"
+msgstr "Shortcut {keys}"
+
+#: konexp/gui/model.py:90 konexp/gui/model.py:100
+msgid "{name} – wirkt unter Linux nicht"
+msgstr "{name} – has no effect on Linux"
+
+#: konexp/gui/model.py:131
+msgid "Stufen"
+msgstr "stages"
+
+#: konexp/gui/model.py:143 konexp/gui/model.py:147
+msgid "unbekannt ({n})"
+msgstr "unknown ({n})"
+
+#: konexp/gui/model.py:205
+msgid "Taste {n} „{name}“ ({layer})"
+msgstr "Button {n} “{name}” ({layer})"
+
+#: konexp/gui/model.py:557
+msgid "Demo-Daten"
+msgstr "Demo data"
+
+#: konexp/gui/model.py:107
+msgid "Easy-Aim: {lo}..{hi} in {step}er-Schritten"
+msgstr "Easy-Aim: {lo}..{hi} in {step}-step increments"
+
+#: konexp/gui/model.py:185
+msgid "LED {i} Byte +0"
+msgstr "LED {i} byte +0"
+
+#: konexp/gui/model.py:186
+msgid "LED {i} Farbe ({label})"
+msgstr "LED {i} color ({label})"
+
+#: konexp/gui/model.py:187
+msgid "LED {i} Byte +5"
+msgstr "LED {i} byte +5"
+
+#: konexp/gui/model.py:206
+msgid "normal"
+msgstr "normal"
+
+#: konexp/gui/model.py:615
+msgid "schreibe {label}"
+msgstr "Writing {label}"
+
+#: konexp/gui/model.py:102
+msgid "typ 0x{t:02x}"
+msgstr "type 0x{t:02x}"
+
+#: konexp/gui/model.py:171
+msgid "DPI Stufe {n} (X)"
+msgstr "DPI stage {n} (X)"
+
+#: konexp/gui/model.py:172
+msgid "DPI Stufe {n} (Y)"
+msgstr "DPI stage {n} (Y)"
+
+#: konexp/gui/model.py:360
+msgid "Taste {n} (Easy-Shift-Ebene) auf „Deaktiviert“ gesetzt (Easy-Shift-Regel)."
+msgstr "Button {n} (Easy-Shift layer) set to “Disabled” (Easy-Shift rule)."
+
+#: konexp/gui/model.py:469
+msgid "P{n} Einstellungen (0x06)"
+msgstr "P{n} settings (0x06)"
+
+#: konexp/gui/model.py:472
+msgid "P{n} Tasten (0x07)"
+msgstr "P{n} buttons (0x07)"
+
+#: konexp/gui/model.py:87
+msgid "Modus {n}"
+msgstr "mode {n}"
+
+#: konexp/gui/model.py:243
+msgid "Byte 0x{off:02x}"
+msgstr "byte 0x{off:02x}"
+
+#: konexp/gui/model.py:400
+msgid "Report 0x{rid:02x} an Position {p} gehört zu Profil {q}"
+msgstr "Report 0x{rid:02x} at position {p} belongs to profile {q}"
+
+#: konexp/gui/model.py:403
+msgid "Report 0x{rid:02x} P{n}: Checksumme falsch"
+msgstr "Report 0x{rid:02x} P{n}: checksum incorrect"
+
+#: konexp/gui/model.py:455
+msgid "E/A-Fehler: {err}"
+msgstr "I/O error: {err}"
+
+#: konexp/gui/tab_buttons.py:59 konexp/gui/tab_buttons.py:159
+msgid "Tasten"
+msgstr "Buttons"
+
+#: konexp/gui/tab_buttons.py:45
+msgid "— Weitere —"
+msgstr "— More —"
+
+#: konexp/gui/tab_buttons.py:93
+msgid "Makros werden nur angezeigt (Bearbeitung nicht unterstützt). Host-Funktionen (typ 0b) führt unter Windows Swarm aus – unter Linux passiert nichts."
+msgstr "Macros are display-only (editing not supported). Host functions (type 0b) are executed by Swarm on Windows — on Linux nothing happens."
+
+#: konexp/gui/tab_buttons.py:48
+msgid "Tastatur-Shortcut…"
+msgstr "Keyboard shortcut…"
+
+#: konexp/gui/tab_buttons.py:49
+msgid "Easy-Aim eigener DPI-Wert…"
+msgstr "Easy-Aim custom DPI value…"
+
+#: konexp/gui/tab_buttons.py:71
+msgid "Taste"
+msgstr "Button"
+
+#: konexp/gui/tab_buttons.py:71
+msgid "Normal"
+msgstr "Normal"
+
+#: konexp/gui/tab_buttons.py:71
+msgid "Easy-Shift-Ebene"
+msgstr "Easy-Shift layer"
+
+#: konexp/gui/tab_buttons.py:151
+msgid "Easy-Shift-Taste"
+msgstr "Easy-Shift button"
+
+#: konexp/gui/tab_buttons.py:152
+msgid ""
+"Taste 14 ist die Easy-Shift-Taste. Ohne sie ist die Easy-Shift-Ebene aller Tasten nicht mehr erreichbar.\n"
+"\n"
+"Trotzdem ändern?"
+msgstr ""
+"Button 14 is the Easy-Shift button. Without it, the Easy-Shift layer of all buttons becomes unreachable.\n"
+"\n"
+"Change anyway?"
+
+#: konexp/gui/tab_buttons.py:33
+msgid "{entry}  (aktuell)"
+msgstr "{entry}  (current)"
+
+#: konexp/gui/tab_buttons.py:37
+msgid "— {group} —"
+msgstr "— {group} —"
+
+#: konexp/gui/tab_buttons.py:54
+msgid "Roh: {hex}"
+msgstr "Raw: {hex}"
+
+#: konexp/gui/tab_buttons.py:115
+msgid "Taste 14 ist keine Easy-Shift-Taste – die Easy-Shift-Ebene ist so nicht erreichbar."
+msgstr "Button 14 is not an Easy-Shift button — the Easy-Shift layer is not reachable this way."
+
+#: konexp/gui/tab_buttons.py:114
+msgid "Warnung:"
+msgstr "Warning:"
+
+#: konexp/gui/tab_buttons.py:120
+msgid "Host-Funktionen (ohne Wirkung unter Linux) auf Taste {keys}."
+msgstr "Host functions (no effect on Linux) on button {keys}."
+
+#: konexp/gui/tab_dpi.py:59
+msgid "Y an X angleichen"
+msgstr "Match Y to X"
+
+#: konexp/gui/tab_dpi.py:64
+msgid "Swarm zeigt je Stufe nur einen Wert (X). Diese GUI setzt beim Ändern X und Y gleich. Wertebereich 50–19000 DPI in 50er-Schritten."
+msgstr "Swarm shows only one value (X) per stage. This GUI sets X and Y equally when changed. Range 50–19000 DPI in 50-step increments."
+
+#: konexp/gui/tab_dpi.py:19
+msgid "Stufe"
+msgstr "Stage"
+
+#: konexp/gui/tab_dpi.py:19
+msgid "aktiv"
+msgstr "Active"
+
+#: konexp/gui/tab_dpi.py:19
+msgid "Y (Experte)"
+msgstr "Y (expert)"
+
+#: konexp/gui/tab_dpi.py:104
+msgid "Die aktive Stufe kann nicht deaktiviert werden. Zuerst eine andere Stufe als aktiv wählen."
+msgstr "The active stage cannot be deactivated. Choose another stage as active first."
+
+#: konexp/gui/tab_dpi.py:89
+msgid "Y-DPI weicht ab bei Stufe {stages} (Swarm schreibt nur X; Wirkung von Y ungeprüft)."
+msgstr "Y-DPI differs in stage {stages} (Swarm only writes X; Y effect untested)."
+
+#: konexp/gui/tab_expert.py:30
+msgid "Experte"
+msgstr "Expert"
+
+#: konexp/gui/tab_expert.py:55
+msgid "Werte über alle LEDs"
+msgstr "Values across all LEDs"
+
+#: konexp/gui/tab_expert.py:46
+msgid "Global"
+msgstr "Global"
+
+#: konexp/gui/tab_expert.py:47
+msgid "(aktives Profil)"
+msgstr "(active profile)"
+
+#: konexp/gui/tab_expert.py:48
+msgid "(Debounce)"
+msgstr "(Debounce)"
+
+#: konexp/gui/tab_expert.py:49
+msgid "(DCU, nur lesen)"
+msgstr "(DCU, read-only)"
+
+#: konexp/gui/tab_expert.py:50
+msgid "Unbekannte / nicht bearbeitete Bytes in 0x06 (nur Anzeige)"
+msgstr "Unknown / unedited bytes in 0x06 (display only)"
+
+#: konexp/gui/tab_expert.py:60
+msgid "Markiert = geändert, noch nicht geschrieben. Letzte 2 Bytes = Checksumme (wird beim Schreiben neu berechnet)."
+msgstr "Marked = changed, not yet written. Last 2 bytes = checksum (recalculated when writing)."
+
+#: konexp/gui/tab_expert.py:49 konexp/gui/tab_sensor.py:60
+msgid "nicht lesbar"
+msgstr "not readable"
+
+#: konexp/gui/tab_expert.py:21
+msgid "alt {value}"
+msgstr "old {value}"
+
+#: konexp/gui/tab_expert.py:42
+msgid "Profil P{n} – Report 0x06 (Einstellungen)"
+msgstr "Profile P{n} – Report 0x06 (settings)"
+
+#: konexp/gui/tab_expert.py:44
+msgid "Profil P{n} – Report 0x07 (Tasten)"
+msgstr "Profile P{n} – Report 0x07 (buttons)"
+
+#: konexp/gui/tab_light.py:13
+msgid "AIMO wird unter Windows von Swarm (Software) berechnet. Unter Linux läuft dafür nichts – die Beleuchtung bleibt dann ohne den erwarteten Effekt."
+msgstr "AIMO is calculated by Swarm (software) on Windows. On Linux nothing runs for it — lighting remains without the expected effect."
+
+#: konexp/gui/tab_light.py:33
+msgid "Beleuchtung"
+msgstr "Lighting"
+
+#: konexp/gui/tab_light.py:41
+msgid "Effekt"
+msgstr "Effect"
+
+#: konexp/gui/tab_light.py:47
+msgid "Effekt:"
+msgstr "Effect:"
+
+#: konexp/gui/tab_light.py:54
+msgid "Geschwindigkeit:"
+msgstr "Speed:"
+
+#: konexp/gui/tab_light.py:57
+msgid "Helligkeit:"
+msgstr "Brightness:"
+
+#: konexp/gui/tab_light.py:62
+msgid "LED-Timeout – Wert (vermutl. Minuten):"
+msgstr "LED timeout — value (likely minutes):"
+
+#: konexp/gui/tab_light.py:67
+msgid "Effekt nach Timeout:"
+msgstr "Effect after timeout:"
+
+#: konexp/gui/tab_light.py:70
+msgid "LED-Farben (Klick auf LED = Farbe wählen)"
+msgstr "LED colors (click on LED = choose color)"
+
+#: konexp/gui/tab_light.py:84
+msgid "Farbe inkl. Alpha (Intensität). Bei Colorwave/AIMO überschreibt der Effekt die Farben."
+msgstr "Color including alpha (intensity). With Colorwave/AIMO the effect overrides colors."
+
+#: konexp/gui/tab_light.py:77
+msgid "Gruppe setzen:"
+msgstr "Set group:"
+
+#: konexp/gui/tab_light.py:129
+msgid "Farbe – {title}"
+msgstr "Color – {title}"
+
+#: konexp/gui/tab_light.py:118 konexp/gui/tab_sensor.py:53 konexp/gui/tab_sensor.py:63
+msgid "unbekannt ({code})"
+msgstr "unknown ({code})"
+
+#: konexp/gui/tab_light.py:74 konexp/gui/tab_light.py:93 konexp/gui/widgets.py:126
+msgid "LED {index}: {label}"
+msgstr "LED {index}: {label}"
+
+#: konexp/gui/tab_sensor.py:11
+msgid "Sensor"
+msgstr "Sensor"
+
+#: konexp/gui/tab_sensor.py:23
+msgid "Polling-Rate:"
+msgstr "Polling rate:"
+
+#: konexp/gui/tab_sensor.py:29
+msgid "Global (alle Profile)"
+msgstr "Global (all profiles)"
+
+#: konexp/gui/tab_sensor.py:35
+msgid "Debounce-Zeit:"
+msgstr "Debounce time:"
+
+#: konexp/gui/tab_sensor.py:37
+msgid "Lift-off (DCU):"
+msgstr "Lift-off (DCU):"
+
+#: konexp/gui/tab_sensor.py:38
+msgid "Kalibrierung (kommt später)"
+msgstr "Calibration (coming later)"
+
+#: konexp/gui/tab_sensor.py:41
+msgid "Lift-off wird nur angezeigt (Report 0x0f), nicht geschrieben."
+msgstr "Lift-off is display-only (Report 0x0f), not written."
+
+#: konexp/gui/widgets.py:113
+msgid "◀ links"
+msgstr "◀ left"
+
+#: konexp/gui/widgets.py:114
+msgid "obere Reihe = vorn (Kabelseite)"
+msgstr "top row = front (cable side)"
+
+#: konexp/gui/widgets.py:115
+msgid "rechts ▶"
+msgstr "right ▶"
+
+#: konexp/gui/widgets.py:234
+msgid "Daumenseite"
+msgstr "Thumb side"
