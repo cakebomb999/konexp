@@ -30,7 +30,7 @@ Voraussetzungen: Linux, Python ≥ 3.10, für die Oberfläche PySide6
 (Arch: `pacman -S pyside6`, sonst `pip install PySide6`).
 
 ```sh
-git clone <repo-url> konexp
+git clone https://github.com/cakebomb999/konexp.git
 cd konexp
 ```
 
