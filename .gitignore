@@ -1,0 +1,24 @@
+# Lokales Reverse-Engineering-Material (nicht veröffentlichen)
+# extracted/: proprietäre Herstellerdateien (Swarm, Plugin, Firmware, Dekompilate)
+extracted/
+# notes/: Arbeitsnotizen mit Ghidra-Adressen und Rohbefunden
+notes/
+# tools/: RE-Hilfsskripte (PE-Parser, qrc-Extraktor, Report-Reader)
+tools/
+# dumps/: Report-Dumps der eigenen Maus und Backups
+dumps/
+
+# Proprietäre Binaries, falls sie woanders landen
+*.exe
+*.dll
+*.7z
+*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.pytest_cache/

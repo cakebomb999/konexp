@@ -1,0 +1,2 @@
+# ROCCAT Kone XP (1e7d:2c8b): hidraw-Zugriff für den angemeldeten Benutzer (systemd-logind uaccess)
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2c8b", TAG+="uaccess"
