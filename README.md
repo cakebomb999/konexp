@@ -1,38 +1,42 @@
-# konexp – ROCCAT Kone XP unter Linux konfigurieren
+# konexp – configure the ROCCAT Kone XP on Linux
 
-Kommandozeile und Qt-Oberfläche für die **ROCCAT Kone XP** (USB `1e7d:2c8b`), als Ersatz für
-ROCCAT Swarm, das es nur für Windows gibt. Die Einstellungen werden direkt in den Speicher der Maus
-geschrieben und gelten danach auch ohne laufende Software.
+**English** | [Deutsch](README.de.md)
 
-![Tasten-Tab](docs/screenshot-tasten.png)
+Command line tool and Qt GUI for the **ROCCAT Kone XP** (USB `1e7d:2c8b`), replacing the Windows-only
+ROCCAT Swarm. Settings are written straight into the mouse's onboard memory and stay active without any
+software running.
 
-## Funktionen
+![Buttons tab](docs/screenshot-tasten.png)
 
-- **Profile**: 5 Profile, aktives Profil wählen, Profilfarbe
-- **DPI**: 5 Stufen (50–19000 in 50er-Schritten), Stufen an/aus, aktive Stufe
-- **Sensor**: Polling-Rate (125–1000 Hz), Angle Snapping, Debounce (0–10 ms); Lift-off nur Anzeige
-- **Beleuchtung**: Effekt (Fully Lit, Blinking, Breathing, Heartbeat, Photon FX, Colorwave),
-  Geschwindigkeit, Helligkeit, Farbe je LED-Gruppe, LED-Timeout
-- **Tasten**: 15 Tasten × 2 Ebenen (normal / Easy-Shift): Maus-, DPI-, Profil-, Multimedia- und
-  Navigationsfunktionen, Tastatur-Shortcuts mit Modifiern, Easy-Aim
-- **Sicherheit**: Änderungen werden gesammelt und vor dem Schreiben als Diff angezeigt; vor jedem
-  Write wird gesichert, danach zurückgelesen und bei Abweichung automatisch wiederhergestellt
-- Backup/Restore aller Profile, Zurücksetzen auf Werkseinstellungen, Demo-Modus ohne Maus
+## Features
 
-Noch nicht unterstützt: Makro-Editor (Makros werden angezeigt und bleiben erhalten), Lift-off-Kalibrierung,
-AIMO (Software-Beleuchtung), Host-Funktionen wie „Programm öffnen“ (führt unter Windows Swarm aus).
+- **Profiles**: 5 profiles, select the active one, profile color
+- **DPI**: 5 stages (50–19000 in steps of 50), enable/disable stages, active stage
+- **Sensor**: polling rate (125–1000 Hz), angle snapping, debounce (0–10 ms); lift-off is read-only
+- **Lighting**: effect (Fully Lit, Blinking, Breathing, Heartbeat, Photon FX, Colorwave), speed,
+  brightness, color per LED group, LED timeout
+- **Buttons**: 15 buttons × 2 layers (normal / Easy-Shift): mouse, DPI, profile, media and navigation
+  functions, keyboard shortcuts with modifiers, Easy-Aim
+- **Safety**: changes are collected and shown as a diff before writing; every write is backed up first,
+  read back afterwards and restored automatically if the result differs
+- Backup/restore of all profiles, reset to factory defaults, demo mode without a mouse
+
+Not supported yet: macro editor (existing macros are shown and preserved), lift-off calibration,
+AIMO (software-driven lighting), host functions such as "open program" (Swarm runs those on Windows).
+
+The user interface is currently in German.
 
 ## Installation
 
-Voraussetzungen: Linux, Python ≥ 3.10, für die Oberfläche PySide6
-(Arch: `pacman -S pyside6`, sonst `pip install PySide6`).
+Requirements: Linux, Python ≥ 3.10, PySide6 for the GUI
+(Arch: `pacman -S pyside6`, otherwise `pip install PySide6`).
 
 ```sh
 git clone <repo-url> konexp
 cd konexp
 ```
 
-Zugriff auf die Maus ohne root (einmalig):
+Allow access to the mouse without root (once):
 
 ```sh
 sudo cp udev/70-kone-xp.rules /etc/udev/rules.d/
@@ -40,44 +44,44 @@ sudo udevadm control --reload
 sudo udevadm trigger
 ```
 
-Optional als Paket installieren (stellt `konexp` und `konexp-gui` bereit):
+Optionally install as a package (provides `konexp` and `konexp-gui`):
 
 ```sh
 pip install --user '.[gui]'
 ```
 
-## Benutzung
+## Usage
 
-Oberfläche (im Repo-Verzeichnis):
-
-```sh
-python3 -m konexp.gui          # mit Maus
-python3 -m konexp.gui --demo   # ohne Maus, schreibt nichts
-```
-
-Kommandozeile:
+GUI (from the repository directory):
 
 ```sh
-python3 -m konexp status                 # alle Profile anzeigen
-python3 -m konexp profile 2              # Profil 3 aktivieren (Index 0–4)
-python3 -m konexp dpi 2 4 3200           # Profil 3, Stufe 5 auf 3200 DPI
-python3 -m konexp dpi-active 2 4         # Profil 3: Stufe 5 aktiv
-python3 -m konexp restore <backup.bin>   # gesicherten Report zurückschreiben
+python3 -m konexp.gui          # with the mouse
+python3 -m konexp.gui --demo   # without a mouse, writes nothing
 ```
 
-Backups landen in `~/.local/share/konexp/backup/`.
+Command line:
 
-## Sicherheit
+```sh
+python3 -m konexp status                 # show all profiles
+python3 -m konexp profile 2              # activate profile 3 (index 0–4)
+python3 -m konexp dpi 2 4 3200           # profile 3, stage 5 to 3200 DPI
+python3 -m konexp dpi-active 2 4         # profile 3: make stage 5 active
+python3 -m konexp restore <backup.bin>   # write a saved report back
+```
 
-`konexp` schreibt nur die Reports, die auch Swarm im Normalbetrieb schreibt. Firmware-Update,
-Werksreset per Gerätebefehl (`0x09`) und von Swarm ungenutzte Reports sind gesperrt.
-Getestet mit Firmware 1.09. Benutzung auf eigenes Risiko.
+Backups are stored in `~/.local/share/konexp/backup/`.
 
-## Protokoll
+## Safety
 
-Das Konfigurationsprotokoll ist in [docs/PROTOCOL.md](docs/PROTOCOL.md) beschrieben. Es wurde zur
-Herstellung von Interoperabilität (§ 69e UrhG / Art. 6 RL 2009/24/EG) aus ROCCAT Swarm und Messungen an
-der Maus ermittelt. Dieses Repository enthält keinen Code und keine Dateien des Herstellers.
+`konexp` only writes the reports that Swarm writes during normal use. Firmware updates, the device
+factory-reset command (`0x09`) and reports Swarm never uses are blocked.
+Tested with firmware 1.09. Use at your own risk.
+
+## Protocol
+
+The configuration protocol is documented in [docs/PROTOCOL.md](docs/PROTOCOL.md) (German). It was
+determined for the purpose of interoperability (Art. 6 Directive 2009/24/EC, § 69e UrhG) by analysing
+ROCCAT Swarm and measuring a real mouse. This repository contains no code or files from the manufacturer.
 
 ## Tests
 
@@ -85,11 +89,11 @@ der Maus ermittelt. Dieses Repository enthält keinen Code und keine Dateien des
 python3 -m pytest
 ```
 
-Die Tests laufen ohne Maus (Demo-Backend mit Werksdaten).
+The tests run without a mouse (demo backend with factory data).
 
-## Lizenz
+## License
 
-GPL-3.0-or-later, siehe [LICENSE](LICENSE).
+GPL-3.0-or-later, see [LICENSE](LICENSE).
 
-ROCCAT, Kone, Swarm, AIMO und Easy-Shift sind Marken der jeweiligen Inhaber. Dieses Projekt steht in keiner
-Verbindung zu ROCCAT oder Turtle Beach.
+ROCCAT, Kone, Swarm, AIMO and Easy-Shift are trademarks of their respective owners. This project is not
+affiliated with ROCCAT or Turtle Beach.
