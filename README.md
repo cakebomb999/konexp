@@ -30,8 +30,7 @@ Translations live in `konexp/locale/*.po` (gettext); after changing texts run `p
 
 ## Installation
 
-Requirements: Linux, Python ≥ 3.10, PySide6 for the GUI
-(Arch: `pacman -S pyside6`, otherwise `pip install PySide6`).
+Requirements: Linux, Python ≥ 3.10.
 
 ```sh
 git clone https://github.com/cakebomb999/konexp.git
@@ -46,13 +45,21 @@ sudo udevadm control --reload
 sudo udevadm trigger
 ```
 
-Optionally install as a package (provides `konexp` and `konexp-gui`):
+Install with [uv](https://docs.astral.sh/uv/) (provides `konexp` and `konexp-gui`, PySide6 included):
 
 ```sh
-pip install --user '.[gui]'
+curl -LsSf https://astral.sh/uv/install.sh | sh   # only if uv is not installed yet
+uv tool install '.[gui]'
 ```
 
+Update after `git pull` with `uv tool install --reinstall '.[gui]'`, remove with `uv tool uninstall konexp`.
+
+Alternatively use the system PySide6 and run from the repository directory (see Usage):
+Arch `sudo pacman -S pyside6`, Debian ≥ 13 / Ubuntu ≥ 25.10 `sudo apt install python3-pyside6.qtwidgets`.
+
 ## Usage
+
+After `uv tool install`, `konexp-gui` and `konexp` replace `python3 -m konexp.gui` / `python3 -m konexp` below.
 
 GUI (from the repository directory):
 

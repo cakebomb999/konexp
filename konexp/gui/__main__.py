@@ -18,8 +18,11 @@ def main(argv=None):
     args = ap.parse_args(argv)
     set_language(args.lang)
 
-    from PySide6.QtCore import QTimer
-    from PySide6.QtWidgets import QApplication
+    try:
+        from PySide6.QtCore import QTimer
+        from PySide6.QtWidgets import QApplication
+    except ImportError:
+        sys.exit(tr('PySide6 fehlt (für die GUI nötig) – Installation siehe README'))
 
     from .main_window import MainWindow
     from .model import DemoBackend, DeviceBackend

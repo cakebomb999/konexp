@@ -61,39 +61,43 @@ msgstr "P{p}: active stage {stage} ({dpi} DPI)"
 msgid "{path} zurückgeschrieben"
 msgstr "{path} restored"
 
-#: konexp/defaults.py:40 konexp/defaults.py:50 konexp/device.py:181
+#: konexp/defaults.py:40 konexp/defaults.py:50 konexp/device.py:187
 msgid "Profil 0..4"
 msgstr "Profile 0..4"
 
-#: konexp/device.py:63
-msgid "Kone XP (Interface 3) nicht gefunden"
-msgstr "Kone XP (Interface 3) not found"
+#: konexp/device.py:69
+msgid "Kone XP (USB 1e7d:2c8b) nicht gefunden – angeschlossen? Prüfen mit: lsusb"
+msgstr "Kone XP (USB 1e7d:2c8b) not found – connected? Check with: lsusb"
 
-#: konexp/device.py:114
+#: konexp/device.py:120
 msgid "Timeout: Gerät bleibt busy"
 msgstr "Timeout: device remains busy"
 
-#: konexp/device.py:184
+#: konexp/device.py:190
 msgid "Profilwechsel nicht übernommen"
 msgstr "Profile switch not applied"
 
-#: konexp/device.py:111
+#: konexp/device.py:68
+msgid "Kone XP gefunden, aber nicht Interface 3: {nodes}"
+msgstr "Kone XP found, but not interface 3: {nodes}"
+
+#: konexp/device.py:117
 msgid "Gerät meldet Fehler (Ack 0x02)"
 msgstr "Device reports error (Ack 0x02)"
 
-#: konexp/device.py:96 konexp/gui/model.py:566
+#: konexp/device.py:102 konexp/gui/model.py:566
 msgid "Report 0x{rid:02x} ist gesperrt"
 msgstr "Report 0x{rid:02x} is locked"
 
-#: konexp/device.py:98
+#: konexp/device.py:104
 msgid "Report 0x{rid:02x}: Länge {got} != {want}"
 msgstr "Report 0x{rid:02x}: length {got} != {want}"
 
-#: konexp/device.py:176
+#: konexp/device.py:182
 msgid "Verify fehlgeschlagen für 0x{rid:02x}, Backup zurückgeschrieben"
 msgstr "Verify failed for 0x{rid:02x}, backup restored"
 
-#: konexp/device.py:72
+#: konexp/device.py:78
 msgid "Kein Zugriff auf {node} – udev-Regel installiert? ({err})"
 msgstr "No access to {node} — udev rule installed? ({err})"
 
@@ -416,6 +420,10 @@ msgstr "save screenshot before exit (with --quit-after)"
 #: konexp/gui/__main__.py:17
 msgid "Sprache der Oberfläche (Standard: Einstellung, sonst Englisch)"
 msgstr "UI language (default: saved setting, otherwise English)"
+
+#: konexp/gui/__main__.py:25
+msgid "PySide6 fehlt (für die GUI nötig) – Installation siehe README"
+msgstr "PySide6 missing (required for the GUI) – see README for installation"
 
 #: konexp/gui/dialogs.py:17
 msgid "Änderungen übernehmen"

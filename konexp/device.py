@@ -55,12 +55,18 @@ def checksum_ok(buf):
 
 
 def find_node():
+    seen = []
     for d in sorted(glob.glob('/sys/class/hidraw/hidraw*')):
         ue = open(f'{d}/device/uevent').read()
+        if f'{VID:08X}:{PID:08X}' not in ue:
+            continue
         phys = next((l for l in ue.splitlines() if l.startswith('HID_PHYS=')), '')
-        if f'{VID:08X}:{PID:08X}' in ue and phys.endswith('/input3'):
+        if phys.endswith('/input3'):
             return '/dev/' + os.path.basename(d)
-    raise KoneXPError(tr('Kone XP (Interface 3) nicht gefunden'))
+        seen.append(f'{os.path.basename(d)} ({phys[9:] or "?"})')
+    if seen:
+        raise KoneXPError(tr('Kone XP gefunden, aber nicht Interface 3: {nodes}').format(nodes=', '.join(seen)))
+    raise KoneXPError(tr('Kone XP (USB 1e7d:2c8b) nicht gefunden – angeschlossen? Prüfen mit: lsusb'))
 
 
 class KoneXP:

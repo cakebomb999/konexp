@@ -30,8 +30,7 @@ oder *View → Sprache / Language* (wirkt nach Neustart).
 
 ## Installation
 
-Voraussetzungen: Linux, Python ≥ 3.10, für die Oberfläche PySide6
-(Arch: `pacman -S pyside6`, sonst `pip install PySide6`).
+Voraussetzungen: Linux, Python ≥ 3.10.
 
 ```sh
 git clone https://github.com/cakebomb999/konexp.git
@@ -46,13 +45,21 @@ sudo udevadm control --reload
 sudo udevadm trigger
 ```
 
-Optional als Paket installieren (stellt `konexp` und `konexp-gui` bereit):
+Installation mit [uv](https://docs.astral.sh/uv/) (stellt `konexp` und `konexp-gui` bereit, inkl. PySide6):
 
 ```sh
-pip install --user '.[gui]'
+curl -LsSf https://astral.sh/uv/install.sh | sh   # nur falls uv noch fehlt
+uv tool install '.[gui]'
 ```
 
+Aktualisieren nach `git pull` mit `uv tool install --reinstall '.[gui]'`, entfernen mit `uv tool uninstall konexp`.
+
+Alternativ mit System-PySide6 direkt aus dem Repo-Verzeichnis starten (siehe Benutzung):
+Arch `sudo pacman -S pyside6`, Debian ≥ 13 / Ubuntu ≥ 25.10 `sudo apt install python3-pyside6.qtwidgets`.
+
 ## Benutzung
+
+Nach `uv tool install` ersetzen `konexp-gui` und `konexp` die Aufrufe `python3 -m konexp.gui` / `python3 -m konexp` unten.
 
 Oberfläche (im Repo-Verzeichnis):
 
