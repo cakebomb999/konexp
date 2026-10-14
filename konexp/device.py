@@ -142,12 +142,16 @@ class KoneXP:
         fcntl.ioctl(self.fd, _ioc(3, 0x07, n), buf)  # HIDIOCGFEATURE
         return bytes(buf)
 
-    def _set(self, data):
+    def _check(self, data):
+        """Darf `data` geschrieben werden? Nur Prüfung, kein Gerätezugriff."""
         if data[0] not in WRITABLE:
             raise KoneXPError(tr('Report 0x{rid:02x} ist gesperrt').format(rid=data[0]))
         if len(data) != SIZES[data[0]]:
             raise KoneXPError(tr('Report 0x{rid:02x}: Länge {got} != {want}').format(
                 rid=data[0], got=len(data), want=SIZES[data[0]]))
+
+    def _set(self, data):
+        self._check(data)
         buf = bytearray(data)
         fcntl.ioctl(self.fd, _ioc(3, 0x06, len(buf)), buf)  # HIDIOCSFEATURE
         self._wait_ack()
@@ -214,10 +218,24 @@ class KoneXP:
         rid = data[0]
         if rid in CHECKSUMMED:
             data = with_checksum(data)
+        self._check(data)
         before = self.read_back(data) if verify else None
         if before is not None:
             self._backup(before)
-        self._set(data)
+        try:
+            self._set(data)
+        except (OSError, KoneXPError) as e:
+            # Abbruch mitten im Schreiben (Air: Block in mehreren Stücken) -> Backup zurück, falls möglich
+            if before is None:
+                raise
+            try:
+                self._set(before)
+            except (OSError, KoneXPError):
+                raise KoneXPError(tr('Schreiben von 0x{rid:02x} abgebrochen ({err}); Backup ließ sich nicht '
+                                     'zurückschreiben, Datei liegt in {path}').format(
+                                         rid=rid, err=e, path=self.backup_dir)) from e
+            raise KoneXPError(tr('Schreiben von 0x{rid:02x} abgebrochen ({err}), Backup zurückgeschrieben').format(
+                rid=rid, err=e)) from e
         if not verify:
             return None
         after = self.read_back(data)
@@ -254,7 +272,12 @@ class KoneXPAir(KoneXP):
         return buf
 
     def command(self, cmd, data, ack=True):
-        """Schreib-Frame senden. Mit ack: Status 0x44 lesen, Byte 0 == 1 heißt angenommen."""
+        """Schreib-Frame senden (nur wenn Schreiben freigeschaltet ist)."""
+        self._check_writable()
+        self._send(cmd, data, ack)
+
+    def _send(self, cmd, data, ack=True):
+        """Schreib-Frame ohne Nur-Lesen-Prüfung. Mit ack: Status 0x44 lesen, Byte 0 == 1 heißt angenommen."""
         if cmd not in AIR_WRITABLE:
             raise KoneXPError(tr('Kommando 0x{cmd:02x} ist gesperrt').format(cmd=cmd))
         fcntl.ioctl(self.fd, _ioc(3, 0x06, AIR_FRAME), self._frame(cmd, AIR_OP_WRITE, data))
@@ -277,7 +300,7 @@ class KoneXPAir(KoneXP):
         """Block in 25-B-Stücken: je Stück Kopf [index, sub] schreiben (ändert nichts), dann lesen."""
         out = b''
         for idx in range(-(-size // AIR_CHUNK)):
-            self.command(cmd, bytes([idx, sub]), ack=False)
+            self._send(cmd, bytes([idx, sub]), ack=False)  # Kopf wählt nur das Stück aus
             out += self.query(cmd, min(AIR_CHUNK, size - len(out)))
         return out
 
@@ -329,15 +352,19 @@ class KoneXPAir(KoneXP):
             raise KoneXPError(tr('Kone XP Air: nur Lesen. Schreiben ist an echter Hardware noch nicht bestätigt '
                                  '(freischalten mit KONEXP_AIR_WRITE=1).'))
 
-    def _set(self, data):
+    def _check(self, data):
         self._check_writable()
         rid = data[0]
-        if rid in AIR_BLOCKS and len(data) == AIR_BLOCKS[rid][1]:
-            self.write_block(AIR_BLOCKS[rid][0], data[2], data)
-        elif rid == 0x11 and len(data) == AIR_DEBOUNCE_SIZE:
-            self.command(0x43, data)
-        else:
+        if not (rid in AIR_BLOCKS and len(data) == AIR_BLOCKS[rid][1]
+                or rid == 0x11 and len(data) == AIR_DEBOUNCE_SIZE):
             raise KoneXPError(tr('Report 0x{rid:02x} ist gesperrt').format(rid=rid))
+
+    def _set(self, data):
+        self._check(data)
+        if data[0] in AIR_BLOCKS:
+            self.write_block(AIR_BLOCKS[data[0]][0], data[2], data)
+        else:
+            self.command(0x43, data)
 
     def set_active_profile(self, profile):
         self._check_writable()

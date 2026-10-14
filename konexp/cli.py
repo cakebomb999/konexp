@@ -104,7 +104,8 @@ def dump(dev, path):
     step('select_active', lambda: dev.select(dev.active_profile(), 0x80))  # wie nach status
     with open(path, 'w') as f:
         json.dump(out, f, indent=1)
-    errors = [k for k, v in out.items() if isinstance(v, str) and v.startswith('ERROR')]
+    errors = [k for k, v in out.items() if isinstance(v, str) and v.startswith('ERROR')
+              or isinstance(v, dict) and not (v.get('header_ok', True) and v.get('checksum_ok', True))]
     print(tr('{path} gespeichert, {n} Fehler').format(path=path, n=len(errors)) + (f': {", ".join(errors)}' if errors else ''))
     return 1 if errors else 0
 

@@ -128,6 +128,7 @@ class AirGuiTest(GuiTest):
         w.on_changed()
         self.assertTrue(w.config.dirty)
         self.assertFalse(w.btn_apply.isEnabled())
+        w.select_profile(0)  # nicht aktives Profil: Button wäre ohne Nur-Lesen-Sperre aktiv
         self.assertFalse(w.btn_active.isEnabled())
 
     def test_set_active_and_poll(self):

@@ -19,6 +19,7 @@ class FakeAir:
         self.ptr = {}
         self.resp = None
         self.sets = []
+        self.fail_data = None  # n: der n-te Daten-Frame (ab 1) wird verworfen und nicht bestätigt
 
     def ioctl(self, fd, req, buf):
         nr = req & 0xff
@@ -28,6 +29,12 @@ class FakeAir:
         else:               # GET
             buf[:] = self.resp
         return 0
+
+    def _fail(self):
+        if self.fail_data is None:
+            return False
+        self.fail_data -= 1
+        return self.fail_data == 0
 
     def _set(self, buf):
         tgt, cmd, op, n = buf[1:5]
@@ -47,6 +54,8 @@ class FakeAir:
         if cmd in (0x46, 0x47):
             if n == 2:
                 self.ptr[cmd] = (data[0], data[1])
+            elif self._fail():
+                ok = 0
             else:
                 idx, p = self.ptr[cmd]
                 self.blocks[(cmd, p)][idx * AIR_CHUNK:idx * AIR_CHUNK + n] = data
@@ -97,7 +106,11 @@ class TransportTest(unittest.TestCase):
             dev.write(s.to_bytes())
         with self.assertRaises(KoneXPError):
             dev.set_active_profile(0)
+        with self.assertRaises(KoneXPError):
+            dev.command(0x45, bytes([0, 5]))
         self.assertFalse([f for f in self.fake.sets if f[4] > 2], 'keine Daten-Frames im Nur-Lesen-Modus')
+        self.assertFalse([f for f in self.fake.sets if f[2] == 0x45])
+        self.assertEqual(dev.read_settings(1), defaults.air_settings(1))  # Lesen geht weiter
 
     def test_write_and_verify(self):
         dev = air(self.fake, readonly=False)
@@ -115,6 +128,18 @@ class TransportTest(unittest.TestCase):
         self.assertEqual(dev.active_profile(), 4)
         with self.assertRaises(KoneXPError):
             dev.set_active_profile(5)
+
+    def test_aborted_write_restores_backup(self):
+        dev = air(self.fake, readonly=False)
+        orig = dev.read_settings(3)
+        s = Settings(orig)
+        for i in range(7):
+            s.set_led(i, 1, 2, 3)
+        self.fake.fail_data = 3  # Stück 3 von 4 schlägt fehl, Stücke 1–2 sind schon geschrieben
+        with self.assertRaises(KoneXPError) as cm:
+            dev.write(s.to_bytes())
+        self.assertIn('Backup zurückgeschrieben', str(cm.exception))
+        self.assertEqual(bytes(self.fake.blocks[(0x46, 3)]), orig)
 
     def test_blocked_commands(self):
         dev = air(self.fake, readonly=False)

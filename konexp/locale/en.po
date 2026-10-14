@@ -35,7 +35,7 @@ msgstr "read-only"
 msgid "{mark}P{p}: DPI {dpis} | {hz} Hz | Angle Snapping {snap} | Effekt {effect}"
 msgstr "{mark}P{p}: DPI {dpis} | {hz} Hz | Angle Snapping {snap} | Effect {effect}"
 
-#: konexp/cli.py:108
+#: konexp/cli.py:109
 msgid "{path} gespeichert, {n} Fehler"
 msgstr "{path} saved, {n} error(s)"
 
@@ -51,27 +51,27 @@ msgstr "off"
 msgid "      {name:<18} {func:<28} Easy-Shift: {shift}"
 msgstr "      {name:<18} {func:<28} Easy-Shift: {shift}"
 
-#: konexp/cli.py:145
+#: konexp/cli.py:146
 msgid "Fehler: {err}"
 msgstr "Error: {err}"
 
-#: konexp/cli.py:124
+#: konexp/cli.py:125
 msgid "Profil {num} aktiv"
 msgstr "Profile {num} active"
 
-#: konexp/cli.py:130
+#: konexp/cli.py:131
 msgid "P{p} Stufe {stage}: {value} DPI"
 msgstr "P{p} stage {stage}: {value} DPI"
 
-#: konexp/cli.py:136
+#: konexp/cli.py:137
 msgid "P{p}: aktive Stufe {stage} ({dpi} DPI)"
 msgstr "P{p}: active stage {stage} ({dpi} DPI)"
 
-#: konexp/cli.py:140
+#: konexp/cli.py:141
 msgid "{path} zurückgeschrieben"
 msgstr "{path} restored"
 
-#: konexp/defaults.py:40 konexp/defaults.py:50 konexp/defaults.py:85 konexp/device.py:232
+#: konexp/defaults.py:40 konexp/defaults.py:50 konexp/defaults.py:85 konexp/device.py:250
 msgid "Profil 0..4"
 msgstr "Profile 0..4"
 
@@ -79,19 +79,19 @@ msgstr "Profile 0..4"
 msgid "Kone XP / Kone XP Air (USB 1e7d:2c8b, 2cb2, 2cb6) nicht gefunden – angeschlossen? Prüfen mit: lsusb"
 msgstr "Kone XP / Kone XP Air (USB 1e7d:2c8b, 2cb2, 2cb6) not found – connected? Check with: lsusb"
 
-#: konexp/device.py:165
+#: konexp/device.py:169
 msgid "Timeout: Gerät bleibt busy"
 msgstr "Timeout: device remains busy"
 
-#: konexp/device.py:320
+#: konexp/device.py:343
 msgid "Makros der Kone XP Air werden noch nicht unterstützt"
 msgstr "Kone XP Air macros are not supported yet"
 
-#: konexp/device.py:235 konexp/device.py:349
+#: konexp/device.py:253 konexp/device.py:376
 msgid "Profilwechsel nicht übernommen"
 msgstr "Profile switch not applied"
 
-#: konexp/device.py:329
+#: konexp/device.py:352
 msgid "Kone XP Air: nur Lesen. Schreiben ist an echter Hardware noch nicht bestätigt (freischalten mit KONEXP_AIR_WRITE=1)."
 msgstr "Kone XP Air: read-only. Writing has not been confirmed on real hardware yet (unlock with KONEXP_AIR_WRITE=1)."
 
@@ -99,45 +99,53 @@ msgstr "Kone XP Air: read-only. Writing has not been confirmed on real hardware 
 msgid "Maus gefunden, aber nicht das Konfigurations-Interface: {nodes}"
 msgstr "Mouse found, but not its configuration interface: {nodes}"
 
-#: konexp/device.py:162
+#: konexp/device.py:166
 msgid "Gerät meldet Fehler (Ack 0x02)"
 msgstr "Device reports error (Ack 0x02)"
 
-#: konexp/device.py:304
+#: konexp/device.py:327
 msgid "Report 0x{rid:02x} gibt es bei der Kone XP Air nicht"
 msgstr "The Kone XP Air has no report 0x{rid:02x}"
 
-#: konexp/device.py:147 konexp/device.py:340 konexp/gui/model.py:631
+#: konexp/device.py:148 konexp/device.py:360 konexp/gui/model.py:631
 msgid "Report 0x{rid:02x} ist gesperrt"
 msgstr "Report 0x{rid:02x} is locked"
 
-#: konexp/device.py:149
+#: konexp/device.py:150
 msgid "Report 0x{rid:02x}: Länge {got} != {want}"
 msgstr "Report 0x{rid:02x}: length {got} != {want}"
 
-#: konexp/device.py:227
+#: konexp/device.py:245
 msgid "Verify fehlgeschlagen für 0x{rid:02x}, Backup zurückgeschrieben"
 msgstr "Verify failed for 0x{rid:02x}, backup restored"
 
-#: konexp/device.py:259 konexp/device.py:268
+#: konexp/device.py:282 konexp/device.py:291
 msgid "Kommando 0x{cmd:02x} ist gesperrt"
 msgstr "Command 0x{cmd:02x} is blocked"
 
-#: konexp/device.py:263
+#: konexp/device.py:286
 msgid "Gerät bestätigt Kommando 0x{cmd:02x} nicht"
 msgstr "Device did not acknowledge command 0x{cmd:02x}"
 
-#: konexp/device.py:293
+#: konexp/device.py:316
 msgid "Ungültige Antwort auf 0x{cmd:02x} – Maus eingeschaltet und mit dem Dongle verbunden?"
 msgstr "Invalid response to 0x{cmd:02x} – is the mouse switched on and connected to the dongle?"
 
-#: konexp/device.py:346
+#: konexp/device.py:373
 msgid "Profil 0..{n}"
 msgstr "Profile 0..{n}"
 
 #: konexp/device.py:123
 msgid "Kein Zugriff auf {node} – udev-Regel installiert? ({err})"
 msgstr "No access to {node} — udev rule installed? ({err})"
+
+#: konexp/device.py:237
+msgid "Schreiben von 0x{rid:02x} abgebrochen ({err}), Backup zurückgeschrieben"
+msgstr "Writing 0x{rid:02x} aborted ({err}), backup written back"
+
+#: konexp/device.py:234
+msgid "Schreiben von 0x{rid:02x} abgebrochen ({err}); Backup ließ sich nicht zurückschreiben, Datei liegt in {path}"
+msgstr "Writing 0x{rid:02x} aborted ({err}); the backup could not be written back, the file is in {path}"
 
 #: konexp/functions.py:10
 msgid "Deaktiviert"
