@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QComboBox, QDialog, QHBoxLayou
                                QTableWidget, QTableWidgetItem, QVBoxLayout)
 
 from ..i18n import tr
-from ..reports import BUTTONS, N_BUTTONS
+from ..reports import AIR_BUTTON_ORDER, N_BUTTONS, button_names
 from .dialogs import EasyAimDialog, ShortcutDialog
 from .model import EASY_SHIFT_KEY, R07, easy_aim_entry, entry_text, function_catalog, is_host, shortcut_entry
 from .tab_base import TabBase
@@ -75,7 +75,7 @@ class ButtonsTab(TabBase):
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.combos = {}
         for k in range(N_BUTTONS):
-            self.table.setItem(k, 0, QTableWidgetItem(BUTTONS[k]))
+            self.table.setItem(k, 0, QTableWidgetItem())
             for col, shift in ((1, False), (2, True)):
                 c = FunctionCombo()
                 c.activated.connect(lambda idx, k=k, shift=shift: self._on_activated(k, shift, idx))
@@ -102,6 +102,10 @@ class ButtonsTab(TabBase):
 
     def _refresh(self):
         b = self.config.buttons[self.profile]
+        air = self.config.air
+        for k, name in enumerate(button_names(air)):
+            self.table.item(k, 0).setText(name)
+        self.map.set_order(AIR_BUTTON_ORDER if air else range(N_BUTTONS))
         dirty = self.config.changed_offsets((R07, self.profile))
         for (k, shift), combo in self.combos.items():
             combo.set_entry(b.entry(k, shift))

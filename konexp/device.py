@@ -1,8 +1,9 @@
-"""HID-Transport für die ROCCAT Kone XP (Interface 3, Feature-Reports via hidraw).
+"""HID-Transport für die ROCCAT Kone XP (Interface 3) und Kone XP Air (Interface 2), Feature-Reports via hidraw.
 
-Protokoll: docs/PROTOCOL.md.
+Protokoll: docs/PROTOCOL.md, docs/PROTOCOL-XP-AIR.md.
 Jeder Write läuft über `KoneXP.write()`: Sperrliste prüfen, Ack pollen, zurücklesen,
-bei Abweichung Backup wiederherstellen.
+bei Abweichung Backup wiederherstellen. `KoneXPAir` bildet dieselbe Schnittstelle auf die
+Kommandos der Air ab (gleiche Datenblöcke, andere Hülle).
 """
 import fcntl
 import glob
@@ -31,6 +32,24 @@ ACK_DELAY = 0.15      # Swarm wartet 150 ms vor jedem Ack-Poll
 ACK_TRIES = 100
 ACK_OK, ACK_ERR, ACK_BUSY = 0x01, 0x02, 0x03
 
+# --- Kone XP Air (docs/PROTOCOL-XP-AIR.md) ---------------------------------
+# 0x2CB2 Maus per Kabel, 0x2CB6 2,4-GHz-Dongle. Dock (0x2CB8) spricht ein anderes Protokoll.
+AIR_WIRED, AIR_DONGLE = 0x2CB2, 0x2CB6
+AIR_PIDS = (AIR_WIRED, AIR_DONGLE)
+AIR_USAGE_PAGE = bytes([0x06, 0x03, 0xff])   # Report-Descriptor-Item Usage Page 0xFF03
+AIR_FRAME, AIR_CHUNK = 30, 25                # Feature-Report 0x06: [06 ziel cmd op len daten…]
+AIR_OP_WRITE, AIR_OP_READ = 0x06, 0x07
+AIR_WRITE_DELAY, AIR_READ_DELAY = 0.08, 0.09  # wie Swarm
+# Report-ID der Kone XP -> (Kommando, Blocklänge). Die Air speichert dieselben Report-Formate.
+AIR_BLOCKS = {0x06: (0x46, 78), 0x07: (0x47, 125)}
+AIR_DEBOUNCE_SIZE = 19
+# Nur diese Kommandos sendet konexp überhaupt. Nicht dabei, weil riskant: 0x49 (u. a. Werksreset),
+# 0x01 (Pairing), 0x12 (Bootloader), 0x31–0x34 (Firmware-Update), 0x4b (Geräte-IDs).
+AIR_READABLE = {0x13, 0x25, 0x35, 0x43, 0x44, 0x45, 0x46, 0x47, 0x4f}
+AIR_WRITABLE = {0x43, 0x45, 0x46, 0x47}
+# Schreiben ist für die Air noch nicht an echter Hardware bestätigt. Freischalten: KONEXP_AIR_WRITE=1
+AIR_WRITE = os.environ.get('KONEXP_AIR_WRITE') == '1'
+
 
 class KoneXPError(Exception):
     pass
@@ -54,24 +73,50 @@ def checksum_ok(buf):
     return checksum(buf) == int.from_bytes(buf[-2:], 'little')
 
 
+def _pid(sysdir):
+    ue = open(f'{sysdir}/device/uevent').read()
+    return next((p for p in (PID, *AIR_PIDS) if f'{VID:08X}:{p:08X}' in ue), None), ue
+
+
 def find_node():
+    """(node, pid) des Konfigurations-Interfaces: Kone XP Interface 3, Kone XP Air Usage Page 0xFF03."""
     seen = []
     for d in sorted(glob.glob('/sys/class/hidraw/hidraw*')):
-        ue = open(f'{d}/device/uevent').read()
-        if f'{VID:08X}:{PID:08X}' not in ue:
+        pid, ue = _pid(d)
+        if pid is None:
             continue
         phys = next((l for l in ue.splitlines() if l.startswith('HID_PHYS=')), '')
-        if phys.endswith('/input3'):
-            return '/dev/' + os.path.basename(d)
-        seen.append(f'{os.path.basename(d)} ({phys[9:] or "?"})')
+        name = os.path.basename(d)
+        if pid == PID and phys.endswith('/input3'):
+            return '/dev/' + name, pid
+        if pid in AIR_PIDS and AIR_USAGE_PAGE in open(f'{d}/device/report_descriptor', 'rb').read():
+            return '/dev/' + name, pid
+        seen.append(f'{name} ({phys[9:] or "?"})')
     if seen:
-        raise KoneXPError(tr('Kone XP gefunden, aber nicht Interface 3: {nodes}').format(nodes=', '.join(seen)))
-    raise KoneXPError(tr('Kone XP (USB 1e7d:2c8b) nicht gefunden – angeschlossen? Prüfen mit: lsusb'))
+        raise KoneXPError(tr('Maus gefunden, aber nicht das Konfigurations-Interface: {nodes}').format(
+            nodes=', '.join(seen)))
+    raise KoneXPError(tr('Kone XP / Kone XP Air (USB 1e7d:2c8b, 2cb2, 2cb6) nicht gefunden – angeschlossen? '
+                         'Prüfen mit: lsusb'))
+
+
+def open_device(node=None, backup_dir=None):
+    """Passende Geräteklasse für den Knoten (automatisch gesucht, wenn None)."""
+    if node is None:
+        node, pid = find_node()
+    else:
+        pid = _pid(f'/sys/class/hidraw/{os.path.basename(node)}')[0]
+    if pid in AIR_PIDS:
+        return KoneXPAir(node, backup_dir, pid)
+    return KoneXP(node, backup_dir)
 
 
 class KoneXP:
+    NAME = 'Kone XP'
+    pid = PID
+    readonly = False
+
     def __init__(self, node=None, backup_dir=None):
-        self.node = node or find_node()
+        self.node = node or find_node()[0]
         try:
             self.fd = os.open(self.node, os.O_RDWR)
         except PermissionError as e:
@@ -188,3 +233,126 @@ class KoneXP:
         self._set(bytes([0x05, 0x04, profile, 0x05]))
         if self.active_profile() != profile:
             raise KoneXPError(tr('Profilwechsel nicht übernommen'))
+
+
+class KoneXPAir(KoneXP):
+    """Kone XP Air per Kabel oder Dongle. Gleiche Schnittstelle wie KoneXP:
+    0x06/0x07 sind die Blöcke 0x46/0x47, 0x11 ist Debounce 0x43, 0x05 und 0x0f werden aus 0x45/0x4f gebildet."""
+    NAME = 'Kone XP Air'
+
+    def __init__(self, node=None, backup_dir=None, pid=AIR_WIRED):
+        super().__init__(node, backup_dir)
+        self.pid = pid
+        self.target = int(pid != AIR_WIRED)  # 1 = über den Dongle an die Maus
+        self.readonly = not AIR_WRITE
+        self.profile_count = 5
+
+    def _frame(self, cmd, op, data=b'', target=None):
+        buf = bytearray(AIR_FRAME)
+        buf[:5] = bytes([0x06, self.target if target is None else target, cmd, op, len(data)])
+        buf[5:5 + len(data)] = data
+        return buf
+
+    def command(self, cmd, data, ack=True):
+        """Schreib-Frame senden. Mit ack: Status 0x44 lesen, Byte 0 == 1 heißt angenommen."""
+        if cmd not in AIR_WRITABLE:
+            raise KoneXPError(tr('Kommando 0x{cmd:02x} ist gesperrt').format(cmd=cmd))
+        fcntl.ioctl(self.fd, _ioc(3, 0x06, AIR_FRAME), self._frame(cmd, AIR_OP_WRITE, data))
+        time.sleep(AIR_WRITE_DELAY)
+        if ack and self.query(0x44, 17)[0] != 1:
+            raise KoneXPError(tr('Gerät bestätigt Kommando 0x{cmd:02x} nicht').format(cmd=cmd))
+
+    def query(self, cmd, n, target=None, frame=False):
+        """Lese-Frame senden, Antwort holen, n Datenbytes ab Byte 5 (frame=True: ganze Antwort, Diagnose)."""
+        if cmd not in AIR_READABLE:
+            raise KoneXPError(tr('Kommando 0x{cmd:02x} ist gesperrt').format(cmd=cmd))
+        buf = self._frame(cmd, AIR_OP_READ, target=target)
+        time.sleep(AIR_READ_DELAY)
+        fcntl.ioctl(self.fd, _ioc(3, 0x06, AIR_FRAME), buf)
+        time.sleep(AIR_READ_DELAY)
+        fcntl.ioctl(self.fd, _ioc(3, 0x07, AIR_FRAME), buf)
+        return bytes(buf) if frame else bytes(buf[5:5 + n])
+
+    def read_block(self, cmd, sub, size):
+        """Block in 25-B-Stücken: je Stück Kopf [index, sub] schreiben (ändert nichts), dann lesen."""
+        out = b''
+        for idx in range(-(-size // AIR_CHUNK)):
+            self.command(cmd, bytes([idx, sub]), ack=False)
+            out += self.query(cmd, min(AIR_CHUNK, size - len(out)))
+        return out
+
+    def write_block(self, cmd, sub, data):
+        for idx in range(-(-len(data) // AIR_CHUNK)):
+            self.command(cmd, bytes([idx, sub]))
+            self.command(cmd, data[idx * AIR_CHUNK:(idx + 1) * AIR_CHUNK])
+
+    def _block(self, rid, profile):
+        cmd, size = AIR_BLOCKS[rid]
+        data = self.read_block(cmd, profile, size)
+        if data[:2] != bytes([rid, size]):  # Blöcke beginnen mit [Report-ID, Länge]
+            raise KoneXPError(tr('Ungültige Antwort auf 0x{cmd:02x} – Maus eingeschaltet und mit dem Dongle '
+                                 'verbunden?').format(cmd=cmd))
+        return data
+
+    def get(self, rid):
+        if rid == 0x05:  # Form der Kone XP: [05 04 profil 05]
+            return bytes([0x05, 0x04, self.active_profile(), 0x05])
+        if rid == 0x11:
+            return self.query(0x43, AIR_DEBOUNCE_SIZE)
+        if rid == 0x0f:  # DCU 0x4f [modus, x] in der Form der Kone XP: [0f 06 modus x 00 00]
+            return bytes([0x0f, 0x06, *self.query(0x4f, 2), 0, 0])
+        raise KoneXPError(tr('Report 0x{rid:02x} gibt es bei der Kone XP Air nicht').format(rid=rid))
+
+    def select(self, profile, req):
+        pass  # kein Select-Zustand; jeder Blockzugriff adressiert sein Profil selbst
+
+    def active_profile(self):
+        active, self.profile_count = self.query(0x45, 2)
+        return active
+
+    def read_settings(self, profile):
+        return self._block(0x06, profile)
+
+    def read_buttons(self, profile):
+        return self._block(0x07, profile)
+
+    def read_macro(self, profile, slot):
+        raise KoneXPError(tr('Makros der Kone XP Air werden noch nicht unterstützt'))
+
+    def read_back(self, data):
+        if data[0] in AIR_BLOCKS:
+            return self._block(data[0], data[2])
+        return self.get(data[0])
+
+    def _check_writable(self):
+        if self.readonly:
+            raise KoneXPError(tr('Kone XP Air: nur Lesen. Schreiben ist an echter Hardware noch nicht bestätigt '
+                                 '(freischalten mit KONEXP_AIR_WRITE=1).'))
+
+    def _set(self, data):
+        self._check_writable()
+        rid = data[0]
+        if rid in AIR_BLOCKS and len(data) == AIR_BLOCKS[rid][1]:
+            self.write_block(AIR_BLOCKS[rid][0], data[2], data)
+        elif rid == 0x11 and len(data) == AIR_DEBOUNCE_SIZE:
+            self.command(0x43, data)
+        else:
+            raise KoneXPError(tr('Report 0x{rid:02x} ist gesperrt').format(rid=rid))
+
+    def set_active_profile(self, profile):
+        self._check_writable()
+        count = self.profile_count
+        if not 0 <= profile < count:
+            raise KoneXPError(tr('Profil 0..{n}').format(n=count - 1))
+        self.command(0x45, bytes([profile, count]))
+        if self.active_profile() != profile:
+            raise KoneXPError(tr('Profilwechsel nicht übernommen'))
+
+    def firmware(self):
+        """Firmware-Versionen als Zahl wie in den Swarm-Dateinamen (Maus 51 = 0.051, Dongle 107 = 1.07)."""
+        b = self.query(0x35, 13)
+        out = {'mouse': ((b[1] * 10 + b[3]) * 10 + b[2]) * 10 + b[5]}
+        if self.pid == AIR_DONGLE:
+            a, c = self.query(0x13, 2, target=0)
+            out['dongle'] = a * 100 + c
+        return out

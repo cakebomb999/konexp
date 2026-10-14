@@ -1,11 +1,11 @@
-"""Tab Beleuchtung: Effekt, Speed, Helligkeit, LED-Timeout, 20 LED-Farben."""
+"""Tab Beleuchtung: Effekt, Speed, Helligkeit, LED-Timeout, LED-Farben (Kone XP 20 LEDs, Kone XP Air 7 Zonen)."""
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QColorDialog, QComboBox, QFormLayout, QGroupBox, QHBoxLayout, QLabel, QPushButton,
                                QSlider, QSpinBox, QVBoxLayout, QWidget)
 
 from ..i18n import tr
-from ..reports import EFFECTS, LED_COUNT, SLEEP_EFFECTS
-from .model import LED_GROUPS, R06, led_label
+from ..reports import SLEEP_EFFECTS
+from .model import LEDS_XP, R06, led_layout
 from .tab_base import TabBase
 from .widgets import LedGrid, LedImageView, argb_color
 
@@ -41,8 +41,6 @@ class LightTab(TabBase):
         eff = QGroupBox(tr('Effekt'))
         f = QFormLayout(eff)
         self.effect = QComboBox()
-        for code, name in EFFECTS.items():
-            self.effect.addItem(name, code)
         self.effect.currentIndexChanged.connect(self._on_effect)
         f.addRow(tr('Effekt:'), self.effect)
         self.aimo_warn = QLabel(AIMO_WARN)
@@ -69,18 +67,12 @@ class LightTab(TabBase):
 
         leds = QGroupBox(tr('LED-Farben (Klick auf LED = Farbe wählen)'))
         v = QVBoxLayout(leds)
+        self.leds = None
         self.grid = LedGrid()
-        self.grid.ledClicked.connect(
-            lambda i: self._pick([i], tr('LED {index}: {label}').format(index=i, label=led_label(i))))
+        self.grid.ledClicked.connect(self._pick_one)
         v.addWidget(self.grid, 1)
-        row = QHBoxLayout()
-        row.addWidget(QLabel(tr('Gruppe setzen:')))
-        for name, members in LED_GROUPS.items():
-            b = QPushButton(name)
-            b.clicked.connect(lambda _=False, m=members, n=name: self._pick(m, n))
-            row.addWidget(b)
-        row.addStretch(1)
-        v.addLayout(row)
+        self.group_row = QHBoxLayout()
+        v.addLayout(self.group_row)
         hint = QLabel(tr('Farbe inkl. Alpha (Intensität). Bei Colorwave/AIMO überschreibt der Effekt die Farben.'))
         hint.setStyleSheet('color: gray')
         v.addWidget(hint)
@@ -89,15 +81,39 @@ class LightTab(TabBase):
         self.image = None
         if LedImageView.available():
             self.image = LedImageView()
-            self.image.ledClicked.connect(
-                lambda i: self._pick([i], tr('LED {index}: {label}').format(index=i, label=led_label(i))))
+            self.image.ledClicked.connect(self._pick_one)
             lay.addWidget(self.image)
 
+    def _pick_one(self, i):
+        self._pick([i], tr('LED {index}: {label}').format(index=i, label=self.leds.labels[i]))
+
+    def _set_leds(self, leds):
+        """Effektliste, Gruppen-Buttons und Bildvorschau an das Modell anpassen (nur bei Wechsel)."""
+        if leds is self.leds:
+            return
+        self.leds = leds
+        self.effect.clear()
+        for code, name in self.settings.effects.items():
+            self.effect.addItem(name, code)
+        while self.group_row.count():
+            w = self.group_row.takeAt(0).widget()
+            if w:
+                w.deleteLater()
+        self.group_row.addWidget(QLabel(tr('Gruppe setzen:')))
+        for name, members in leds.groups.items():
+            b = QPushButton(name)
+            b.clicked.connect(lambda _=False, m=members, n=name: self._pick(m, n))
+            self.group_row.addWidget(b)
+        self.group_row.addStretch(1)
+        if self.image:
+            self.image.setVisible(leds is LEDS_XP)  # Plugin-Grafiken gibt es nur für die Kone XP
+
     def _colors(self):
-        return [self.settings.led(i) for i in range(LED_COUNT)]
+        return [self.settings.led(i) for i in range(self.settings.led_count)]
 
     def _refresh(self):
         s = self.settings
+        self._set_leds(led_layout(s))  # vor den Combos: baut die Effektliste des Modells
         self._set_combo(self.effect, s.effect)
         self.aimo_warn.setVisible(s.effect == AIMO or (s.sleep_effect == AIMO and s.led_timeout))
         self.speed.setValue(s.speed)
@@ -105,9 +121,9 @@ class LightTab(TabBase):
         self.timeout.setValue(s.led_timeout)
         self._set_combo(self.sleep, s.sleep_effect)
         self.sleep.setEnabled(s.led_timeout != 0)
-        changed = {(o - 0x24) // 6 for o in self.config.changed_offsets((R06, self.profile)) if 0x24 <= o < 0x9c}
+        changed = {s.led_index(o) for o in self.config.changed_offsets((R06, self.profile))} - {None}
         cols = self._colors()
-        self.grid.set_colors(cols, changed)
+        self.grid.set_colors(cols, changed, self.leds)
         if self.image:
             self.image.set_colors(cols)
 
@@ -120,7 +136,7 @@ class LightTab(TabBase):
         combo.setCurrentIndex(idx)
 
     def is_dirty(self):
-        return any(0x1e <= o < 0x9c for o in self.config.changed_offsets((R06, self.profile)))
+        return any(0x1e <= o < self.settings.led_end for o in self.config.changed_offsets((R06, self.profile)))
 
     def _pick(self, leds, title):
         if self.config is None:
@@ -138,7 +154,7 @@ class LightTab(TabBase):
         if self._loading or idx < 0:
             return
         code = self.effect.itemData(idx)
-        if code in EFFECTS:
+        if code in self.settings.effects:
             self.settings.effect = code
         self.refresh()
         self.edit()

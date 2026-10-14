@@ -1,7 +1,7 @@
 """Datenmodell der GUI: Laden, Ändern, Diff, Schreibplan, Backup – ohne Qt, ohne Maus testbar.
 
 Geräte-Zugriff läuft ausschließlich über ein Backend:
-  DeviceBackend – echte Maus über konexp.device.KoneXP (write() mit Backup/Verify/Auto-Restore)
+  DeviceBackend – echte Maus über konexp.device (KoneXP / KoneXPAir; write() mit Backup/Verify/Auto-Restore)
   DemoBackend   – Werksdaten + synthetisches P3, Writes nur im Speicher
 """
 import datetime
@@ -12,10 +12,10 @@ import time
 from dataclasses import dataclass
 
 from .. import defaults
-from ..device import SEL_SETTINGS, KoneXP, KoneXPError, checksum_ok
+from ..device import AIR_WRITE, SEL_SETTINGS, KoneXPError, checksum_ok, open_device
 from ..i18n import tr
 from ..functions import MACRO_MODES, NAMES, describe
-from ..reports import (BUTTONS, DPI_STEP, EFFECTS, LED_COUNT, N_BUTTONS, POLLING_HZ, SLEEP_EFFECTS,
+from ..reports import (BUTTONS, BUTTONS_AIR, DPI_STEP, EFFECTS, EFFECTS_AIR, LED_COUNT, N_BUTTONS, POLLING_HZ, SLEEP_EFFECTS,
                        Advanced, Buttons, Settings)
 from .hidkeys import shortcut_text
 
@@ -63,6 +63,32 @@ def led_label(i):
     col, row = LED_GRID[i]
     return tr('Leiste {side}, Spalte {col}, {row}').format(side=side, col=col,
                                                            row=tr('vorn') if row == 0 else tr('hinten'))
+
+
+@dataclass
+class LedLayout:
+    """LED-Skizze eines Modells: Gitterplatz (Spalte, Zeile) je LED, Beschriftung, Gruppen."""
+    grid: list
+    cols: int
+    short: dict      # LED -> Kurztext; diese LEDs werden rund gezeichnet
+    labels: list
+    groups: dict
+    caption: tuple   # Texte links / Mitte / rechts über der Skizze
+
+
+LEDS_XP = LedLayout(LED_GRID, 11, {LED_WHEEL: tr('Rad'), LED_DPI: 'DPI'}, [led_label(i) for i in range(LED_COUNT)],
+                    LED_GROUPS, (tr('◀ links'), tr('obere Reihe = vorn (Kabelseite)'), tr('rechts ▶')))
+# Kone XP Air: Zone 1 Rad, 2–5 Leisten; Zone 0 und 6 nutzt Swarm nicht (Lage unbekannt)
+LEDS_AIR = LedLayout(
+    [(0, 0), (2, 0), (1, 0), (3, 0), (1, 1), (3, 1), (4, 0)], 5, {0: '?', 1: tr('Rad'), 6: '?'},
+    [tr('Zone 0 (von Swarm nicht genutzt)'), tr('Mausrad'), tr('Leiste links, vorn'), tr('Leiste rechts, vorn'),
+     tr('Leiste links, hinten'), tr('Leiste rechts, hinten'), tr('Zone 6 (von Swarm nicht genutzt)')],
+    {tr('alle'): list(range(7)), tr('Leiste links'): [2, 4], tr('Leiste rechts'): [3, 5], tr('Rad'): [1]},
+    (tr('◀ links'), tr('obere Reihe = vorn'), tr('rechts ▶')))
+
+
+def led_layout(settings):
+    return LEDS_AIR if settings.air else LEDS_XP
 
 
 # --- Tasten-Funktionen --------------------------------------------------------
@@ -126,6 +152,10 @@ def _dpi(b):
     return f'{int.from_bytes(b, "little") * DPI_STEP} DPI'
 
 
+def _dpi_air(b):
+    return f'{int.from_bytes(b, "little")} DPI'
+
+
 def _mask(b):
     on = [str(i + 1) for i in range(5) if b[0] >> i & 1]
     return tr('Stufen') + ' ' + (','.join(on) or '–') + (f' (0x{b[0]:02x})' if b[0] & 0xe0 else '')
@@ -140,7 +170,7 @@ def _polling(b):
 
 
 def _effect(b):
-    return EFFECTS.get(b[0], tr('unbekannt ({n})').format(n=b[0]))
+    return EFFECTS_AIR.get(b[0], tr('unbekannt ({n})').format(n=b[0]))
 
 
 def _sleep(b):
@@ -201,20 +231,38 @@ def _entry_fmt(b):
     return entry_text(tuple(b))
 
 
-FIELDS07 = [(3 + 4 * (k + (N_BUTTONS if sh else 0)), 4,
+def _fields07(names):
+    return [(3 + 4 * (k + (N_BUTTONS if sh else 0)), 4,
              tr('Taste {n} „{name}“ ({layer})').format(
-                 n=k + 1, name=BUTTONS[k], layer=tr('Easy-Shift') if sh else tr('normal')), _entry_fmt)
+                 n=k + 1, name=names[k], layer=tr('Easy-Shift') if sh else tr('normal')), _entry_fmt)
             for sh in (False, True) for k in range(N_BUTTONS)]
+
+
+FIELDS07 = _fields07(BUTTONS)
 
 FIELDS11 = [(0x02, 1, tr('Debounce (ms)'), _dec)]
 
-FIELDS = {R06: FIELDS06, R07: FIELDS07, R11: FIELDS11}
+# Kone XP Air: gleiche Offsets bis 0x23, dann 7 LED-Zonen à 5 B und die Profilfarbe
+FIELDS06_AIR = [(o, n, name, _dpi_air if fmt is _dpi else fmt) for o, n, name, fmt in FIELDS06 if o < 0x24]
+for _i in range(7):
+    _o = 0x24 + 5 * _i
+    FIELDS06_AIR += [(_o, 1, tr('LED {i} Byte +0').format(i=_i), _hex),
+                     (_o + 1, 4, tr('LED-Zone {n} Farbe').format(n=_i + 1), _argb)]
+FIELDS06_AIR += [(0x47, 1, tr('Profilfarbe aktiv'), _hex), (0x48, 1, tr('unbekannt 0x48'), _hex),
+                 (0x49, 3, tr('Profilfarbe'), lambda b: f'#{b.hex()}')]
+FIELDS11_AIR = [(0x02, 1, tr('Debounce aktiv'), _hex), (0x03, 1, tr('Debounce (ms)'), _dec),
+                (0x04, 1, tr('Debounce 2 (ms)'), _dec), (0x05, 12, tr('Debounce weitere Werte'), _hex)]
+
+# (Report, Kone XP Air?) -> Feldkarte
+FIELDS = {(R06, False): FIELDS06, (R07, False): FIELDS07, (R11, False): FIELDS11,
+          (R06, True): FIELDS06_AIR, (R07, True): _fields07(BUTTONS_AIR), (R11, True): FIELDS11_AIR}
 
 # Bytes ohne bekannte Bedeutung (Expertenansicht, read-only)
 UNKNOWN06 = [(0x03, tr('Sensitivity X? (unbekannt)')), (0x04, tr('Sensitivity Y? (unbekannt)')),
              (0x1c, tr('unbekannt')), (0x23, tr('Timeout-Flag (GUI setzt 0)')), (0x9c, tr('Profilfarbe aktiv?')),
              (0x9d, tr('unbekannt (Intensität?)')), (0xa2, tr('Tasten-Preset-Index')),
              (0xa3, tr('AIMO-Parameter')), (0xa4, tr('DPI-Stufen-Flag (Auto?)')), (0xa5, tr('unbekannt'))]
+UNKNOWN06_AIR = UNKNOWN06[:4] + [(0x47, tr('Profilfarbe aktiv?')), (0x48, tr('unbekannt'))]
 
 
 @dataclass
@@ -230,10 +278,10 @@ class Change:
         return tr('global') if self.profile is None else f'P{self.profile + 1}'
 
 
-def diff_report(rid, old, new):
+def diff_report(rid, old, new, air=False):
     """Feldweiser Diff zweier Reports (Checksumme ignoriert). Liefert [(Feld, alt, neu)]."""
     changes, covered = [], set()
-    for off, n, name, fmt in FIELDS.get(rid, []):
+    for off, n, name, fmt in FIELDS.get((rid, air), []):
         covered.update(range(off, off + n))
         a, b = old[off:off + n], new[off:off + n]
         if a != b:
@@ -254,6 +302,8 @@ class Snapshot:
     r07: list
     r11: bytes
     r0f: object = None  # bytes oder None, wenn nicht lesbar
+    model: str = 'Kone XP'
+    readonly: bool = False  # Kone XP Air, solange Schreiben nicht freigeschaltet ist
 
     @property
     def active(self):
@@ -275,6 +325,11 @@ class Config:
         self.settings = [Settings(snap.r06[p]) for p in range(NPROFILES)]
         self.buttons = [Buttons(snap.r07[p]) for p in range(NPROFILES)]
         self.advanced = Advanced(snap.r11)
+        self.readonly = snap.readonly
+
+    @property
+    def air(self):
+        return self.settings[0].air
 
     # Schlüssel in Swarm-Schreibreihenfolge: je Profil 0x07, dann 0x06; zuletzt 0x11
     KEYS = [(rid, p) for p in range(NPROFILES) for rid in (R07, R06)] + [(R11, None)]
@@ -311,7 +366,7 @@ class Config:
         out = []
         for key in self.dirty_keys():
             rid, p = key
-            for field, a, b in diff_report(rid, self.orig[key], bytes(self.obj(key).raw)):
+            for field, a, b in diff_report(rid, self.orig[key], bytes(self.obj(key).raw), self.air):
                 out.append(Change(p, rid, field, a, b))
         return out
 
@@ -366,14 +421,18 @@ class Config:
 
     def load_factory(self, p):
         """Profil p im Editor auf Werkswerte setzen (0x06 + 0x07). Schreiben erst über Übernehmen."""
-        self.settings[p] = Settings(defaults.settings(p))
-        self.buttons[p] = Buttons(defaults.buttons(p))
+        if self.air:
+            self.settings[p] = Settings(defaults.air_settings(p))
+            self.buttons[p] = Buttons(defaults.air_buttons(p))
+        else:
+            self.settings[p] = Settings(defaults.settings(p))
+            self.buttons[p] = Buttons(defaults.buttons(p))
 
     # --- Backup ----------------------------------------------------------
 
     def backup_dict(self):
         return {
-            'format': 'konexp-backup', 'version': 1,
+            'format': 'konexp-backup', 'version': 1, 'model': self.snapshot.model,
             'created': datetime.datetime.now().isoformat(timespec='seconds'),
             'r05': self.snapshot.r05.hex(),
             'r06': [self.orig[(R06, p)].hex() for p in range(NPROFILES)],
@@ -385,6 +444,9 @@ class Config:
     def apply_backup(self, d):
         """Backup in den Editor laden (validiert). Schreiben erst über Übernehmen."""
         s, b, a = parse_backup(d)
+        if s[0].air != self.air:
+            raise ValueError(tr('Backup gehört zu einem anderen Modell ({model})').format(
+                model=d.get('model', 'Kone XP')))
         self.settings, self.buttons, self.advanced = s, b, a
 
 
@@ -437,7 +499,7 @@ class DeviceBackend:
 
     def _open(self):
         if self.dev is None:
-            self.dev = KoneXP(self.node, backup_dir=self.backup_dir)
+            self.dev = open_device(self.node, backup_dir=self.backup_dir)
         return self.dev
 
     def close(self):
@@ -480,7 +542,7 @@ class DeviceBackend:
             r0f = None
         dev.select(r05[2], SEL_SETTINGS)  # GET 0x06 ohne Select liefert wieder das aktive Profil
         progress(n, n, tr('fertig'))
-        return Snapshot(r05, r06, r07, r11, r0f)
+        return Snapshot(r05, r06, r07, r11, r0f, dev.NAME, dev.readonly)
 
     def write(self, data):
         with self.lock:
@@ -513,12 +575,12 @@ class DeviceBackend:
             self.lock.release()
 
 
-def demo_snapshot():
+def demo_snapshot(air=False):
     """Werksprofile plus ein synthetisch angepasstes P3 (aktiv), damit alle Ansichten etwas zeigen."""
-    r06 = [defaults.settings(p) for p in range(NPROFILES)]
-    r07 = [defaults.buttons(p) for p in range(NPROFILES)]
+    r06 = [(defaults.air_settings if air else defaults.settings)(p) for p in range(NPROFILES)]
+    r07 = [(defaults.air_buttons if air else defaults.buttons)(p) for p in range(NPROFILES)]
     s = Settings(r06[2])
-    s.raw[0x0d:0x0f] = (1200 // DPI_STEP).to_bytes(2, 'little')  # Stufe 4: X 1200, Y bleibt 1600
+    s.set_dpi(3, 1200, y=False)  # Stufe 4: X 1200, Y bleibt 1600
     s.dpi_active = 3
     s.angle_snapping = True
     s.effect = 9
@@ -533,8 +595,9 @@ def demo_snapshot():
                         (8, True, (0, 0, 0x03, 0x02))):     # DPI Down
         b.set_entry(k, e, shift)
     r07[2] = b.to_bytes()
-    return Snapshot(bytes([0x05, 0x04, 0x02, 0x05]), r06, r07, bytes.fromhex(defaults.ADVANCED_HEX),
-                    bytes.fromhex('0f0600000000'))
+    r11 = defaults.AIR_ADVANCED_HEX if air else defaults.ADVANCED_HEX
+    return Snapshot(bytes([0x05, 0x04, 0x02, 0x05]), r06, r07, bytes.fromhex(r11), bytes.fromhex('0f0600000000'),
+                    'Kone XP Air' if air else 'Kone XP', air and not AIR_WRITE)
 
 
 class DemoBackend:
@@ -542,9 +605,9 @@ class DemoBackend:
     name = tr('Demo')
     demo = True
 
-    def __init__(self, delay=0.05):
+    def __init__(self, delay=0.05, air=False):
         self.delay = delay
-        self.snap = demo_snapshot()
+        self.snap = demo_snapshot(air)
         self.lock = threading.Lock()
         self.writes = []
 
@@ -557,11 +620,13 @@ class DemoBackend:
             progress(i, n, tr('Demo-Daten'))
             time.sleep(self.delay / 4)
         s = self.snap
-        return Snapshot(s.r05, list(s.r06), list(s.r07), s.r11, s.r0f)
+        return Snapshot(s.r05, list(s.r06), list(s.r07), s.r11, s.r0f, s.model, s.readonly)
 
     def write(self, data):
         from ..device import CHECKSUMMED, WRITABLE, with_checksum
         rid = data[0]
+        if self.snap.readonly:
+            raise KoneXPError(tr('Kone XP Air: nur Lesen'))
         if rid not in WRITABLE:
             raise KoneXPError(tr('Report 0x{rid:02x} ist gesperrt').format(rid=rid))
         if rid in CHECKSUMMED:
@@ -577,6 +642,8 @@ class DemoBackend:
         return bytes(data)
 
     def set_active_profile(self, p):
+        if self.snap.readonly:
+            raise KoneXPError(tr('Kone XP Air: nur Lesen'))
         self.snap.r05 = bytes([0x05, 0x04, p, 0x05])
 
     def read_report(self, key):

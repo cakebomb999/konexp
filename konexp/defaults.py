@@ -55,3 +55,48 @@ def buttons(profile):
 
 # Report 0x11 Werkswert (Debounce 10 ms) – aus Dump 20261006-102656-r11.bin
 ADVANCED_HEX = '11140a' + '00' * 15 + '2f00'
+
+
+# --- Kone XP Air ---------------------------------------------------------------
+# Aus der Werks-Datei des Swarm-Plugins 1.0019 (Reset-Format: 0x45, 0x4f, 0x43, 0x4b, 5× 0x46, 5× 0x07).
+# Gleiche Profilfarben wie die Kone XP; P3/P4 haben ab Werk andere LED-Farben.
+AIR_SETTINGS_P0_HEX = (
+    '064e00' '0606' '1f' '01'                 # ID, Länge 78, Profil, 0x03/0x04, DPI-Maske, aktive Stufe
+    '90012003b0044006800c'                    # DPI X 400/800/1200/1600/3200
+    '90012003b0044006800c'                    # DPI Y
+    '000003' '0a06ff' '050000'                # 0x1b–0x1d, Effekt/Speed/Helligkeit, Timeout 0x21–0x23
+    + '14ff0048ff' * 7 +                      # 7 LED-Zonen [z0, a, r, g, b]
+    '0164c50bdc' '9218'                       # Profilfarbe [01, 64, r, g, b], Checksumme
+)
+AIR_LEDS_P3P4_HEX = '01ffff0000' + '01fff05000' * 4 + '01ffe66c00' '01ffe68c00'
+AIR_BUTTONS_P0_HEX = (
+    '077d00'
+    '00000101' '00000201' '00000301' '00000901' '00000a01' '00000501' '00000601' '00000202'
+    '00000302' '00140006' '00080006' '00000701' '00000801' '0000010a' '00000108'
+    '00000101' '00000201' '00000403' '00000703' '00000803' '004b0006' '004e0006' '00190106'
+    '00060106' '004c0006' '00490006' '00000203' '00000303' '0000010a' '00000b08'
+    'c202'
+)
+AIR_ADVANCED_HEX = '110d000a0a' + '05' * 12 + '6e00'
+
+
+def _profile(hex_, profile):
+    if not 0 <= profile <= 4:
+        raise ValueError(tr('Profil 0..4'))
+    buf = bytearray.fromhex(hex_)
+    buf[2] = profile
+    return buf
+
+
+def air_settings(profile):
+    """Werks-Block 0x46 (Form Report 0x06, 78 B) für Profil 0..4."""
+    buf = _profile(AIR_SETTINGS_P0_HEX, profile)
+    if profile in (2, 3):
+        buf[0x24:0x47] = bytes.fromhex(AIR_LEDS_P3P4_HEX)
+    buf[0x49:0x4c] = bytes.fromhex(PROFILE_COLORS[profile])
+    return with_checksum(buf)
+
+
+def air_buttons(profile):
+    """Werks-Block 0x47 (Form Report 0x07, 125 B) für Profil 0..4."""
+    return with_checksum(_profile(AIR_BUTTONS_P0_HEX, profile))

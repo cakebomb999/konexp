@@ -100,6 +100,40 @@ class GuiTest(unittest.TestCase):
         self.assertEqual(w.config.active, 1)
 
 
+class AirGuiTest(GuiTest):
+    """Kone XP Air (Demo): alle Tabs, Nur-Lesen-Sperre, Tastennamen in Air-Reihenfolge."""
+    def setUp(self):
+        app()
+        self.be = DemoBackend(delay=0, air=True)
+        self.win = main_window.MainWindow(self.be)
+        self.win.show()
+        self.assertTrue(wait(lambda: self.win.config is not None and not self.win.busy))
+
+    def test_tabs_and_expert(self):
+        w = self.win
+        self.assertIn('Kone XP Air', w.windowTitle())
+        w.act_expert.setChecked(True)
+        for i in range(w.tabs.count()):
+            w.tabs.setCurrentIndex(i)
+            app().processEvents()
+            self.shot(f'air-tab{i}.png')
+        self.assertFalse(w.readonly_label.isHidden())
+        buttons = w.tab_list[3]
+        self.assertEqual(buttons.table.item(3, 0).text(), 'Rad hoch')
+        self.assertEqual(buttons.table.item(11, 0).text(), 'Rad-Tilt links')
+
+    def test_edit_and_apply(self):
+        w = self.win
+        w.config.settings[2].set_dpi(0, 900)
+        w.on_changed()
+        self.assertTrue(w.config.dirty)
+        self.assertFalse(w.btn_apply.isEnabled())
+        self.assertFalse(w.btn_active.isEnabled())
+
+    def test_set_active_and_poll(self):
+        pass  # Profilwechsel ist im Nur-Lesen-Modus gesperrt (test_edit_and_apply)
+
+
 class CliStartTest(unittest.TestCase):
     def test_demo_start(self):
         env = dict(os.environ, QT_QPA_PLATFORM='offscreen')

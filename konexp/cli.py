@@ -5,14 +5,18 @@
   dpi <profil> <stufe> <dpi>  DPI einer Stufe setzen (X und Y)
   dpi-active <profil> <stufe> aktive DPI-Stufe setzen
   restore <datei.bin>         gesichertes Backup zurückschreiben
+  dump [datei.json]           alles lesen und als Diagnose-Datei speichern (nur Lesen)
 """
+import json
+import os
 import sys
+import time
 
-from .device import KoneXP, KoneXPError
+from .device import AIR_BLOCKS, AIR_DONGLE, KoneXPAir, KoneXPError, checksum_ok, open_device
 from .functions import describe
 from .i18n import tr
 from .paths import BACKUP_DIR
-from .reports import BUTTONS, Buttons, Settings
+from .reports import Buttons, Settings, button_names
 
 USAGE = tr('''Kommandozeile: python3 -m konexp <befehl> …
 
@@ -21,11 +25,13 @@ USAGE = tr('''Kommandozeile: python3 -m konexp <befehl> …
   dpi <profil> <stufe> <dpi>  DPI einer Stufe setzen (X und Y)
   dpi-active <profil> <stufe> aktive DPI-Stufe setzen
   restore <datei.bin>         gesichertes Backup zurückschreiben
+  dump [datei.json]           alles lesen und als Diagnose-Datei speichern (nur Lesen)
 ''')
 
 
 def status(dev):
     active = dev.active_profile()
+    print(f'{dev.NAME} ({dev.node})' + (' – ' + tr('nur Lesen') if dev.readonly else ''))
     print(tr('aktives Profil: {num} (Index {idx})').format(num=active + 1, idx=active))
     for p in range(5):
         s = Settings(dev.read_settings(p))
@@ -39,17 +45,80 @@ def status(dev):
             snap=tr('an') if s.angle_snapping else tr('aus'), effect=s.effect))
         for k in (7, 8, 14):
             print(tr('      {name:<18} {func:<28} Easy-Shift: {shift}').format(
-                name=BUTTONS[k], func=describe(b.entry(k)), shift=describe(b.entry(k, True))))
+                name=button_names(s.air)[k], func=describe(b.entry(k)), shift=describe(b.entry(k, True))))
     dev.select(active, 0x80)
+
+
+def _sysfs(node):
+    d = f'/sys/class/hidraw/{os.path.basename(node)}/device'
+    out = {}
+    for name, mode in (('uevent', 'r'), ('report_descriptor', 'rb')):
+        try:
+            with open(f'{d}/{name}', mode) as f:
+                data = f.read()
+            out[name] = data.hex() if mode == 'rb' else data
+        except OSError as e:
+            out[name] = f'ERROR {e}'
+    return out
+
+
+def dump(dev, path):
+    """Liest alles, was konexp nutzt, plus Diagnosewerte. Jeder Schritt einzeln, Fehler werden notiert."""
+    out = {'format': 'konexp-dump', 'created': time.strftime('%Y-%m-%dT%H:%M:%S'), 'model': dev.NAME,
+           'pid': f'{dev.pid:04x}', 'node': dev.node, 'sysfs': _sysfs(dev.node)}
+
+    def step(key, fn):
+        print(f'  {key} …', flush=True)
+        try:
+            v = fn()
+            out[key] = v.hex() if isinstance(v, bytes) else v
+        except (OSError, KoneXPError, ValueError, IndexError) as e:
+            out[key] = f'ERROR {type(e).__name__}: {e}'
+
+    air = isinstance(dev, KoneXPAir)
+
+    def block(rid, p):
+        # Air: Rohdaten ohne Prüfung lesen, damit auch unerwartete Antworten im Dump landen
+        if air:
+            cmd, size = AIR_BLOCKS[rid]
+            raw = dev.read_block(cmd, p, size)
+        else:
+            raw = (dev.read_settings if rid == 0x06 else dev.read_buttons)(p)
+        return {'hex': raw.hex(), 'header_ok': raw[:3] == bytes([rid, len(raw), p]), 'checksum_ok': checksum_ok(raw)}
+
+    step('r05', lambda: dev.get(0x05))
+    for p in range(5):
+        step(f'r06_p{p}', lambda p=p: block(0x06, p))
+        step(f'r07_p{p}', lambda p=p: block(0x07, p))
+    step('r11', lambda: dev.get(0x11))
+    step('r0f', lambda: dev.get(0x0f))
+    if air:  # ganze 30-Byte-Antworten (Byte 3 = Status)
+        for cmd in (0x45, 0x44, 0x4f, 0x43, 0x35):
+            step(f'air_{cmd:02x}', lambda cmd=cmd: dev.query(cmd, 0, frame=True))
+        step('firmware', dev.firmware)
+        if dev.pid == AIR_DONGLE:
+            for cmd in (0x13, 0x25):
+                step(f'air_{cmd:02x}', lambda cmd=cmd: dev.query(cmd, 0, target=0, frame=True))
+    else:
+        step('r09', lambda: dev.get(0x09))
+    step('select_active', lambda: dev.select(dev.active_profile(), 0x80))  # wie nach status
+    with open(path, 'w') as f:
+        json.dump(out, f, indent=1)
+    errors = [k for k, v in out.items() if isinstance(v, str) and v.startswith('ERROR')]
+    print(tr('{path} gespeichert, {n} Fehler').format(path=path, n=len(errors)) + (f': {", ".join(errors)}' if errors else ''))
+    return 1 if errors else 0
 
 
 def main(argv=None):
     args = (argv or sys.argv[1:]) or ['status']
     cmd, rest = args[0], [int(a, 0) for a in args[1:] if a.lstrip('-').isdigit() or a.startswith('0x')]
     try:
-        with KoneXP(backup_dir=BACKUP_DIR) as dev:
+        with open_device(backup_dir=BACKUP_DIR) as dev:
             if cmd == 'status':
                 status(dev)
+            elif cmd == 'dump':
+                path = args[1] if len(args) > 1 else f'konexp-dump-{time.strftime("%Y%m%d-%H%M%S")}.json'
+                return dump(dev, path)
             elif cmd == 'profile':
                 dev.set_active_profile(rest[0])
                 print(tr('Profil {num} aktiv').format(num=rest[0]))
