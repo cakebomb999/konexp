@@ -1,9 +1,10 @@
-# konexp – ROCCAT Kone XP unter Linux konfigurieren
+# konexp – ROCCAT Kone XP (und Kone XP Air) unter Linux konfigurieren
 
 [English](README.md) | **Deutsch**
 
 Kommandozeile und Qt-Oberfläche für die **ROCCAT Kone XP** (USB `1e7d:2c8b`), als Ersatz für
-ROCCAT Swarm, das es nur für Windows gibt. Die Einstellungen werden direkt in den Speicher der Maus
+ROCCAT Swarm, das es nur für Windows gibt. Die **Kone XP Air** (Kabel `1e7d:2cb2`, Dongle `1e7d:2cb6`)
+wird experimentell unterstützt, siehe [unten](#kone-xp-air-experimentell). Die Einstellungen werden direkt in den Speicher der Maus
 geschrieben und gelten danach auch ohne laufende Software.
 
 ![Tasten-Tab](docs/screenshot-tasten.png)
@@ -76,19 +77,40 @@ python3 -m konexp profile 2              # Profil 3 aktivieren (Index 0–4)
 python3 -m konexp dpi 2 4 3200           # Profil 3, Stufe 5 auf 3200 DPI
 python3 -m konexp dpi-active 2 4         # Profil 3: Stufe 5 aktiv
 python3 -m konexp restore <backup.bin>   # gesicherten Report zurückschreiben
+python3 -m konexp dump                   # alles als Diagnose-Datei (JSON) speichern, nur Lesen
 ```
 
 Backups landen in `~/.local/share/konexp/backup/`.
+
+## Kone XP Air (experimentell)
+
+Die Kone XP Air speichert dieselben Datenformate wie die Kone XP, nur mit anderem Transport
+([docs/PROTOCOL-XP-AIR.md](docs/PROTOCOL-XP-AIR.md)). An einer echten Maus bestätigt: Lesen per Kabel
+und Dongle, Schreiben der Profil-Einstellungen per Kabel. Tasten, Debounce und Profilwechsel laufen genauso,
+sind aber noch unbestätigt. Nicht unterstützt: Licht der
+Ladestation, Makros, Akkuanzeige.
+
+Wenn etwas nicht stimmt: bitte ausführen (liest nur, ändert nichts) und die Datei an ein GitHub-Issue hängen:
+
+```sh
+python3 -m konexp dump                # schreibt konexp-dump-<datum>.json
+python3 -m konexp.gui                 # DPI, Licht und Tasten mit der eigenen Einstellung vergleichen
+```
+
+Schreiben mit Backup und Rücklesen wie bei der Kone XP. `KONEXP_AIR_WRITE=0` schaltet auf nur Lesen.
+Ohne Maus: `python3 -m konexp.gui --demo air`.
 
 ## Sicherheit
 
 `konexp` schreibt nur die Reports, die auch Swarm im Normalbetrieb schreibt. Firmware-Update,
 Werksreset per Gerätebefehl (`0x09`) und von Swarm ungenutzte Reports sind gesperrt.
 Getestet mit Firmware 1.09. Benutzung auf eigenes Risiko.
+Bei der Kone XP Air sind Werksreset (`0x49`), Pairing, Bootloader und Firmware-Update gesperrt.
 
 ## Protokoll
 
-Das Konfigurationsprotokoll ist in [docs/PROTOCOL.md](docs/PROTOCOL.md) beschrieben. Es wurde zur
+Das Konfigurationsprotokoll ist in [docs/PROTOCOL.md](docs/PROTOCOL.md) und
+[docs/PROTOCOL-XP-AIR.md](docs/PROTOCOL-XP-AIR.md) beschrieben. Es wurde zur
 Herstellung von Interoperabilität (§ 69e UrhG / Art. 6 RL 2009/24/EG) aus ROCCAT Swarm und Messungen an
 der Maus ermittelt. Dieses Repository enthält keinen Code und keine Dateien des Herstellers.
 

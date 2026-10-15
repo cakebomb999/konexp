@@ -5,7 +5,7 @@ from PySide6.QtGui import QFontDatabase
 from PySide6.QtWidgets import QTextBrowser, QVBoxLayout
 
 from ..i18n import tr
-from .model import R06, R07, R11, UNKNOWN06
+from .model import R06, R07, R11, UNKNOWN06, UNKNOWN06_AIR
 from .tab_base import TabBase
 
 
@@ -48,12 +48,13 @@ class ExpertTab(TabBase):
                '<b>0x11</b> ' + tr('(Debounce)') + hex_html(bytes(c.advanced.to_bytes()), c.orig[(R11, None)]),
                '<b>0x0f</b> ' + tr('(DCU, nur lesen)') + (hex_html(c.r0f, None) if c.r0f else ' ' + tr('nicht lesbar')),
                '<h3>' + tr('Unbekannte / nicht bearbeitete Bytes in 0x06 (nur Anzeige)') + '</h3><table>']
-        for off, name in UNKNOWN06:
+        for off, name in UNKNOWN06_AIR if s.air else UNKNOWN06:
             out.append(f'<tr><td>0x{off:02x}</td><td>&nbsp;{s.raw[off]:02x}&nbsp;</td><td>{html.escape(name)}</td></tr>')
-        led0 = sorted({s.raw[0x24 + 6 * i] for i in range(20)})
-        led5 = sorted({s.raw[0x29 + 6 * i] for i in range(20)})
+        stride = s.layout['stride']
+        extra = [('LED +0', 0)] + ([] if s.air else [('LED +5', 5)])
         all_leds = tr('Werte über alle LEDs')
-        for name, vals in (('LED +0', led0), ('LED +5', led5)):
+        for name, k in extra:
+            vals = sorted({s.raw[0x24 + stride * i + k] for i in range(s.led_count)})
             hexed = ' '.join(f'{v:02x}' for v in vals)
             out.append(f'<tr><td>{name}</td><td>&nbsp;{hexed}&nbsp;</td><td>{all_leds}</td></tr>')
         out.append('</table><p style="color:gray">'

@@ -30,12 +30,20 @@ class MainWindow(QMainWindow):
         self.config = None
         self.profile = 0
         self.task = None
-        self.setWindowTitle(tr('Kone XP Konfiguration') + (' – DEMO' if backend.demo else ''))
+        self._title('Kone XP')
         self.resize(1100, 720)
 
         central = QWidget()
         self.setCentralWidget(central)
         lay = QVBoxLayout(central)
+
+        self.readonly_label = QLabel(tr(
+            'Kone XP Air: nur Lesen, Schreiben ist mit KONEXP_AIR_WRITE=0 abgeschaltet. '
+            'Änderungen lassen sich ansehen, aber nicht übernehmen.'))
+        self.readonly_label.setWordWrap(True)
+        self.readonly_label.setStyleSheet('background: #fff0c0; color: #503800; padding: 6px')
+        self.readonly_label.hide()
+        lay.addWidget(self.readonly_label)
 
         # Profilleiste
         bar = QHBoxLayout()
@@ -138,8 +146,13 @@ class MainWindow(QMainWindow):
 
         m = self.menuBar().addMenu(tr('&Hilfe'))
         m.addAction(tr('Über'), lambda: QMessageBox.about(
-            self, 'Kone XP', tr('ROCCAT Kone XP – Linux-Konfiguration\n\nSchreibt nur Reports 0x07, 0x06, 0x11 '
-                                '(und 0x05 für das aktive Profil). Werksreset über Report 0x09 wird nicht verwendet.')))
+            self, 'konexp', tr('ROCCAT Kone XP / Kone XP Air – Linux-Konfiguration\n\nSchreibt nur Reports 0x07, 0x06, '
+                               '0x11 (und 0x05 für das aktive Profil). Werksreset über Report 0x09 wird nicht verwendet.\n'
+                               'Kone XP Air: nur Blöcke 0x47, 0x46, 0x43 und 0x45; Werksreset (0x49), Pairing und '
+                               'Firmware-Update sind gesperrt.')))
+
+    def _title(self, model):
+        self.setWindowTitle(tr('{model} Konfiguration').format(model=model) + (' – DEMO' if self.backend.demo else ''))
 
     def set_language(self, code):
         if code == language():
@@ -185,10 +198,12 @@ class MainWindow(QMainWindow):
         else:
             self.dirty_label.setText('')
         self.tabs.setEnabled(has)
-        self.btn_apply.setEnabled(has and c.dirty and not self.busy)
+        ro = has and c.readonly
+        self.readonly_label.setVisible(ro)
+        self.btn_apply.setEnabled(has and c.dirty and not self.busy and not ro)
         self.btn_discard.setEnabled(not self.busy)
         self.act_reload.setEnabled(not self.busy)
-        self.btn_active.setEnabled(has and not self.busy and self.profile != c.active)
+        self.btn_active.setEnabled(has and not self.busy and self.profile != c.active and not ro)
         self.btn_color.setEnabled(has)
         for a in (self.act_backup, self.act_restore, self.act_factory):
             a.setEnabled(has and not self.busy)
@@ -257,6 +272,7 @@ class MainWindow(QMainWindow):
 
     def _loaded(self, snap):
         self.config = Config(snap)
+        self._title(snap.model)
         self.status(tr('{name}: 5 Profile geladen, aktiv P{n}')
                     .format(name=self.backend.name, n=self.config.active + 1))
         self.profile = self.config.active

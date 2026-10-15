@@ -10,7 +10,7 @@ from PySide6.QtGui import QBrush, QColor, QFont, QImage, QPainter, QPainterPath,
 from PySide6.QtWidgets import QPushButton, QSizePolicy, QWidget
 
 from ..i18n import tr
-from .model import LED_DPI, LED_GRID, LED_IMAGES, LED_WHEEL, RES_DIR, led_label
+from .model import LED_IMAGES, LEDS_XP, RES_DIR
 from ..reports import LED_COUNT
 
 ILLU_DIR = os.path.join(RES_DIR, 'graphics', 'controls', 'Kone-XP_Illumination')
@@ -55,30 +55,32 @@ def _fit(src_w, src_h, rect):
 
 
 class LedGrid(QWidget):
-    """Eigene Skizze: Maus von oben, LEDs im AIMO-Gitter (11 Spalten × 2 Zeilen)."""
+    """Eigene Skizze: Maus von oben, LEDs im Gitter des Modells (Kone XP: AIMO-Gitter 11 × 2)."""
     ledClicked = Signal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.leds = LEDS_XP
         self.colors = [(255, 0, 0, 0)] * LED_COUNT
         self.highlight = set()
         self.setMinimumSize(360, 170)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setMouseTracking(True)
 
-    def set_colors(self, colors, highlight=()):
+    def set_colors(self, colors, highlight=(), leds=LEDS_XP):
+        self.leds = leds
         self.colors = list(colors)
         self.highlight = set(highlight)
         self.update()
 
     def _layout(self):
         r = QRectF(self.rect()).adjusted(10, 4, -10, -4)
-        tile_w = r.width() / 11
+        tile_w = r.width() / self.leds.cols
         tile_h = min((r.height() - 50) / 2, tile_w * 1.4)
         top = r.center().y() - tile_h - 4 + 8
         rects = []
-        for i in range(LED_COUNT):
-            col, row = LED_GRID[i]
+        for i in range(len(self.colors)):
+            col, row = self.leds.grid[i]
             x = r.x() + col * tile_w + 3
             y = top + row * (tile_h + 8)
             rects.append(QRectF(x, y, tile_w - 6, tile_h))
@@ -102,17 +104,18 @@ class LedGrid(QWidget):
             p.setBrush(QBrush(col))
             pen = QPen(QColor('white') if i in self.highlight else QColor(20, 20, 20), 3 if i in self.highlight else 1)
             p.setPen(pen)
-            if i in (LED_WHEEL, LED_DPI):
+            if i in self.leds.short:
                 p.drawEllipse(rc)
             else:
                 p.drawRoundedRect(rc, 5, 5)
             lum = col.red() * 0.3 + col.green() * 0.59 + col.blue() * 0.11
             p.setPen(QColor('black') if lum > 140 and col.alpha() > 100 else QColor('white'))
-            p.drawText(rc, Qt.AlignCenter, {LED_WHEEL: tr('Rad'), LED_DPI: 'DPI'}.get(i, str(i)))
+            p.drawText(rc, Qt.AlignCenter, self.leds.short.get(i, str(i)))
         p.setPen(QColor(170, 170, 170))
-        p.drawText(QRectF(r.x() + 8, r.y(), r.width() - 16, 18), Qt.AlignLeft, tr('◀ links'))
-        p.drawText(QRectF(r.x(), r.y(), r.width(), 18), Qt.AlignCenter, tr('obere Reihe = vorn (Kabelseite)'))
-        p.drawText(QRectF(r.x() + 8, r.y(), r.width() - 16, 18), Qt.AlignRight, tr('rechts ▶'))
+        left, mid, right = self.leds.caption
+        p.drawText(QRectF(r.x() + 8, r.y(), r.width() - 16, 18), Qt.AlignLeft, left)
+        p.drawText(QRectF(r.x(), r.y(), r.width(), 18), Qt.AlignCenter, mid)
+        p.drawText(QRectF(r.x() + 8, r.y(), r.width() - 16, 18), Qt.AlignRight, right)
 
     def _hit(self, pos):
         _, rects = self._layout()
@@ -123,7 +126,7 @@ class LedGrid(QWidget):
 
     def mouseMoveEvent(self, e):
         i = self._hit(e.position())
-        self.setToolTip(tr('LED {index}: {label}').format(index=i, label=led_label(i)) if i is not None else '')
+        self.setToolTip(tr('LED {index}: {label}').format(index=i, label=self.leds.labels[i]) if i is not None else '')
 
     def mousePressEvent(self, e):
         i = self._hit(e.position())
@@ -203,8 +206,14 @@ class ButtonMap(QWidget):
         self.image = QImage(BTN_IMAGE) if os.path.isfile(BTN_IMAGE) else None
         self.selected = None
         self.warn = set()
+        self.pos = BUTTON_POS
         self.setMinimumSize(230, 260)
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+
+    def set_order(self, order):
+        """Tasten-Index -> Index der Kone XP (gleiche physische Taste), z. B. reports.AIR_BUTTON_ORDER."""
+        self.pos = [BUTTON_POS[i] for i in order]
+        self.update()
 
     def set_selected(self, k):
         self.selected = k
@@ -248,7 +257,7 @@ class ButtonMap(QWidget):
         f.setBold(True)
         f.setPointSizeF(10)
         p.setFont(f)
-        for k, (x, y) in enumerate(BUTTON_POS):
+        for k, (x, y) in enumerate(self.pos):
             sel = k == self.selected
             p.setBrush(QColor(230, 160, 20) if sel else (QColor(200, 60, 60) if k in self.warn else QColor(30, 30, 30, 200)))
             p.setPen(QPen(QColor('white'), 2))
@@ -259,7 +268,7 @@ class ButtonMap(QWidget):
         target, s = _fit(457, 518, QRectF(self.rect()))
         x = (e.position().x() - target.x()) / s
         y = (e.position().y() - target.y()) / s
-        for k, (bx, by) in enumerate(BUTTON_POS):
+        for k, (bx, by) in enumerate(self.pos):
             if (x - bx) ** 2 + (y - by) ** 2 <= 16 ** 2:
                 self.buttonClicked.emit(k)
                 return

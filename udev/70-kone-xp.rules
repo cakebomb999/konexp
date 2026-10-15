@@ -1,2 +1,5 @@
-# ROCCAT Kone XP (1e7d:2c8b): hidraw-Zugriff für den angemeldeten Benutzer (systemd-logind uaccess)
+# ROCCAT Kone XP (1e7d:2c8b) und Kone XP Air (Kabel 1e7d:2cb2, Dongle 1e7d:2cb6):
+# hidraw-Zugriff für den angemeldeten Benutzer (systemd-logind uaccess)
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2c8b", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cb2", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cb6", TAG+="uaccess"

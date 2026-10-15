@@ -4,12 +4,13 @@ import subprocess
 import sys
 import time
 import unittest
+from unittest import mock
 
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 
 from PySide6.QtWidgets import QApplication, QDialog  # noqa: E402
 
-from konexp.gui import dialogs, main_window  # noqa: E402
+from konexp.gui import dialogs, main_window, model  # noqa: E402
 from konexp.gui.model import R06, R07, R11, DemoBackend  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -98,6 +99,53 @@ class GuiTest(unittest.TestCase):
         self.be.set_active_profile(1)   # Wechsel „an der Maus“
         w.poll_active()
         self.assertEqual(w.config.active, 1)
+
+
+class AirGuiTest(GuiTest):
+    """Kone XP Air (Demo): alle Tabs, Schreiben wie Kone XP, Tastennamen in Air-Reihenfolge."""
+    def setUp(self):
+        app()
+        self.be = DemoBackend(delay=0, air=True)
+        self.win = main_window.MainWindow(self.be)
+        self.win.show()
+        self.assertTrue(wait(lambda: self.win.config is not None and not self.win.busy))
+
+    def test_tabs_and_expert(self):
+        w = self.win
+        self.assertIn('Kone XP Air', w.windowTitle())
+        w.act_expert.setChecked(True)
+        for i in range(w.tabs.count()):
+            w.tabs.setCurrentIndex(i)
+            app().processEvents()
+            self.shot(f'air-tab{i}.png')
+        self.assertTrue(w.readonly_label.isHidden())
+        buttons = w.tab_list[3]
+        self.assertEqual(buttons.table.item(3, 0).text(), 'Rad hoch')
+        self.assertEqual(buttons.table.item(11, 0).text(), 'Rad-Tilt links')
+
+
+class AirReadonlyGuiTest(AirGuiTest):
+    """KONEXP_AIR_WRITE=0: Banner, Übernehmen und Profilwechsel gesperrt."""
+    def setUp(self):
+        patch = mock.patch.object(model, 'AIR_WRITE', False)
+        patch.start()
+        self.addCleanup(patch.stop)
+        super().setUp()
+
+    def test_tabs_and_expert(self):
+        self.assertFalse(self.win.readonly_label.isHidden())
+
+    def test_edit_and_apply(self):
+        w = self.win
+        w.config.settings[2].set_dpi(0, 900)
+        w.on_changed()
+        self.assertTrue(w.config.dirty)
+        self.assertFalse(w.btn_apply.isEnabled())
+        w.select_profile(0)  # nicht aktives Profil: Button wäre ohne Nur-Lesen-Sperre aktiv
+        self.assertFalse(w.btn_active.isEnabled())
+
+    def test_set_active_and_poll(self):
+        pass  # Profilwechsel ist im Nur-Lesen-Modus gesperrt (test_edit_and_apply)
 
 
 class CliStartTest(unittest.TestCase):

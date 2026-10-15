@@ -1,4 +1,4 @@
-"""python3 -m konexp.gui [--demo] [--node /dev/hidrawN] [--quit-after MS] [--screenshot DATEI]"""
+"""python3 -m konexp.gui [--demo [xp|air]] [--node /dev/hidrawN] [--quit-after MS] [--screenshot DATEI]"""
 import argparse
 import sys
 
@@ -7,9 +7,9 @@ from ..i18n import LANGUAGES, set_language, tr
 
 def main(argv=None):
     ap = argparse.ArgumentParser(prog='python3 -m konexp.gui', description=tr('Kone-XP-Konfiguration'))
-    ap.add_argument('--demo', action='store_true', 
+    ap.add_argument('--demo', nargs='?', const='xp', choices=('xp', 'air'),
                     help=tr('ohne Maus: Werksdaten + Beispielprofil, Writes nur im Speicher'))
-    ap.add_argument('--node', help=tr('hidraw-Gerät (Standard: automatisch, Interface 3)'))
+    ap.add_argument('--node', help=tr('hidraw-Gerät (Standard: automatisch)'))
     ap.add_argument('--quit-after', type=int, metavar='MS', help=tr('nach MS Millisekunden beenden (Tests)'))
     ap.add_argument('--screenshot', metavar='DATEI', 
                     help=tr('vor dem Beenden Screenshot speichern (mit --quit-after)'))
@@ -28,8 +28,8 @@ def main(argv=None):
     from .model import DemoBackend, DeviceBackend
 
     app = QApplication(sys.argv[:1])
-    app.setApplicationName('Kone XP')
-    backend = DemoBackend() if args.demo else DeviceBackend(args.node)
+    app.setApplicationName('konexp')
+    backend = DemoBackend(air=args.demo == 'air') if args.demo else DeviceBackend(args.node)
     win = MainWindow(backend)
     win.show()
     if args.quit_after:
