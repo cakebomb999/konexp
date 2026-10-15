@@ -5,8 +5,9 @@ ermittelt zur Herstellung von Interoperabilität (§ 69e UrhG / Art. 6 RL 2009/2
 Swarm-Plugins „Kone XP Air“ 1.0019 (Protokoll-Bibliothek und GUI). Dieses Dokument enthält nur eigene
 Beschreibungen, keinen Herstellercode.
 
-**Stand: nicht an echter Hardware geprüft.** Konfidenz bezieht sich auf den Herstellercode:
-**sicher** = eindeutig im Code, **wahrscheinlich** = abgeleitet, **offen** = unbekannt.
+**Stand: Lesen an echter Hardware bestätigt** (Kabel und Dongle, Dongle-FW 1.07); Schreiben ungeprüft.
+Konfidenz bezieht sich auf den Herstellercode: **sicher** = eindeutig im Code, **wahrscheinlich** = abgeleitet,
+**offen** = unbekannt, **bestätigt** = an echter Hardware gesehen.
 `konexp` liest die Air deshalb standardmäßig nur; Schreiben ist mit `KONEXP_AIR_WRITE=1` freischaltbar.
 
 ## Überblick
@@ -36,7 +37,7 @@ Feature-Report `0x06`, immer 30 Bytes inkl. Report-ID, SET und GET. *sicher*
 | 1 | Ziel (s. o.) | Ziel |
 | 2 | Kommando | Kommando |
 | 3 | `06` schreiben, `07` lesen | Status: `00` beschäftigt, `08` ok, sonst Fehler |
-| 4 | Länge der Daten | – |
+| 4 | Länge der Daten | Länge der Antwortdaten (*bestätigt*) |
 | 5–29 | Daten (max. 25 B) | Antwortdaten |
 
 - **Lesen**: 90 ms warten, SET mit Op `07`, 90 ms warten, GET; Daten ab Byte 5. Swarm prüft den Status hier nicht. *sicher*
@@ -48,8 +49,9 @@ Feature-Report `0x06`, immer 30 Bytes inkl. Report-ID, SET und GET. *sicher*
 - **Öffnen** wie Swarm: nur Dongle zuerst Link-Check (Ziel 0, Kommando 0, Op `04`, dann Op `05`; je pollen bis
   Status ≠ 0; Op `05` mit Status `08` und Byte 13 = `01` heißt Maus verbunden), dann `0x4e` = `01 00 00 ff`
   („Software aktiv“), beim Schließen `0x4e` = `00 00 00 ff`. *sicher*
-- Ohne diese Schritte antwortete eine echte Air am Dongle (FW 1.07) auf jede Anfrage an Ziel 1 mit Status `0c`
-  und leeren Daten; welcher Schritt fehlt, ist *offen*.
+- Antwort auf Op `05`: Länge `09`, Bytes 5–12 = Seriennummer der Maus (gleich `HID_UNIQ` am Kabel), Byte 13 = `01`. *bestätigt*
+- Ohne diese Schritte antwortete die Air am Dongle auf jede Anfrage an Ziel 1 mit Status `0c` und leeren Daten;
+  mit ihnen lesen Kabel (Ziel 0) und Dongle (Ziel 1) identische Daten. Welcher Schritt nötig ist, ist *offen*.
 - Events kommen als Input-Report `0x08` (Byte 2 Typ, Byte 3 Wert; `01` = Profilwechsel). *sicher*
 
 ## Kommandos
@@ -62,8 +64,8 @@ Feature-Report `0x06`, immer 30 Bytes inkl. Report-ID, SET und GET. *sicher*
 | `0x48` | Block | 1043 je Profil × Taste | Makro (Format wie Report `0x08`); von konexp nicht genutzt | sicher |
 | `0x43` | lesen/schreiben | 19 | Debounce, s. u. | sicher |
 | `0x4f` | lesen/schreiben | 2 | Lift-off (DCU) `[modus 0–2, x]`; Kalibrierung `[02, ff/00/01]` | sicher |
-| `0x44` | lesen | 17 | Status: Byte 0 Ack, Byte 2 Akkustand, Byte 1 = 0 beim Laden | sicher / Laden wahrscheinlich |
-| `0x35` | lesen | 13 | Firmware der Maus | sicher |
+| `0x44` | lesen | 17 | Status: Byte 0 Ack, Byte 2 Akkustand in % (gesehen: `5a` = 90), Byte 1 = 0 am Kabel/Laden, 1 per Funk | sicher / Byte 1 bestätigt |
+| `0x35` | lesen | 13 | Firmware der Maus: BCD-Bytes 5, 7, 6, 9 → `((b5·10+b7)·10+b6)·10+b9`; echte Maus ergibt 501, Plugin liefert `FW_V0.051` | sicher / Bedeutung offen |
 | `0x13` | lesen, Ziel 0 | 2 | Firmware des Dongles | sicher |
 | `0x25` | lesen, Ziel 0 | 4 | Signalstärke (Byte 2), nur Dongle | sicher |
 | `0x4c`, `0x4d`, `0x4e` | schreiben | | LED-Vorschau, direkte LED-Steuerung, Software-Modus an/aus | wahrscheinlich |

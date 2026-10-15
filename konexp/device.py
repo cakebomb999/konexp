@@ -419,10 +419,11 @@ class KoneXPAir(KoneXP):
             raise KoneXPError(tr('Profilwechsel nicht übernommen'))
 
     def firmware(self):
-        """Firmware-Versionen als Zahl wie in den Swarm-Dateinamen (Maus 51 = 0.051, Dongle 107 = 1.07)."""
+        """Firmware-Versionen wie Swarm sie berechnet: BCD-Ziffern, Maus aus Byte 5, 7, 6, 9; Dongle 107 = 1.07."""
+        bcd = lambda x: (x >> 4) * 10 + (x & 0xf)  # noqa: E731
         b = self.query(0x35, 13)
-        out = {'mouse': ((b[1] * 10 + b[3]) * 10 + b[2]) * 10 + b[5]}
+        out = {'mouse': ((bcd(b[5]) * 10 + bcd(b[7])) * 10 + bcd(b[6])) * 10 + bcd(b[9])}
         if self.pid == AIR_DONGLE:
             a, c = self.query(0x13, 2, target=0)
-            out['dongle'] = a * 100 + c
+            out['dongle'] = bcd(a) * 100 + bcd(c)
         return out
