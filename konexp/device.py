@@ -47,6 +47,7 @@ AIR_DEBOUNCE_SIZE = 19
 # 0x01 (Pairing), 0x12 (Bootloader), 0x31–0x34 (Firmware-Update), 0x4b (Geräte-IDs).
 AIR_READABLE = {0x13, 0x25, 0x35, 0x43, 0x44, 0x45, 0x46, 0x47, 0x4f}
 AIR_WRITABLE = {0x43, 0x45, 0x46, 0x47}
+AIR_SOFTWARE = 0x4e  # „Software aktiv“: Swarm sendet [01 00 00 ff] beim Öffnen, [00 00 00 ff] beim Schließen
 # Schreiben ist für die Air noch nicht an echter Hardware bestätigt. Freischalten: KONEXP_AIR_WRITE=1
 AIR_WRITE = os.environ.get('KONEXP_AIR_WRITE') == '1'
 
@@ -80,7 +81,7 @@ def _pid(sysdir):
 
 def find_node():
     """(node, pid) des Konfigurations-Interfaces: Kone XP Interface 3, Kone XP Air Usage Page 0xFF03."""
-    seen = []
+    seen, air = [], []
     for d in sorted(glob.glob('/sys/class/hidraw/hidraw*')):
         pid, ue = _pid(d)
         if pid is None:
@@ -90,8 +91,11 @@ def find_node():
         if pid == PID and phys.endswith('/input3'):
             return '/dev/' + name, pid
         if pid in AIR_PIDS and AIR_USAGE_PAGE in open(f'{d}/device/report_descriptor', 'rb').read():
-            return '/dev/' + name, pid
+            air.append(('/dev/' + name, pid))
+            continue
         seen.append(f'{name} ({phys[9:] or "?"})')
+    if air:  # Kabel vor Dongle: Kabel spricht die Maus direkt an
+        return min(air, key=lambda a: a[1] != AIR_WIRED)
     if seen:
         raise KoneXPError(tr('Maus gefunden, aber nicht das Konfigurations-Interface: {nodes}').format(
             nodes=', '.join(seen)))
@@ -264,6 +268,40 @@ class KoneXPAir(KoneXP):
         self.target = int(pid != AIR_WIRED)  # 1 = über den Dongle an die Maus
         self.readonly = not AIR_WRITE
         self.profile_count = 5
+        self.init_log = {}  # Antworten beim Öffnen, für dump
+        if pid == AIR_DONGLE:
+            self.init_log['link'] = self.link()
+        self.init_log['software'] = self._software(1)
+
+    def close(self):
+        self._software(0)
+        super().close()
+
+    def _software(self, on):
+        """Wie Swarm: „Software aktiv“ setzen. Fehler nur notieren, Swarm bricht hier auch nicht ab."""
+        try:
+            self._send(AIR_SOFTWARE, bytes([on, 0, 0, 0xff]))
+            return 'ok'
+        except (OSError, KoneXPError) as e:
+            return f'ERROR {e}'
+
+    def link(self):
+        """Wie Swarm beim Öffnen des Dongles: Op 04, dann Op 05 (Ziel 0, Kommando 0), je pollen bis Status ≠ 0.
+        Status 08 und Byte 13 == 1 heißt Maus verbunden. Gibt die Antwort-Frames zurück."""
+        frames = []
+        for op in (0x04, 0x05):
+            buf = self._frame(0, op, target=0)
+            fcntl.ioctl(self.fd, _ioc(3, 0x06, AIR_FRAME), buf)
+            for _ in range(20):  # ponytail: festes Limit 20×50 ms, Swarm pollt Schritt 1 ohne Limit
+                time.sleep(0.05)
+                fcntl.ioctl(self.fd, _ioc(3, 0x07, AIR_FRAME), buf)
+                if buf[3]:
+                    break
+            frames.append(bytes(buf).hex())
+            if buf[3] != 0x08:
+                break
+        self.linked = len(frames) == 2 and buf[3] == 0x08 and buf[13] == 1
+        return frames
 
     def _frame(self, cmd, op, data=b'', target=None):
         buf = bytearray(AIR_FRAME)
@@ -278,7 +316,7 @@ class KoneXPAir(KoneXP):
 
     def _send(self, cmd, data, ack=True):
         """Schreib-Frame ohne Nur-Lesen-Prüfung. Mit ack: Status 0x44 lesen, Byte 0 == 1 heißt angenommen."""
-        if cmd not in AIR_WRITABLE:
+        if cmd not in AIR_WRITABLE | {AIR_SOFTWARE}:
             raise KoneXPError(tr('Kommando 0x{cmd:02x} ist gesperrt').format(cmd=cmd))
         fcntl.ioctl(self.fd, _ioc(3, 0x06, AIR_FRAME), self._frame(cmd, AIR_OP_WRITE, data))
         time.sleep(AIR_WRITE_DELAY)
@@ -294,7 +332,12 @@ class KoneXPAir(KoneXP):
         fcntl.ioctl(self.fd, _ioc(3, 0x06, AIR_FRAME), buf)
         time.sleep(AIR_READ_DELAY)
         fcntl.ioctl(self.fd, _ioc(3, 0x07, AIR_FRAME), buf)
-        return bytes(buf) if frame else bytes(buf[5:5 + n])
+        if frame:
+            return bytes(buf)
+        if buf[3] not in (0x00, 0x08):  # 00 beschäftigt (Swarm ignoriert das beim Lesen), 08 ok
+            raise KoneXPError(tr('Maus antwortet nicht auf 0x{cmd:02x} (Status 0x{st:02x}) – eingeschaltet und '
+                                 'mit dem Dongle verbunden?').format(cmd=cmd, st=buf[3]))
+        return bytes(buf[5:5 + n])
 
     def read_block(self, cmd, sub, size):
         """Block in 25-B-Stücken: je Stück Kopf [index, sub] schreiben (ändert nichts), dann lesen."""

@@ -45,6 +45,11 @@ Feature-Report `0x06`, immer 30 Bytes inkl. Report-ID, SET und GET. *sicher*
   Beim Lesen ändert der Kopf nichts am Gerät; beim Schreiben bestätigt Swarm Kopf und Daten einzeln über `0x44`. *sicher*
 - **Checksumme** der Blöcke: wie bei der Kone XP, u16-LE-Summe aller Bytes davor. *sicher*
 - Einzelne Pakete haben keine Checksumme. *sicher*
+- **Öffnen** wie Swarm: nur Dongle zuerst Link-Check (Ziel 0, Kommando 0, Op `04`, dann Op `05`; je pollen bis
+  Status ≠ 0; Op `05` mit Status `08` und Byte 13 = `01` heißt Maus verbunden), dann `0x4e` = `01 00 00 ff`
+  („Software aktiv“), beim Schließen `0x4e` = `00 00 00 ff`. *sicher*
+- Ohne diese Schritte antwortete eine echte Air am Dongle (FW 1.07) auf jede Anfrage an Ziel 1 mit Status `0c`
+  und leeren Daten; welcher Schritt fehlt, ist *offen*.
 - Events kommen als Input-Report `0x08` (Byte 2 Typ, Byte 3 Wert; `01` = Profilwechsel). *sicher*
 
 ## Kommandos

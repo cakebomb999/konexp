@@ -20,6 +20,7 @@ class FakeAir:
         self.resp = None
         self.sets = []
         self.fail_data = None  # n: der n-te Daten-Frame (ab 1) wird verworfen und nicht bestätigt
+        self.linked = True     # False: Maus nicht mit dem Dongle verbunden, Ziel 1 antwortet mit Status 0x0c
 
     def ioctl(self, fd, req, buf):
         nr = req & 0xff
@@ -39,9 +40,14 @@ class FakeAir:
     def _set(self, buf):
         tgt, cmd, op, n = buf[1:5]
         data = bytes(buf[5:5 + n])
+        if op in (0x04, 0x05):  # Link-Check des Dongles
+            self.resp = bytearray(30)
+            self.resp[:4] = bytes([0x06, 0, 0, 0x08])
+            self.resp[13] = int(op == 0x05 and self.linked)
+            return
         if op == 0x07:
             out = bytearray(30)
-            out[:4] = bytes([0x06, tgt, cmd, 0x08])
+            out[:4] = bytes([0x06, tgt, cmd, 0x08 if self.linked or tgt == 0 else 0x0c])
             if cmd in (0x46, 0x47):
                 idx, p = self.ptr[cmd]
                 chunk = self.blocks[(cmd, p)][idx * AIR_CHUNK:(idx + 1) * AIR_CHUNK]
@@ -148,6 +154,16 @@ class TransportTest(unittest.TestCase):
                 dev.command(cmd, b'\x01')
         with self.assertRaises(KoneXPError):
             dev.write(bytes([0x08]) + bytes(1042))
+
+    def test_link(self):
+        dev = air(self.fake)
+        self.assertEqual(len(dev.link()), 2)
+        self.assertTrue(dev.linked)
+        self.fake.linked = False
+        dev.link()
+        self.assertFalse(dev.linked)
+        with self.assertRaisesRegex(KoneXPError, '0x0c'):
+            dev.read_settings(0)
 
     def test_bad_answer(self):
         dev = air(self.fake)

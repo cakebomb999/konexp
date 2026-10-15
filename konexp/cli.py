@@ -65,7 +65,8 @@ def _sysfs(node):
 def dump(dev, path):
     """Liest alles, was konexp nutzt, plus Diagnosewerte. Jeder Schritt einzeln, Fehler werden notiert."""
     out = {'format': 'konexp-dump', 'created': time.strftime('%Y-%m-%dT%H:%M:%S'), 'model': dev.NAME,
-           'pid': f'{dev.pid:04x}', 'node': dev.node, 'sysfs': _sysfs(dev.node)}
+           'pid': f'{dev.pid:04x}', 'node': dev.node, 'sysfs': _sysfs(dev.node),
+           'init': getattr(dev, 'init_log', None)}
 
     def step(key, fn):
         print(f'  {key} …', flush=True)
