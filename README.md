@@ -99,6 +99,14 @@ python3 -m konexp.gui                 # check DPI, lighting and buttons against 
 Writes are backed up and read back as for the Kone XP. `KONEXP_AIR_WRITE=0` makes konexp read-only.
 Without a mouse: `python3 -m konexp.gui --demo air`.
 
+## Adding your mouse
+
+Own another ROCCAT or Turtle Beach mouse? Run `python3 -m konexp dump` and open an issue with the
+[mouse support form](https://github.com/cakebomb999/konexp/issues/new?template=device.yml), attaching the file.
+For mice konexp does not know, the dump sends nothing to the device and needs no udev rule: it only lists
+USB IDs and HID report descriptors from `/sys`. That is enough to find the matching Swarm plugin and
+start the protocol analysis.
+
 ## Safety
 
 `konexp` only writes the reports that Swarm writes during normal use. Firmware updates, the device

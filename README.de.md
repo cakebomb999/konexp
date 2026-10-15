@@ -100,6 +100,14 @@ python3 -m konexp.gui                 # DPI, Licht und Tasten mit der eigenen Ei
 Schreiben mit Backup und Rücklesen wie bei der Kone XP. `KONEXP_AIR_WRITE=0` schaltet auf nur Lesen.
 Ohne Maus: `python3 -m konexp.gui --demo air`.
 
+## Eigene Maus hinzufügen
+
+Andere ROCCAT- oder Turtle-Beach-Maus? `python3 -m konexp dump` ausführen und mit dem
+[Formular](https://github.com/cakebomb999/konexp/issues/new?template=device.yml) ein Issue anlegen, Datei anhängen.
+Bei Mäusen, die konexp nicht kennt, sendet der Dump nichts an das Gerät und braucht keine udev-Regel:
+Er liest nur USB-IDs und HID-Report-Descriptors aus `/sys`. Das reicht, um das passende Swarm-Plugin
+zu finden und mit der Protokollanalyse zu beginnen.
+
 ## Sicherheit
 
 `konexp` schreibt nur die Reports, die auch Swarm im Normalbetrieb schreibt. Firmware-Update,

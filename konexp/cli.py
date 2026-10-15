@@ -5,8 +5,9 @@
   dpi <profil> <stufe> <dpi>  DPI einer Stufe setzen (X und Y)
   dpi-active <profil> <stufe> aktive DPI-Stufe setzen
   restore <datei.bin>         gesichertes Backup zurückschreiben
-  dump [datei.json]           alles lesen und als Diagnose-Datei speichern (nur Lesen)
+  dump [datei.json]           Diagnose-Datei für ein GitHub-Issue (nur Lesen, auch für unbekannte Mäuse)
 """
+import glob
 import json
 import os
 import sys
@@ -18,6 +19,9 @@ from .i18n import tr
 from .paths import BACKUP_DIR
 from .reports import Buttons, Settings, button_names
 
+DUMP_VENDORS = (0x1E7D, 0x10F5)  # ROCCAT, Turtle Beach
+ISSUE_URL = 'https://github.com/cakebomb999/konexp/issues/new?template=device.yml'
+
 USAGE = tr('''Kommandozeile: python3 -m konexp <befehl> …
 
   status                      alle Profile: aktive DPI-Stufe, DPI, Polling, Licht, DPI-/Profil-Tasten
@@ -25,7 +29,7 @@ USAGE = tr('''Kommandozeile: python3 -m konexp <befehl> …
   dpi <profil> <stufe> <dpi>  DPI einer Stufe setzen (X und Y)
   dpi-active <profil> <stufe> aktive DPI-Stufe setzen
   restore <datei.bin>         gesichertes Backup zurückschreiben
-  dump [datei.json]           alles lesen und als Diagnose-Datei speichern (nur Lesen)
+  dump [datei.json]           Diagnose-Datei für ein GitHub-Issue (nur Lesen, auch für unbekannte Mäuse)
 ''')
 
 
@@ -62,12 +66,36 @@ def _sysfs(node):
     return out
 
 
-def dump(dev, path):
-    """Liest alles, was konexp nutzt, plus Diagnosewerte. Jeder Schritt einzeln, Fehler werden notiert."""
-    out = {'format': 'konexp-dump', 'created': time.strftime('%Y-%m-%dT%H:%M:%S'), 'model': dev.NAME,
-           'pid': f'{dev.pid:04x}', 'node': dev.node, 'sysfs': _sysfs(dev.node),
-           'init': getattr(dev, 'init_log', None)}
+def _hid_devices():
+    """Alle hidraw-Knoten von ROCCAT und Turtle Beach, nur aus sysfs: braucht keine udev-Regel, sendet nichts."""
+    out = {}
+    for d in sorted(glob.glob('/sys/class/hidraw/hidraw*')):
+        info = _sysfs(d)
+        if any(f':{v:08X}:' in info['uevent'] for v in DUMP_VENDORS):
+            out['/dev/' + os.path.basename(d)] = info
+    return out
 
+
+def dump(dev, path, error=None):
+    """Diagnose-Datei: alle ROCCAT-/Turtle-Beach-Geräte (sysfs), dazu bei bekannter Maus alles, was konexp nutzt.
+    Jeder Schritt einzeln, Fehler werden notiert."""
+    out = {'format': 'konexp-dump', 'created': time.strftime('%Y-%m-%dT%H:%M:%S'), 'devices': _hid_devices()}
+    if dev is None:
+        out['error'] = error
+    else:
+        out.update({'model': dev.NAME, 'pid': f'{dev.pid:04x}', 'node': dev.node,
+                    'init': getattr(dev, 'init_log', None)})
+        _read(dev, out)
+    with open(path, 'w') as f:
+        json.dump(out, f, indent=1)
+    errors = [k for k, v in out.items() if isinstance(v, str) and v.startswith('ERROR')
+              or isinstance(v, dict) and not (v.get('header_ok', True) and v.get('checksum_ok', True))]
+    print(tr('{path} gespeichert, {n} Fehler').format(path=path, n=len(errors)) + (f': {", ".join(errors)}' if errors else ''))
+    print(tr('Neue Maus oder Problem? Issue öffnen und die Datei anhängen: {url}').format(url=ISSUE_URL))
+    return 1 if errors else 0
+
+
+def _read(dev, out):
     def step(key, fn):
         print(f'  {key} …', flush=True)
         try:
@@ -103,24 +131,24 @@ def dump(dev, path):
     else:
         step('r09', lambda: dev.get(0x09))
     step('select_active', lambda: dev.select(dev.active_profile(), 0x80))  # wie nach status
-    with open(path, 'w') as f:
-        json.dump(out, f, indent=1)
-    errors = [k for k, v in out.items() if isinstance(v, str) and v.startswith('ERROR')
-              or isinstance(v, dict) and not (v.get('header_ok', True) and v.get('checksum_ok', True))]
-    print(tr('{path} gespeichert, {n} Fehler').format(path=path, n=len(errors)) + (f': {", ".join(errors)}' if errors else ''))
-    return 1 if errors else 0
 
 
 def main(argv=None):
     args = (argv or sys.argv[1:]) or ['status']
     cmd, rest = args[0], [int(a, 0) for a in args[1:] if a.lstrip('-').isdigit() or a.startswith('0x')]
+    if cmd == 'dump':
+        path = args[1] if len(args) > 1 else f'konexp-dump-{time.strftime("%Y%m%d-%H%M%S")}.json'
+        try:
+            dev = open_device(backup_dir=BACKUP_DIR)
+        except KoneXPError as e:  # unbekannte Maus oder kein Zugriff: nur die Geräteliste speichern
+            print(tr('Fehler: {err}').format(err=e), file=sys.stderr)
+            return dump(None, path, str(e))
+        with dev:
+            return dump(dev, path)
     try:
         with open_device(backup_dir=BACKUP_DIR) as dev:
             if cmd == 'status':
                 status(dev)
-            elif cmd == 'dump':
-                path = args[1] if len(args) > 1 else f'konexp-dump-{time.strftime("%Y%m%d-%H%M%S")}.json'
-                return dump(dev, path)
             elif cmd == 'profile':
                 dev.set_active_profile(rest[0])
                 print(tr('Profil {num} aktiv').format(num=rest[0]))

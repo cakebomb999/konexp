@@ -3,7 +3,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Language: en\n"
 
-#: konexp/cli.py:21
+#: konexp/cli.py:25
 msgid ""
 "Kommandozeile: python3 -m konexp <befehl> …\n"
 "\n"
@@ -12,7 +12,7 @@ msgid ""
 "  dpi <profil> <stufe> <dpi>  DPI einer Stufe setzen (X und Y)\n"
 "  dpi-active <profil> <stufe> aktive DPI-Stufe setzen\n"
 "  restore <datei.bin>         gesichertes Backup zurückschreiben\n"
-"  dump [datei.json]           alles lesen und als Diagnose-Datei speichern (nur Lesen)\n"
+"  dump [datei.json]           Diagnose-Datei für ein GitHub-Issue (nur Lesen, auch für unbekannte Mäuse)\n"
 msgstr ""
 "Command line: python3 -m konexp <command> …\n"
 "\n"
@@ -21,53 +21,57 @@ msgstr ""
 "  dpi <profile> <stage> <dpi> set DPI of a stage (X and Y)\n"
 "  dpi-active <profile> <stage> set active DPI stage\n"
 "  restore <file.bin>          restore saved backup\n"
-"  dump [file.json]            read everything and save it as a diagnostic file (read-only)\n"
+"  dump [file.json]            diagnostic file for a GitHub issue (read-only, also for unknown mice)\n"
 
-#: konexp/cli.py:35
+#: konexp/cli.py:39
 msgid "aktives Profil: {num} (Index {idx})"
 msgstr "active profile: {num} (index {idx})"
 
-#: konexp/cli.py:34
+#: konexp/cli.py:94
+msgid "Neue Maus oder Problem? Issue öffnen und die Datei anhängen: {url}"
+msgstr "New mouse or a problem? Open an issue and attach the file: {url}"
+
+#: konexp/cli.py:38
 msgid "nur Lesen"
 msgstr "read-only"
 
-#: konexp/cli.py:43
+#: konexp/cli.py:47
 msgid "{mark}P{p}: DPI {dpis} | {hz} Hz | Angle Snapping {snap} | Effekt {effect}"
 msgstr "{mark}P{p}: DPI {dpis} | {hz} Hz | Angle Snapping {snap} | Effect {effect}"
 
-#: konexp/cli.py:110
+#: konexp/cli.py:93
 msgid "{path} gespeichert, {n} Fehler"
 msgstr "{path} saved, {n} error(s)"
 
-#: konexp/cli.py:45 konexp/gui/model.py:165
+#: konexp/cli.py:49 konexp/gui/model.py:165
 msgid "an"
 msgstr "on"
 
-#: konexp/cli.py:45 konexp/gui/model.py:181 konexp/gui/model.py:165 konexp/gui/tab_light.py:58
+#: konexp/cli.py:49 konexp/gui/model.py:181 konexp/gui/model.py:165 konexp/gui/tab_light.py:58
 msgid "aus"
 msgstr "off"
 
-#: konexp/cli.py:47
+#: konexp/cli.py:51
 msgid "      {name:<18} {func:<28} Easy-Shift: {shift}"
 msgstr "      {name:<18} {func:<28} Easy-Shift: {shift}"
 
-#: konexp/cli.py:147
+#: konexp/cli.py:175 konexp/cli.py:144
 msgid "Fehler: {err}"
 msgstr "Error: {err}"
 
-#: konexp/cli.py:126
+#: konexp/cli.py:154
 msgid "Profil {num} aktiv"
 msgstr "Profile {num} active"
 
-#: konexp/cli.py:132
+#: konexp/cli.py:160
 msgid "P{p} Stufe {stage}: {value} DPI"
 msgstr "P{p} stage {stage}: {value} DPI"
 
-#: konexp/cli.py:138
+#: konexp/cli.py:166
 msgid "P{p}: aktive Stufe {stage} ({dpi} DPI)"
 msgstr "P{p}: active stage {stage} ({dpi} DPI)"
 
-#: konexp/cli.py:142
+#: konexp/cli.py:170
 msgid "{path} zurückgeschrieben"
 msgstr "{path} restored"
 

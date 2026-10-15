@@ -1,0 +1,41 @@
+name: Mouse support / diagnostics
+description: Add support for your ROCCAT / Turtle Beach mouse, or report a problem with a supported one
+labels: [device]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Run `python3 -m konexp dump` and attach the `konexp-dump-<date>.json` it writes.
+        The dump only reads from the mouse. For mice konexp does not know yet it sends nothing
+        and only lists the USB IDs and HID report descriptors from `/sys`.
+  - type: input
+    id: model
+    attributes:
+      label: Mouse model
+      placeholder: e.g. ROCCAT Kone XP Air
+    validations:
+      required: true
+  - type: dropdown
+    id: connection
+    attributes:
+      label: Connection used for the dump
+      options: [Cable, Wireless dongle, Bluetooth, Other]
+    validations:
+      required: true
+  - type: textarea
+    id: dump
+    attributes:
+      label: Dump file
+      description: Drag the JSON file into this field. If GitHub refuses it, zip it first.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: What works, what does not?
+      description: For supported mice, does the GUI show your settings correctly? Error messages?
+  - type: input
+    id: os
+    attributes:
+      label: Distribution and kernel
+      placeholder: output of `cat /etc/os-release | head -1` and `uname -r`
