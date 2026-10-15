@@ -5,10 +5,11 @@ ermittelt zur Herstellung von Interoperabilität (§ 69e UrhG / Art. 6 RL 2009/2
 Swarm-Plugins „Kone XP Air“ 1.0019 (Protokoll-Bibliothek und GUI). Dieses Dokument enthält nur eigene
 Beschreibungen, keinen Herstellercode.
 
-**Stand: Lesen an echter Hardware bestätigt** (Kabel und Dongle, Dongle-FW 1.07); Schreiben ungeprüft.
+**Stand: an echter Hardware bestätigt:** Lesen per Kabel und Dongle (Dongle-FW 1.07), Schreiben des Profilblocks
+`0x46` per Kabel. Tastenblock `0x47`, Debounce `0x43`, Profilwechsel `0x45` und Schreiben per Dongle ungeprüft.
 Konfidenz bezieht sich auf den Herstellercode: **sicher** = eindeutig im Code, **wahrscheinlich** = abgeleitet,
 **offen** = unbekannt, **bestätigt** = an echter Hardware gesehen.
-`konexp` liest die Air deshalb standardmäßig nur; Schreiben ist mit `KONEXP_AIR_WRITE=1` freischaltbar.
+Schreiben lässt sich mit `KONEXP_AIR_WRITE=0` abschalten.
 
 ## Überblick
 

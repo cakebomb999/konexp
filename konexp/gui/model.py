@@ -303,7 +303,7 @@ class Snapshot:
     r11: bytes
     r0f: object = None  # bytes oder None, wenn nicht lesbar
     model: str = 'Kone XP'
-    readonly: bool = False  # Kone XP Air, solange Schreiben nicht freigeschaltet ist
+    readonly: bool = False  # Kone XP Air mit KONEXP_AIR_WRITE=0
 
     @property
     def active(self):

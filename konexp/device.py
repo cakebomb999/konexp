@@ -48,8 +48,8 @@ AIR_DEBOUNCE_SIZE = 19
 AIR_READABLE = {0x13, 0x25, 0x35, 0x43, 0x44, 0x45, 0x46, 0x47, 0x4f}
 AIR_WRITABLE = {0x43, 0x45, 0x46, 0x47}
 AIR_SOFTWARE = 0x4e  # „Software aktiv“: Swarm sendet [01 00 00 ff] beim Öffnen, [00 00 00 ff] beim Schließen
-# Schreiben ist für die Air noch nicht an echter Hardware bestätigt. Freischalten: KONEXP_AIR_WRITE=1
-AIR_WRITE = os.environ.get('KONEXP_AIR_WRITE') == '1'
+# Schreiben an echter Hardware bestätigt (Profilblock per Kabel). Abschalten: KONEXP_AIR_WRITE=0
+AIR_WRITE = os.environ.get('KONEXP_AIR_WRITE') != '0'
 
 
 class KoneXPError(Exception):
@@ -392,8 +392,7 @@ class KoneXPAir(KoneXP):
 
     def _check_writable(self):
         if self.readonly:
-            raise KoneXPError(tr('Kone XP Air: nur Lesen. Schreiben ist an echter Hardware noch nicht bestätigt '
-                                 '(freischalten mit KONEXP_AIR_WRITE=1).'))
+            raise KoneXPError(tr('Kone XP Air: nur Lesen, Schreiben ist mit KONEXP_AIR_WRITE=0 abgeschaltet.'))
 
     def _check(self, data):
         self._check_writable()

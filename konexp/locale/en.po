@@ -87,13 +87,13 @@ msgstr "Timeout: device remains busy"
 msgid "Makros der Kone XP Air werden noch nicht unterstützt"
 msgstr "Kone XP Air macros are not supported yet"
 
-#: konexp/device.py:257 konexp/device.py:419
+#: konexp/device.py:257 konexp/device.py:418
 msgid "Profilwechsel nicht übernommen"
 msgstr "Profile switch not applied"
 
 #: konexp/device.py:395
-msgid "Kone XP Air: nur Lesen. Schreiben ist an echter Hardware noch nicht bestätigt (freischalten mit KONEXP_AIR_WRITE=1)."
-msgstr "Kone XP Air: read-only. Writing has not been confirmed on real hardware yet (unlock with KONEXP_AIR_WRITE=1)."
+msgid "Kone XP Air: nur Lesen, Schreiben ist mit KONEXP_AIR_WRITE=0 abgeschaltet."
+msgstr "Kone XP Air: read-only, writing is disabled by KONEXP_AIR_WRITE=0."
 
 #: konexp/device.py:100
 msgid "Maus gefunden, aber nicht das Konfigurations-Interface: {nodes}"
@@ -107,7 +107,7 @@ msgstr "Device reports error (Ack 0x02)"
 msgid "Report 0x{rid:02x} gibt es bei der Kone XP Air nicht"
 msgstr "The Kone XP Air has no report 0x{rid:02x}"
 
-#: konexp/device.py:152 konexp/device.py:403 konexp/gui/model.py:631
+#: konexp/device.py:152 konexp/device.py:402 konexp/gui/model.py:631
 msgid "Report 0x{rid:02x} ist gesperrt"
 msgstr "Report 0x{rid:02x} is locked"
 
@@ -135,7 +135,7 @@ msgstr "Mouse does not answer 0x{cmd:02x} (status 0x{st:02x}) – is it switched
 msgid "Ungültige Antwort auf 0x{cmd:02x} – Maus eingeschaltet und mit dem Dongle verbunden?"
 msgstr "Invalid response to 0x{cmd:02x} – is the mouse switched on and connected to the dongle?"
 
-#: konexp/device.py:416
+#: konexp/device.py:415
 msgid "Profil 0..{n}"
 msgstr "Profile 0..{n}"
 
@@ -411,7 +411,7 @@ msgstr "Thumb 3"
 msgid "Daumen 4"
 msgstr "Thumb 4"
 
-#: konexp/reports.py:175 konexp/gui/main_window.py:299 konexp/gui/model.py:99 konexp/gui/model.py:237
+#: konexp/reports.py:175 konexp/gui/main_window.py:298 konexp/gui/model.py:99 konexp/gui/model.py:237
 msgid "Easy-Shift"
 msgstr "Easy-Shift"
 
@@ -479,7 +479,7 @@ msgstr "PySide6 missing (required for the GUI) – see README for installation"
 msgid "Änderungen übernehmen"
 msgstr "Apply changes"
 
-#: konexp/gui/dialogs.py:41 konexp/gui/main_window.py:312 konexp/gui/main_window.py:321
+#: konexp/gui/dialogs.py:41 konexp/gui/main_window.py:311 konexp/gui/main_window.py:320
 msgid "Schreiben"
 msgstr "Write"
 
@@ -608,138 +608,138 @@ msgid "Num {key}"
 msgstr "Num {key}"
 
 #: konexp/gui/main_window.py:40
-msgid "Kone XP Air: nur Lesen. Schreiben ist an echter Hardware noch nicht bestätigt. Änderungen lassen sich ansehen, aber nicht übernehmen. Diagnose für das Projekt: python3 -m konexp dump"
-msgstr "Kone XP Air: read-only. Writing has not been confirmed on real hardware yet. Changes can be previewed but not applied. Diagnostics for the project: python3 -m konexp dump"
+msgid "Kone XP Air: nur Lesen, Schreiben ist mit KONEXP_AIR_WRITE=0 abgeschaltet. Änderungen lassen sich ansehen, aber nicht übernehmen."
+msgstr "Kone XP Air: read-only, writing is disabled by KONEXP_AIR_WRITE=0. Changes can be previewed but not applied."
 
-#: konexp/gui/main_window.py:63
+#: konexp/gui/main_window.py:62
 msgid "Als aktiv setzen"
 msgstr "Set as active"
 
-#: konexp/gui/main_window.py:66
+#: konexp/gui/main_window.py:65
 msgid "Profilfarbe…"
 msgstr "Profile color…"
 
-#: konexp/gui/main_window.py:93 konexp/gui/main_window.py:287
+#: konexp/gui/main_window.py:92 konexp/gui/main_window.py:286
 msgid "Verwerfen"
 msgstr "Discard"
 
-#: konexp/gui/main_window.py:94
+#: konexp/gui/main_window.py:93
 msgid "Änderungen verwerfen und alles neu von der Maus laden"
 msgstr "Discard changes and reload all data from mouse"
 
-#: konexp/gui/main_window.py:96
+#: konexp/gui/main_window.py:95
 msgid "Übernehmen"
 msgstr "Apply"
 
-#: konexp/gui/main_window.py:121
+#: konexp/gui/main_window.py:120
 msgid "&Datei"
 msgstr "&File"
 
-#: konexp/gui/main_window.py:122
+#: konexp/gui/main_window.py:121
 msgid "Neu laden"
 msgstr "Reload"
 
-#: konexp/gui/main_window.py:124 konexp/gui/main_window.py:401
+#: konexp/gui/main_window.py:123 konexp/gui/main_window.py:400
 msgid "Beenden"
 msgstr "Exit"
 
-#: konexp/gui/main_window.py:126
+#: konexp/gui/main_window.py:125
 msgid "&Werkzeuge"
 msgstr "&Tools"
 
-#: konexp/gui/main_window.py:127
+#: konexp/gui/main_window.py:126
 msgid "Backup aller Profile speichern…"
 msgstr "Save backup of all profiles…"
 
-#: konexp/gui/main_window.py:128
+#: konexp/gui/main_window.py:127
 msgid "Backup wiederherstellen…"
 msgstr "Restore backup…"
 
-#: konexp/gui/main_window.py:130
+#: konexp/gui/main_window.py:129
 msgid "Profil auf Werkseinstellung"
 msgstr "Reset profile to factory defaults"
 
-#: konexp/gui/main_window.py:132
+#: konexp/gui/main_window.py:131
 msgid "&Ansicht"
 msgstr "&View"
 
-#: konexp/gui/main_window.py:133
+#: konexp/gui/main_window.py:132
 msgid "Expertenmodus"
 msgstr "Expert mode"
 
-#: konexp/gui/main_window.py:136
+#: konexp/gui/main_window.py:135
 msgid "Profilwechsel an der Maus verfolgen (alle 2 s)"
 msgstr "Track profile changes on mouse (every 2 s)"
 
-#: konexp/gui/main_window.py:148
+#: konexp/gui/main_window.py:147
 msgid "&Hilfe"
 msgstr "&Help"
 
-#: konexp/gui/main_window.py:149
+#: konexp/gui/main_window.py:148
 msgid "Über"
 msgstr "About"
 
-#: konexp/gui/main_window.py:272
+#: konexp/gui/main_window.py:271
 msgid "Laden"
 msgstr "Loading"
 
-#: konexp/gui/main_window.py:339
+#: konexp/gui/main_window.py:338
 msgid "Profil aktivieren"
 msgstr "Activate profile"
 
-#: konexp/gui/main_window.py:370
+#: konexp/gui/main_window.py:369
 msgid "Backup speichern"
 msgstr "Save backup"
 
-#: konexp/gui/main_window.py:370 konexp/gui/main_window.py:377
+#: konexp/gui/main_window.py:369 konexp/gui/main_window.py:376
 msgid "Kone-XP-Backup (*.json)"
 msgstr "Kone XP Backup (*.json)"
 
-#: konexp/gui/main_window.py:376
+#: konexp/gui/main_window.py:375
 msgid "Backup wiederherstellen"
 msgstr "Restore backup"
 
-#: konexp/gui/main_window.py:386 konexp/gui/main_window.py:366 konexp/gui/main_window.py:383
+#: konexp/gui/main_window.py:385 konexp/gui/main_window.py:365 konexp/gui/main_window.py:382
 msgid "Backup"
 msgstr "Backup"
 
-#: konexp/gui/main_window.py:387
+#: konexp/gui/main_window.py:386
 msgid "Backup in den Editor geladen. Mit „Übernehmen“ prüfen und schreiben."
 msgstr "Backup loaded into the editor. Review and write with “Apply”."
 
-#: konexp/gui/main_window.py:391
+#: konexp/gui/main_window.py:390
 msgid "Werkseinstellung"
 msgstr "Factory defaults"
 
-#: konexp/gui/main_window.py:51
+#: konexp/gui/main_window.py:50
 msgid "Profil:"
 msgstr "Profile:"
 
-#: konexp/gui/main_window.py:239
+#: konexp/gui/main_window.py:238
 msgid "Bitte warten"
 msgstr "Please wait"
 
-#: konexp/gui/main_window.py:239
+#: konexp/gui/main_window.py:238
 msgid "Es läuft bereits ein Gerätezugriff."
 msgstr "Device access is already in progress."
 
-#: konexp/gui/main_window.py:265
+#: konexp/gui/main_window.py:264
 msgid "Ohne Maus testen: python3 -m konexp.gui --demo"
 msgstr "Test without mouse: python3 -m konexp.gui --demo"
 
-#: konexp/gui/main_window.py:288
+#: konexp/gui/main_window.py:287
 msgid "Alle ungespeicherten Änderungen verwerfen und neu laden?"
 msgstr "Discard all unsaved changes and reload?"
 
-#: konexp/gui/main_window.py:366
+#: konexp/gui/main_window.py:365
 msgid "Gespeichert wird der zuletzt von der Maus gelesene Zustand, nicht die ungespeicherten Änderungen."
 msgstr "The backup saves the last state read from the mouse, not unsaved changes."
 
-#: konexp/gui/main_window.py:401
+#: konexp/gui/main_window.py:400
 msgid "Ungespeicherte Änderungen verwerfen und beenden?"
 msgstr "Discard unsaved changes and exit?"
 
-#: konexp/gui/main_window.py:150
+#: konexp/gui/main_window.py:149
 msgid ""
 "ROCCAT Kone XP / Kone XP Air – Linux-Konfiguration\n"
 "\n"
@@ -751,27 +751,27 @@ msgstr ""
 "Writes only reports 0x07, 0x06, 0x11 (and 0x05 for the active profile). Factory reset via report 0x09 is never used.\n"
 "Kone XP Air: only blocks 0x47, 0x46, 0x43 and 0x45; factory reset (0x49), pairing and firmware update are blocked."
 
-#: konexp/gui/main_window.py:183
+#: konexp/gui/main_window.py:182
 msgid "● aktiv"
 msgstr "● active"
 
-#: konexp/gui/main_window.py:198
+#: konexp/gui/main_window.py:197
 msgid "keine Änderungen"
 msgstr "no changes"
 
-#: konexp/gui/main_window.py:263
+#: konexp/gui/main_window.py:262
 msgid "{label} fehlgeschlagen"
 msgstr "{label} failed"
 
-#: konexp/gui/main_window.py:277
+#: konexp/gui/main_window.py:276
 msgid "{name}: 5 Profile geladen, aktiv P{n}"
 msgstr "{name}: 5 profiles loaded, active P{n}"
 
-#: konexp/gui/main_window.py:357
+#: konexp/gui/main_window.py:356
 msgid "Profilfarbe P{n}"
 msgstr "Profile color P{n}"
 
-#: konexp/gui/main_window.py:392
+#: konexp/gui/main_window.py:391
 msgid ""
 "P{n} (Einstellungen + Tasten) im Editor auf Werkswerte setzen?\n"
 "Geschrieben wird erst mit „Übernehmen“. Makros (0x08) bleiben unberührt."
@@ -779,11 +779,11 @@ msgstr ""
 "Reset P{n} (settings + buttons) to factory values in editor?\n"
 "Actual write happens with “Apply”. Macros (0x08) remain unchanged."
 
-#: konexp/gui/main_window.py:156
+#: konexp/gui/main_window.py:155
 msgid "{model} Konfiguration"
 msgstr "{model} configuration"
 
-#: konexp/gui/main_window.py:266
+#: konexp/gui/main_window.py:265
 msgid ""
 "{label} fehlgeschlagen:\n"
 "{msg}"
@@ -791,15 +791,15 @@ msgstr ""
 "{label} failed:\n"
 "{msg}"
 
-#: konexp/gui/main_window.py:300
+#: konexp/gui/main_window.py:299
 msgid "In {profiles} ist Taste 14 keine Easy-Shift-Taste. Trotzdem schreiben?"
 msgstr "Button 14 is not an Easy-Shift button in {profiles}. Write anyway?"
 
-#: konexp/gui/main_window.py:320
+#: konexp/gui/main_window.py:319
 msgid "Schreiben abgebrochen nach {n} Report(s)"
 msgstr "Write cancelled after {n} report(s)"
 
-#: konexp/gui/main_window.py:322
+#: konexp/gui/main_window.py:321
 msgid ""
 "Fehler: {err}\n"
 "\n"
@@ -809,27 +809,27 @@ msgstr ""
 "\n"
 "{n} report(s) written, rest not (remains marked as changed)."
 
-#: konexp/gui/main_window.py:325
+#: konexp/gui/main_window.py:324
 msgid "{n} Report(s) geschrieben und verifiziert"
 msgstr "{n} report(s) written and verified"
 
-#: konexp/gui/main_window.py:335
+#: konexp/gui/main_window.py:334
 msgid "P{n} ist jetzt aktiv"
 msgstr "P{n} is now active"
 
-#: konexp/gui/main_window.py:350
+#: konexp/gui/main_window.py:349
 msgid "Profil an der Maus gewechselt → P{n}"
 msgstr "Profile changed on mouse → P{n}"
 
-#: konexp/gui/main_window.py:373
+#: konexp/gui/main_window.py:372
 msgid "Backup gespeichert: {path}"
 msgstr "Backup saved: {path}"
 
-#: konexp/gui/main_window.py:198
+#: konexp/gui/main_window.py:197
 msgid "{n} ungespeicherte Änderung(en)"
 msgstr "{n} unsaved change(s)"
 
-#: konexp/gui/main_window.py:383
+#: konexp/gui/main_window.py:382
 msgid "Backup ungültig: {err}"
 msgstr "Backup invalid: {err}"
 

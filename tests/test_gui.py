@@ -4,12 +4,13 @@ import subprocess
 import sys
 import time
 import unittest
+from unittest import mock
 
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 
 from PySide6.QtWidgets import QApplication, QDialog  # noqa: E402
 
-from konexp.gui import dialogs, main_window  # noqa: E402
+from konexp.gui import dialogs, main_window, model  # noqa: E402
 from konexp.gui.model import R06, R07, R11, DemoBackend  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -101,7 +102,7 @@ class GuiTest(unittest.TestCase):
 
 
 class AirGuiTest(GuiTest):
-    """Kone XP Air (Demo): alle Tabs, Nur-Lesen-Sperre, Tastennamen in Air-Reihenfolge."""
+    """Kone XP Air (Demo): alle Tabs, Schreiben wie Kone XP, Tastennamen in Air-Reihenfolge."""
     def setUp(self):
         app()
         self.be = DemoBackend(delay=0, air=True)
@@ -117,10 +118,22 @@ class AirGuiTest(GuiTest):
             w.tabs.setCurrentIndex(i)
             app().processEvents()
             self.shot(f'air-tab{i}.png')
-        self.assertFalse(w.readonly_label.isHidden())
+        self.assertTrue(w.readonly_label.isHidden())
         buttons = w.tab_list[3]
         self.assertEqual(buttons.table.item(3, 0).text(), 'Rad hoch')
         self.assertEqual(buttons.table.item(11, 0).text(), 'Rad-Tilt links')
+
+
+class AirReadonlyGuiTest(AirGuiTest):
+    """KONEXP_AIR_WRITE=0: Banner, Übernehmen und Profilwechsel gesperrt."""
+    def setUp(self):
+        patch = mock.patch.object(model, 'AIR_WRITE', False)
+        patch.start()
+        self.addCleanup(patch.stop)
+        super().setUp()
+
+    def test_tabs_and_expert(self):
+        self.assertFalse(self.win.readonly_label.isHidden())
 
     def test_edit_and_apply(self):
         w = self.win

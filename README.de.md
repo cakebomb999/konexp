@@ -4,7 +4,7 @@
 
 Kommandozeile und Qt-Oberfläche für die **ROCCAT Kone XP** (USB `1e7d:2c8b`), als Ersatz für
 ROCCAT Swarm, das es nur für Windows gibt. Die **Kone XP Air** (Kabel `1e7d:2cb2`, Dongle `1e7d:2cb6`)
-wird experimentell und vorerst nur lesend unterstützt, siehe [unten](#kone-xp-air-experimentell). Die Einstellungen werden direkt in den Speicher der Maus
+wird experimentell unterstützt, siehe [unten](#kone-xp-air-experimentell). Die Einstellungen werden direkt in den Speicher der Maus
 geschrieben und gelten danach auch ohne laufende Software.
 
 ![Tasten-Tab](docs/screenshot-tasten.png)
@@ -85,21 +85,19 @@ Backups landen in `~/.local/share/konexp/backup/`.
 ## Kone XP Air (experimentell)
 
 Die Kone XP Air speichert dieselben Datenformate wie die Kone XP, nur mit anderem Transport
-([docs/PROTOCOL-XP-AIR.md](docs/PROTOCOL-XP-AIR.md)). Alles ist umgesetzt, aber **noch nicht an echter
-Hardware getestet**. Deshalb liest konexp die Air nur: Die GUI zeigt alle Einstellungen, *Übernehmen*
-bleibt gesperrt. Funktioniert per Kabel und über den 2,4-GHz-Dongle. Nicht unterstützt: Licht der
+([docs/PROTOCOL-XP-AIR.md](docs/PROTOCOL-XP-AIR.md)). An einer echten Maus bestätigt: Lesen per Kabel
+und Dongle, Schreiben der Profil-Einstellungen per Kabel. Tasten, Debounce und Profilwechsel laufen genauso,
+sind aber noch unbestätigt. Nicht unterstützt: Licht der
 Ladestation, Makros, Akkuanzeige.
 
-Wer eine Kone XP Air hat: bitte einmal ausführen (liest nur, ändert nichts) und die Datei an ein
-GitHub-Issue hängen, mit kurzer Rückmeldung, ob die GUI die eigenen Einstellungen richtig zeigt:
+Wenn etwas nicht stimmt: bitte ausführen (liest nur, ändert nichts) und die Datei an ein GitHub-Issue hängen:
 
 ```sh
 python3 -m konexp dump                # schreibt konexp-dump-<datum>.json
 python3 -m konexp.gui                 # DPI, Licht und Tasten mit der eigenen Einstellung vergleichen
 ```
 
-Zum Testen lässt sich Schreiben mit `KONEXP_AIR_WRITE=1` freischalten (Backup und Rücklesen wie bei der
-Kone XP). Nur, wenn man die Maus notfalls in Swarm zurücksetzen kann.
+Schreiben mit Backup und Rücklesen wie bei der Kone XP. `KONEXP_AIR_WRITE=0` schaltet auf nur Lesen.
 Ohne Maus: `python3 -m konexp.gui --demo air`.
 
 ## Sicherheit

@@ -38,9 +38,8 @@ class MainWindow(QMainWindow):
         lay = QVBoxLayout(central)
 
         self.readonly_label = QLabel(tr(
-            'Kone XP Air: nur Lesen. Schreiben ist an echter Hardware noch nicht bestätigt. '
-            'Änderungen lassen sich ansehen, aber nicht übernehmen. '
-            'Diagnose für das Projekt: python3 -m konexp dump'))
+            'Kone XP Air: nur Lesen, Schreiben ist mit KONEXP_AIR_WRITE=0 abgeschaltet. '
+            'Änderungen lassen sich ansehen, aber nicht übernehmen.'))
         self.readonly_label.setWordWrap(True)
         self.readonly_label.setStyleSheet('background: #fff0c0; color: #503800; padding: 6px')
         self.readonly_label.hide()

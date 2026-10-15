@@ -3,8 +3,8 @@
 **English** | [Deutsch](README.de.md)
 
 Command line tool and Qt GUI for the **ROCCAT Kone XP** (USB `1e7d:2c8b`), replacing the Windows-only
-ROCCAT Swarm. **Kone XP Air** support (cable `1e7d:2cb2`, dongle `1e7d:2cb6`) is experimental and
-read-only for now, see [below](#kone-xp-air-experimental). Settings are written straight into the mouse's onboard memory and stay active without any
+ROCCAT Swarm. **Kone XP Air** support (cable `1e7d:2cb2`, dongle `1e7d:2cb6`) is experimental, see
+[below](#kone-xp-air-experimental). Settings are written straight into the mouse's onboard memory and stay active without any
 software running.
 
 ![Buttons tab](docs/screenshot-buttons.png)
@@ -85,20 +85,18 @@ Backups are stored in `~/.local/share/konexp/backup/`.
 ## Kone XP Air (experimental)
 
 The Kone XP Air stores the same data formats as the Kone XP, wrapped in a different transport
-([docs/PROTOCOL-XP-AIR.md](docs/PROTOCOL-XP-AIR.md)). Everything is implemented, but **not yet tested on
-real hardware**, so konexp only reads the Air: the GUI shows all settings, but *Apply* stays disabled.
-Works over the cable and the 2.4 GHz dongle. Not supported: charging dock lighting, macros, battery display.
+([docs/PROTOCOL-XP-AIR.md](docs/PROTOCOL-XP-AIR.md)). Reading is confirmed on a real mouse over cable
+and dongle, writing the profile settings over the cable. Buttons, debounce and profile switching are written
+the same way but not yet confirmed. Not supported: charging dock lighting, macros, battery display.
 
-If you own a Kone XP Air, please help by running this once (reads only, changes nothing) and attaching
-the file to a GitHub issue, together with a note on whether the GUI shows your settings correctly:
+If something looks wrong, please run this (reads only, changes nothing) and attach the file to a GitHub issue:
 
 ```sh
 python3 -m konexp dump                # writes konexp-dump-<date>.json
 python3 -m konexp.gui                 # check DPI, lighting and buttons against your setup
 ```
 
-Writing can be unlocked for testing with `KONEXP_AIR_WRITE=1` (backups and read-back verification as for
-the Kone XP). Only do this if you are prepared to reset the mouse in Swarm if something goes wrong.
+Writes are backed up and read back as for the Kone XP. `KONEXP_AIR_WRITE=0` makes konexp read-only.
 Without a mouse: `python3 -m konexp.gui --demo air`.
 
 ## Safety

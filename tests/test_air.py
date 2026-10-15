@@ -202,6 +202,7 @@ class CodecTest(unittest.TestCase):
 
 
 class ModelTest(unittest.TestCase):
+    @mock.patch('konexp.gui.model.AIR_WRITE', False)
     def test_demo_air_readonly(self):
         be = DemoBackend(delay=0, air=True)
         c = Config(be.read_all())
