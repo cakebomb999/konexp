@@ -146,6 +146,13 @@ class GuiTest(unittest.TestCase):
         w.poll_active()
         self.assertEqual(w.config.active, 1)
 
+    def test_calibrate(self):
+        w = self.win
+        Q = main_window.QMessageBox
+        with mock.patch.object(Q, 'question', side_effect=[Q.Yes, Q.Save]):
+            w.tab_list[1].calib.click()
+            self.assertTrue(wait(lambda: not w.busy and w.config.r0f[2] == 2))
+
 
 class AirGuiTest(GuiTest):
     """Kone XP Air (Demo): alle Tabs, Schreiben wie Kone XP, Tastennamen in Air-Reihenfolge."""
@@ -192,6 +199,9 @@ class AirReadonlyGuiTest(AirGuiTest):
 
     def test_set_active_and_poll(self):
         pass  # Profilwechsel ist im Nur-Lesen-Modus gesperrt (test_edit_and_apply)
+
+    def test_calibrate(self):
+        self.assertFalse(self.win.tab_list[1].calib.isEnabled())
 
 
 class CliStartTest(unittest.TestCase):

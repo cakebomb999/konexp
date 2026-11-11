@@ -13,7 +13,7 @@ geschrieben und gelten danach auch ohne laufende Software.
 
 - **Profile**: 5 Profile, aktives Profil wählen, Profilfarbe
 - **DPI**: 5 Stufen (50–19000 in 50er-Schritten), Stufen an/aus, aktive Stufe
-- **Sensor**: Polling-Rate (125–1000 Hz), Angle Snapping, Debounce (0–10 ms); Lift-off nur Anzeige
+- **Sensor**: Polling-Rate (125–1000 Hz), Angle Snapping, Debounce (0–10 ms); Lift-off-Kalibrierung
 - **Beleuchtung**: Effekt (Fully Lit, Blinking, Breathing, Heartbeat, Photon FX, Colorwave),
   Geschwindigkeit, Helligkeit, Farbe je LED-Gruppe, LED-Timeout
 - **Tasten**: 15 Tasten × 2 Ebenen (normal / Easy-Shift): Maus-, DPI-, Profil-, Multimedia- und
@@ -23,8 +23,7 @@ geschrieben und gelten danach auch ohne laufende Software.
 - Backup/Restore aller Profile, Zurücksetzen auf Werkseinstellungen, Demo-Modus ohne Maus
 
 Makro-Editor: Tasten → „Makro…“ (Tasten, Maustasten, Pausen, Aufnahme, Schleife solange gedrückt oder N-mal); CLI `macro` für Schleifen.
-Noch nicht unterstützt: Lift-off-Kalibrierung,
-AIMO (Software-Beleuchtung), Host-Funktionen wie „Programm öffnen“ (führt unter Windows Swarm aus).
+Noch nicht unterstützt: AIMO (Software-Beleuchtung), Host-Funktionen wie „Programm öffnen“ (führt unter Windows Swarm aus).
 
 Die Oberfläche ist standardmäßig Englisch. Deutsch per `--lang de` (GUI), `KONEXP_LANG=de` (GUI und CLI)
 oder *View → Sprache / Language* (wirkt nach Neustart).

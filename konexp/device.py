@@ -32,6 +32,9 @@ ACK_DELAY = 0.15      # Swarm wartet 150 ms vor jedem Ack-Poll
 ACK_TRIES = 100
 ACK_OK, ACK_ERR, ACK_BUSY = 0x01, 0x02, 0x03
 
+# Lift-off-Kalibrierung (DCU, Modus 2): starten, Ergebnis übernehmen, verwerfen
+DCU_START, DCU_ACCEPT, DCU_DISCARD = 0xff, 0x01, 0x00
+
 # --- Kone XP Air (docs/PROTOCOL-XP-AIR.md) ---------------------------------
 # 0x2CB2 Maus per Kabel, 0x2CB6 2,4-GHz-Dongle. Dock (0x2CB8) spricht ein anderes Protokoll.
 AIR_WIRED, AIR_DONGLE = 0x2CB2, 0x2CB6
@@ -46,7 +49,7 @@ AIR_DEBOUNCE_SIZE = 19
 # Nur diese Kommandos sendet konexp überhaupt. Nicht dabei, weil riskant: 0x49 (u. a. Werksreset),
 # 0x01 (Pairing), 0x12 (Bootloader), 0x31–0x34 (Firmware-Update), 0x4b (Geräte-IDs).
 AIR_READABLE = {0x13, 0x25, 0x35, 0x43, 0x44, 0x45, 0x46, 0x47, 0x4f}
-AIR_WRITABLE = {0x43, 0x45, 0x46, 0x47}
+AIR_WRITABLE = {0x43, 0x45, 0x46, 0x47, 0x4f}
 AIR_SOFTWARE = 0x4e  # „Software aktiv“: Swarm sendet [01 00 00 ff] beim Öffnen, [00 00 00 ff] beim Schließen
 # Schreiben an echter Hardware bestätigt (Profilblock per Kabel). Abschalten: KONEXP_AIR_WRITE=0
 AIR_WRITE = os.environ.get('KONEXP_AIR_WRITE') != '0'
@@ -257,6 +260,16 @@ class KoneXP:
         if self.active_profile() != profile:
             raise KoneXPError(tr('Profilwechsel nicht übernommen'))
 
+    def calibrate(self, cmd):
+        """Lift-off-Kalibrierung: DCU_START, DCU_ACCEPT oder DCU_DISCARD. Gibt 0x0f danach zurück."""
+        if cmd not in (DCU_START, DCU_ACCEPT, DCU_DISCARD):
+            raise KoneXPError(tr('Unbekanntes Kalibrier-Kommando 0x{cmd:02x}').format(cmd=cmd))
+        self._calibrate(cmd)
+        return self.get(0x0f)
+
+    def _calibrate(self, cmd):
+        self._set(bytes([0x0f, 0x06, 0x02, cmd, 0x00, 0x00]))
+
 
 class KoneXPAir(KoneXP):
     """Kone XP Air per Kabel oder Dongle. Gleiche Schnittstelle wie KoneXP:
@@ -417,6 +430,9 @@ class KoneXPAir(KoneXP):
         self.command(0x45, bytes([profile, count]))
         if self.active_profile() != profile:
             raise KoneXPError(tr('Profilwechsel nicht übernommen'))
+
+    def _calibrate(self, cmd):
+        self.command(0x4f, bytes([0x02, cmd]))
 
     def firmware(self):
         """Firmware-Versionen wie Swarm sie berechnet: BCD-Ziffern, Maus aus Byte 5, 7, 6, 9; Dongle 107 = 1.07."""

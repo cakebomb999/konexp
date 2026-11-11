@@ -46,7 +46,7 @@ class ExpertTab(TabBase):
                '<h3>' + tr('Global') + '</h3>',
                '<b>0x05</b> ' + tr('(aktives Profil)') + hex_html(c.snapshot.r05, None),
                '<b>0x11</b> ' + tr('(Debounce)') + hex_html(bytes(c.advanced.to_bytes()), c.orig[(R11, None)]),
-               '<b>0x0f</b> ' + tr('(DCU, nur lesen)') + (hex_html(c.r0f, None) if c.r0f else ' ' + tr('nicht lesbar')),
+               '<b>0x0f</b> ' + tr('(DCU)') + (hex_html(c.r0f, None) if c.r0f else ' ' + tr('nicht lesbar')),
                '<h3>' + tr('Unbekannte / nicht bearbeitete Bytes in 0x06 (nur Anzeige)') + '</h3><table>']
         for off, name in UNKNOWN06_AIR if s.air else UNKNOWN06:
             out.append(f'<tr><td>0x{off:02x}</td><td>&nbsp;{s.raw[off]:02x}&nbsp;</td><td>{html.escape(name)}</td></tr>')

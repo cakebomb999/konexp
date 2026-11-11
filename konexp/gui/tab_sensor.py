@@ -1,4 +1,4 @@
-"""Tab Sensor: Polling (0x06 0x1d), Angle Snapping (0x06 0x1b), Debounce (0x11, global), DCU nur Anzeige."""
+"""Tab Sensor: Polling (0x06 0x1d), Angle Snapping (0x06 0x1b), Debounce (0x11, global), DCU-Anzeige und Kalibrierung."""
 from PySide6.QtWidgets import QCheckBox, QComboBox, QFormLayout, QGroupBox, QLabel, QPushButton, QSpinBox, QVBoxLayout
 
 from ..i18n import tr
@@ -35,12 +35,10 @@ class SensorTab(TabBase):
         g.addRow(tr('Debounce-Zeit:'), self.debounce)
         self.dcu = QLabel()
         g.addRow(tr('Lift-off (DCU):'), self.dcu)
-        self.calib = QPushButton(tr('Kalibrierung (kommt später)'))
-        self.calib.setEnabled(False)
+        self.calib = QPushButton(tr('Kalibrieren…'))
+        self.calib.setToolTip(tr('Misst den Lift-off auf dem aktuellen Mauspad (Modus „kalibriert“). '
+                                 'Wird sofort an die Maus geschickt, nicht über „Übernehmen“.'))
         g.addRow('', self.calib)
-        hint = QLabel(tr('Lift-off wird nur angezeigt (Report 0x0f), nicht geschrieben.'))
-        hint.setStyleSheet('color: gray')
-        g.addRow('', hint)
         lay.addWidget(glob)
         lay.addStretch(1)
 
@@ -56,6 +54,7 @@ class SensorTab(TabBase):
         self.snap.setChecked(s.angle_snapping)
         self.debounce.setValue(min(self.config.advanced.debounce_ms, 10))
         r0f = self.config.r0f
+        self.calib.setEnabled(r0f is not None and not self.config.readonly)
         if r0f is None:
             self.dcu.setText(tr('nicht lesbar'))
         else:

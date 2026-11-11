@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (QButtonGroup, QColorDialog, QDialog, QFileDialog,
                                QFrame, QMessageBox, QProgressBar, QPushButton, QScrollArea, QTabWidget, QVBoxLayout,
                                QWidget)
 
-from ..device import KoneXPError
+from ..device import DCU_ACCEPT, DCU_DISCARD, DCU_START, KoneXPError
 from ..i18n import LANGUAGES, language, save_language, tr
 from .dialogs import DiffDialog
 from .model import BACKUP_DIR, NPROFILES, UDEV_HINT, Config, load_backup, run_plan, save_backup
@@ -81,6 +81,7 @@ class MainWindow(QMainWindow):
             self.tab_pages[t] = page
             self.tabs.addTab(page, t.TITLE)
             t.changed.connect(self.on_changed)
+        self.tab_list[1].calib.clicked.connect(self.calibrate)
         self.expert_tab = self.tab_list[-1]
         self.tabs.setTabVisible(self.tabs.indexOf(self.tab_pages[self.expert_tab]), False)
         lay.addWidget(self.tabs, 1)
@@ -332,6 +333,30 @@ class MainWindow(QMainWindow):
             self.status(tr('P{n} ist jetzt aktiv').format(n=p + 1))
             self.refresh_chrome()
         self.run_task(lambda prog: self.backend.set_active_profile(p), done, tr('Profil aktivieren'))
+
+    def calibrate(self):
+        r = QMessageBox.question(self, tr('Lift-off-Kalibrierung'),
+                                 tr('Maus flach auf das Mauspad legen. Nach dem Start einige Sekunden bewegen, '
+                                    'dabei nicht anheben. Kalibrierung starten?'))
+        if r != QMessageBox.Yes:
+            return
+        self.poll.stop()
+        self.run_task(lambda prog: self.backend.calibrate(DCU_START), self._calibrating, tr('Kalibrierung'))
+
+    def _calibrating(self, _):
+        # shortcut: Ende der Messung (Event 0x30) wird nicht gelesen, der Nutzer bestätigt selbst
+        self.task.wait()  # done kommt kurz vor Thread-Ende; sonst lehnt run_task als „busy“ ab
+        r =QMessageBox.question(self, tr('Lift-off-Kalibrierung'),
+                                 tr('Maus jetzt ca. 5 Sekunden auf dem Mauspad bewegen, ohne sie anzuheben. '
+                                    'Danach Ergebnis übernehmen?'),
+                                 QMessageBox.Save | QMessageBox.Discard, QMessageBox.Save)
+        cmd = DCU_ACCEPT if r == QMessageBox.Save else DCU_DISCARD
+
+        def done(r0f):
+            self.config.r0f = r0f
+            self.status(tr('Kalibrierung übernommen') if cmd == DCU_ACCEPT else tr('Kalibrierung verworfen'))
+            self.refresh_all()
+        self.run_task(lambda prog: self.backend.calibrate(cmd), done, tr('Kalibrierung'))
 
     def poll_active(self):
         if self.config is None or self.busy:

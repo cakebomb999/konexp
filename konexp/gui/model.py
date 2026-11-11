@@ -12,7 +12,7 @@ import time
 from dataclasses import dataclass
 
 from .. import defaults
-from ..device import AIR_WRITE, SEL_SETTINGS, KoneXPError, checksum_ok, open_device
+from ..device import AIR_WRITE, DCU_ACCEPT, SEL_SETTINGS, KoneXPError, checksum_ok, open_device
 from ..i18n import tr
 from ..functions import MACRO_MODES, NAMES, describe
 from ..reports import (BUTTONS, BUTTONS_AIR, DPI_STEP, EFFECTS, EFFECTS_AIR, LED_COUNT, LED_DPI, LED_WHEEL, N_BUTTONS,
@@ -588,6 +588,10 @@ class DeviceBackend:
         with self.lock:
             self._guard(lambda: self._open().set_active_profile(p))
 
+    def calibrate(self, cmd):
+        with self.lock:
+            return self._guard(lambda: self._open().calibrate(cmd))
+
     def read_report(self, key):
         """Aktuellen Gerätestand eines Reports lesen (für den Merge vor dem Schreiben)."""
         rid, p = key
@@ -688,6 +692,14 @@ class DemoBackend:
         if self.snap.readonly:
             raise KoneXPError(tr('Kone XP Air: nur Lesen'))
         self.snap.r05 = bytes([0x05, 0x04, p, 0x05])
+
+    def calibrate(self, cmd):
+        if self.snap.readonly:
+            raise KoneXPError(tr('Kone XP Air: nur Lesen'))
+        time.sleep(self.delay)
+        if cmd == DCU_ACCEPT:
+            self.snap.r0f = bytes([0x0f, 0x06, 0x02, 0x00, 0x00, 0x00])
+        return self.snap.r0f
 
     def read_macro(self, p, slot):
         """Geschriebene Makros, sonst Swarms Autoclicker als Beispiel."""

@@ -13,7 +13,7 @@ software running.
 
 - **Profiles**: 5 profiles, select the active one, profile color
 - **DPI**: 5 stages (50–19000 in steps of 50), enable/disable stages, active stage
-- **Sensor**: polling rate (125–1000 Hz), angle snapping, debounce (0–10 ms); lift-off is read-only
+- **Sensor**: polling rate (125–1000 Hz), angle snapping, debounce (0–10 ms); lift-off calibration
 - **Lighting**: effect (Fully Lit, Blinking, Breathing, Heartbeat, Photon FX, Colorwave), speed,
   brightness, color per LED group, LED timeout
 - **Buttons**: 15 buttons × 2 layers (normal / Easy-Shift): mouse, DPI, profile, media and navigation
@@ -23,8 +23,7 @@ software running.
 - Backup/restore of all profiles, reset to factory defaults, demo mode without a mouse
 
 Macro editor: Buttons → “Macro…” (keys, mouse buttons, pauses, recording, loop while held or play N times); CLI `macro` for loops.
-Not supported yet: lift-off calibration,
-AIMO (software-driven lighting), host functions such as "open program" (Swarm runs those on Windows).
+Not supported yet: AIMO (software-driven lighting), host functions such as "open program" (Swarm runs those on Windows).
 
 The user interface is in English by default; German is available via `--lang de` (GUI), `KONEXP_LANG=de`
 (GUI and CLI) or *View → Sprache / Language* (takes effect after a restart).

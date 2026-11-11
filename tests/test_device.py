@@ -15,18 +15,21 @@ class FakeXP:
     def __init__(self):
         self.r06 = {p: bytearray(defaults.settings(p)) for p in range(5)}
         self.sel, self.mangle = 0, False
+        self.r0f = bytearray([0x0f, 0x06, 0, 0, 0, 0])
 
     def ioctl(self, fd, req, buf):
         if req & 0xff == 0x06:      # SET
             if buf[0] == 0x04:
                 self.sel = buf[1]
+            elif buf[0] == 0x0f:
+                self.r0f = bytearray(buf)
             else:
                 self.r06[buf[2]] = bytearray(buf)
                 if self.mangle:
                     self.r06[buf[2]][0x20] ^= 1
                     self.mangle = False
         else:                       # GET
-            buf[:] = bytes([0x04, device.ACK_OK, 0, 0]) if buf[0] == 0x04 else self.r06[self.sel]
+            buf[:] = {0x04: bytes([0x04, device.ACK_OK, 0, 0]), 0x0f: self.r0f}.get(buf[0], self.r06[self.sel])
         return 0
 
 
@@ -70,6 +73,13 @@ class WriteTest(unittest.TestCase):
             self.dev.write(self._changed(1))
             self.dev.write(self._changed(2))
         self.assertEqual(len(os.listdir(self.tmp.name)), 2)
+
+    def test_calibrate(self):
+        self.assertEqual(self.dev.calibrate(device.DCU_START), bytes.fromhex('0f0602ff0000'))
+        self.assertEqual(self.dev.calibrate(device.DCU_ACCEPT), bytes.fromhex('0f0602010000'))
+        with self.assertRaises(KoneXPError):
+            self.dev.calibrate(0x02)
+        self.assertEqual(bytes(self.fake.r06[2]), defaults.settings(2))  # Profil 2 nicht berührt
 
     def test_locked_report(self):
         with self.assertRaises(KoneXPError):

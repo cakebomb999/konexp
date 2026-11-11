@@ -135,6 +135,13 @@ class TransportTest(unittest.TestCase):
         with self.assertRaises(KoneXPError):
             dev.set_active_profile(5)
 
+    def test_calibrate(self):
+        with self.assertRaises(KoneXPError):
+            air(self.fake).calibrate(device.DCU_START)  # Nur-Lesen
+        dev = air(self.fake, readonly=False)
+        self.assertEqual(dev.calibrate(device.DCU_START), bytes.fromhex('0f0602ff0000'))
+        self.assertEqual(self.fake.regs[0x4f], bytes([0x02, 0xff]))
+
     def test_aborted_write_restores_backup(self):
         dev = air(self.fake, readonly=False)
         orig = dev.read_settings(3)
