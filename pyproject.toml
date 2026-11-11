@@ -5,15 +5,18 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "konexp"
 version = "0.2.0"
-description = "Linux-Konfiguration für die ROCCAT Kone XP (DPI, Sensor, Beleuchtung, Tasten)"
+description = "Konfiguration für die ROCCAT Kone XP unter Linux und Windows (DPI, Sensor, Beleuchtung, Tasten)"
 readme = "README.md"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
+# Linux spricht hidraw direkt an; Windows braucht hidapi (wie Swarm)
+dependencies = ["hidapi>=0.14; sys_platform == 'win32'"]
 authors = [{ name = "Marco" }]
-keywords = ["roccat", "kone-xp", "mouse", "hidraw", "linux"]
+keywords = ["roccat", "kone-xp", "mouse", "hidraw", "hidapi", "linux", "windows"]
 classifiers = [
     "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3",
     "Topic :: System :: Hardware :: Hardware Drivers",
     "Environment :: X11 Applications :: Qt",

@@ -38,7 +38,7 @@ class WriteTest(unittest.TestCase):
         self.fake = FakeXP()
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
-        for p in (mock.patch.object(device.fcntl, 'ioctl', self.fake.ioctl),
+        for p in (mock.patch.object(device, '_feature', self.fake.ioctl),
                   mock.patch.object(device.time, 'sleep', lambda _s: None)):
             p.start()
             self.addCleanup(p.stop)
@@ -84,6 +84,55 @@ class WriteTest(unittest.TestCase):
     def test_locked_report(self):
         with self.assertRaises(KoneXPError):
             self.dev.write(bytes(device.SIZES[0x09]).replace(b'\0', b'\x09', 1))
+
+
+class WindowsTransportTest(unittest.TestCase):
+    """Windows-Pfad (hidapi) mit Fake-hid: Suche über Usage Page, Feature-Reports mit Report-ID."""
+
+    class Dev:
+        def __init__(self):
+            self.sent, self.path = [], None
+
+        def open_path(self, path):
+            self.path = path
+
+        def send_feature_report(self, data):
+            self.sent.append(data)
+            return len(data)
+
+        def get_feature_report(self, rid, n):
+            return [rid, device.ACK_OK, 0, 0][:n]
+
+        def close(self):
+            pass
+
+    def setUp(self):
+        devs = [{'path': b'p-mouse', 'product_id': device.PID, 'usage_page': 0x0001},
+                {'path': b'p-cfg', 'product_id': device.PID, 'usage_page': device.XP_PAGE},
+                {'path': b'p-air', 'product_id': device.AIR_DONGLE, 'usage_page': device.AIR_PAGE}]
+        self.hid = mock.Mock(enumerate=lambda vid: devs if vid == device.VID else [], device=self.Dev)
+        for p in (mock.patch.object(device, 'WINDOWS', True), mock.patch.object(device, 'hid', self.hid, create=True),
+                  mock.patch.object(device.time, 'sleep', lambda _s: None)):
+            p.start()
+            self.addCleanup(p.stop)
+
+    def test_find_prefers_config_collection(self):
+        self.assertEqual(device.find_node(), ('p-cfg', device.PID))
+
+    def test_swarm_warning(self):
+        out = '"svchost.exe","1","Services","0","1 K"\n"ROCCAT_Swarm.exe","2","Console","1","9 K"\n'
+        with mock.patch.object(device.subprocess, 'run', return_value=mock.Mock(stdout=out)):
+            self.assertIn('ROCCAT_Swarm.exe', device.swarm_warning())
+        with mock.patch.object(device.subprocess, 'run', return_value=mock.Mock(stdout=out.split('\n')[0])):
+            self.assertEqual(device.swarm_warning(), '')
+
+    def test_open_by_path_and_feature_roundtrip(self):
+        dev = device.open_device('p-air')
+        self.assertIsInstance(dev.fd, self.Dev)
+        self.assertEqual(dev.fd.path, b'p-air')
+        buf = bytearray([0x04, 0, 0, 0])
+        device._feature(dev.fd, 0x07, buf)
+        self.assertEqual(buf, bytearray([0x04, device.ACK_OK, 0, 0]))
 
 
 if __name__ == '__main__':

@@ -1,14 +1,22 @@
-"""HID-Transport für die ROCCAT Kone XP (Interface 3) und Kone XP Air (Interface 2), Feature-Reports via hidraw.
+"""HID-Transport für die ROCCAT Kone XP (Interface 3) und Kone XP Air (Interface 2), Feature-Reports via hidraw
+(Linux) bzw. hidapi (Windows).
 
 Protokoll: docs/PROTOCOL.md, docs/PROTOCOL-XP-AIR.md.
 Jeder Write läuft über `KoneXP.write()`: Sperrliste prüfen, Ack pollen, zurücklesen,
 bei Abweichung Backup wiederherstellen. `KoneXPAir` bildet dieselbe Schnittstelle auf die
 Kommandos der Air ab (gleiche Datenblöcke, andere Hülle).
 """
-import fcntl
 import glob
 import os
+import subprocess
+import sys
 import time
+
+WINDOWS = sys.platform == 'win32'
+if WINDOWS:
+    import hid  # PyPI hidapi, Windows-Backend wie in Swarm
+else:
+    import fcntl
 
 from .i18n import tr
 
@@ -40,6 +48,7 @@ DCU_START, DCU_ACCEPT, DCU_DISCARD = 0xff, 0x01, 0x00
 AIR_WIRED, AIR_DONGLE = 0x2CB2, 0x2CB6
 AIR_PIDS = (AIR_WIRED, AIR_DONGLE)
 AIR_USAGE_PAGE = bytes([0x06, 0x03, 0xff])   # Report-Descriptor-Item Usage Page 0xFF03
+XP_PAGE, AIR_PAGE = 0xFF01, 0xFF03           # Usage Page des Konfigurations-Interfaces (Windows-Suche)
 AIR_FRAME, AIR_CHUNK = 30, 25                # Feature-Report 0x06: [06 ziel cmd op len daten…]
 AIR_OP_WRITE, AIR_OP_READ = 0x06, 0x07
 AIR_WRITE_DELAY, AIR_READ_DELAY = 0.08, 0.09  # wie Swarm
@@ -81,6 +90,45 @@ def _ioc(dir_, nr, size):
     return (dir_ << 30) | (size << 16) | (ord('H') << 8) | nr
 
 
+def _feature(fd, nr, buf):
+    """Feature-Report: nr 0x06 SET, 0x07 GET (füllt buf, buf[0] = Report-ID). fd: hidraw-fd bzw. hid.device."""
+    if not WINDOWS:
+        fcntl.ioctl(fd, _ioc(3, nr, len(buf)), buf)
+    elif nr == 0x06:
+        if fd.send_feature_report(bytes(buf)) < 0:
+            raise OSError('send_feature_report failed')
+    else:
+        data = bytes(fd.get_feature_report(buf[0], len(buf)))
+        buf[:] = data[:len(buf)].ljust(len(buf), b'\0')
+
+
+def _open(node):
+    if not WINDOWS:
+        return os.open(node, os.O_RDWR)
+    dev = hid.device()
+    dev.open_path(node.encode())
+    return dev
+
+
+def _close(fd):
+    fd.close() if WINDOWS else os.close(fd)
+
+
+def swarm_warning():
+    """Windows: Warntext, wenn Swarm läuft (paralleler Zugriff kann Select/Antwort-Paare vertauschen), sonst ''."""
+    if not WINDOWS:
+        return ''
+    try:
+        out = subprocess.run(['tasklist', '/fo', 'csv', '/nh'], capture_output=True, text=True,
+                             errors='replace', timeout=5).stdout
+    except (OSError, subprocess.SubprocessError):
+        return ''
+    # shortcut: Teilstring „swarm“, weil der Prozessname von Swarm II nicht belegt ist
+    names = sorted({l.split('","')[0].strip('"') for l in out.splitlines() if 'swarm' in l.lower()})
+    return tr('Swarm läuft ({names}) – vorher beenden, sonst können Lese- und Schreibzugriffe '
+              'durcheinandergeraten.').format(names=', '.join(names)) if names else ''
+
+
 def checksum(buf):
     return sum(buf[:-2]) & 0xffff
 
@@ -100,34 +148,50 @@ def _pid(sysdir):
     return next((p for p in (PID, *AIR_PIDS) if f'{VID:08X}:{p:08X}' in ue), None), ue
 
 
-def find_node():
-    """(node, pid) des Konfigurations-Interfaces: Kone XP Interface 3, Kone XP Air Usage Page 0xFF03."""
-    seen, air = [], []
+def _candidates():
+    """(node, pid, Konfigurations-Interface?, Beschreibung) je HID-Knoten einer Kone XP / XP Air."""
+    if WINDOWS:
+        for d in hid.enumerate(VID):
+            pid, page = d['product_id'], d['usage_page']
+            if pid in (PID, *AIR_PIDS):
+                yield d['path'].decode(), pid, page == (XP_PAGE if pid == PID else AIR_PAGE), f'usage page 0x{page:04x}'
+        return
     for d in sorted(glob.glob('/sys/class/hidraw/hidraw*')):
         pid, ue = _pid(d)
         if pid is None:
             continue
         phys = next((l for l in ue.splitlines() if l.startswith('HID_PHYS=')), '')
         name = os.path.basename(d)
-        if pid == PID and phys.endswith('/input3'):
-            return '/dev/' + name, pid
-        if pid in AIR_PIDS and AIR_USAGE_PAGE in open(f'{d}/device/report_descriptor', 'rb').read():
-            air.append(('/dev/' + name, pid))
-            continue
-        seen.append(f'{name} ({phys[9:] or "?"})')
+        ok = (phys.endswith('/input3') if pid == PID
+              else AIR_USAGE_PAGE in open(f'{d}/device/report_descriptor', 'rb').read())
+        yield '/dev/' + name, pid, ok, f'{name} ({phys[9:] or "?"})'
+
+
+def find_node():
+    """(node, pid) des Konfigurations-Interfaces: Kone XP Interface 3, Kone XP Air Usage Page 0xFF03."""
+    seen, air = [], []
+    for node, pid, ok, desc in _candidates():
+        if not ok:
+            seen.append(desc)
+        elif pid == PID:
+            return node, pid
+        else:
+            air.append((node, pid))
     if air:  # Kabel vor Dongle: Kabel spricht die Maus direkt an
         return min(air, key=lambda a: a[1] != AIR_WIRED)
     if seen:
         raise KoneXPError(tr('Maus gefunden, aber nicht das Konfigurations-Interface: {nodes}').format(
             nodes=', '.join(seen)))
     raise KoneXPError(tr('Kone XP / Kone XP Air (USB 1e7d:2c8b, 2cb2, 2cb6) nicht gefunden – angeschlossen? '
-                         'Prüfen mit: lsusb'))
+                         'Prüfen mit: {check}').format(check=tr('Geräte-Manager') if WINDOWS else 'lsusb'))
 
 
 def open_device(node=None, backup_dir=None):
     """Passende Geräteklasse für den Knoten (automatisch gesucht, wenn None)."""
     if node is None:
         node, pid = find_node()
+    elif WINDOWS:
+        pid = next((p for n, p, _ok, _d in _candidates() if n == node), None)
     else:
         pid = _pid(f'/sys/class/hidraw/{os.path.basename(node)}')[0]
     if pid in AIR_PIDS:
@@ -143,14 +207,18 @@ class KoneXP:
     def __init__(self, node=None, backup_dir=None):
         self.node = node or find_node()[0]
         try:
-            self.fd = os.open(self.node, os.O_RDWR)
-        except PermissionError as e:
+            self.fd = _open(self.node)
+        except OSError as e:
+            if WINDOWS:  # hidapi meldet nur „open failed“
+                raise KoneXPError(tr('Kein Zugriff auf {node} ({err})').format(node=self.node, err=e))
+            if not isinstance(e, PermissionError):
+                raise
             raise KoneXPError(tr('Kein Zugriff auf {node} – udev-Regel installiert? ({err})').format(
                 node=self.node, err=e))
         self.backup_dir = backup_dir
 
     def close(self):
-        os.close(self.fd)
+        _close(self.fd)
 
     def __enter__(self):
         return self
@@ -164,7 +232,7 @@ class KoneXP:
         n = SIZES[rid]
         buf = bytearray(n)
         buf[0] = rid
-        fcntl.ioctl(self.fd, _ioc(3, 0x07, n), buf)  # HIDIOCGFEATURE
+        _feature(self.fd, 0x07, buf)  # HIDIOCGFEATURE
         return bytes(buf)
 
     def _check(self, data):
@@ -178,7 +246,7 @@ class KoneXP:
     def _set(self, data):
         self._check(data)
         buf = bytearray(data)
-        fcntl.ioctl(self.fd, _ioc(3, 0x06, len(buf)), buf)  # HIDIOCSFEATURE
+        _feature(self.fd, 0x06, buf)  # HIDIOCSFEATURE
         self._wait_ack()
 
     def _wait_ack(self):
@@ -327,10 +395,10 @@ class KoneXPAir(KoneXP):
         frames = []
         for op in (0x04, 0x05):
             buf = self._frame(0, op, target=0)
-            fcntl.ioctl(self.fd, _ioc(3, 0x06, AIR_FRAME), buf)
+            _feature(self.fd, 0x06, buf)
             for _ in range(20):  # ponytail: festes Limit 20×50 ms, Swarm pollt Schritt 1 ohne Limit
                 time.sleep(0.05)
-                fcntl.ioctl(self.fd, _ioc(3, 0x07, AIR_FRAME), buf)
+                _feature(self.fd, 0x07, buf)
                 if buf[3]:
                     break
             frames.append(bytes(buf).hex())
@@ -354,7 +422,7 @@ class KoneXPAir(KoneXP):
         """Schreib-Frame ohne Nur-Lesen-Prüfung. Mit ack: Status 0x44 lesen, Byte 0 == 1 heißt angenommen."""
         if cmd not in AIR_WRITABLE | {AIR_SOFTWARE}:
             raise KoneXPError(tr('Kommando 0x{cmd:02x} ist gesperrt').format(cmd=cmd))
-        fcntl.ioctl(self.fd, _ioc(3, 0x06, AIR_FRAME), self._frame(cmd, AIR_OP_WRITE, data))
+        _feature(self.fd, 0x06, self._frame(cmd, AIR_OP_WRITE, data))
         time.sleep(AIR_WRITE_DELAY)
         if ack and self.query(0x44, 17)[0] != 1:
             raise KoneXPError(tr('Gerät bestätigt Kommando 0x{cmd:02x} nicht').format(cmd=cmd))
@@ -365,9 +433,9 @@ class KoneXPAir(KoneXP):
             raise KoneXPError(tr('Kommando 0x{cmd:02x} ist gesperrt').format(cmd=cmd))
         buf = self._frame(cmd, AIR_OP_READ, target=target)
         time.sleep(AIR_READ_DELAY)
-        fcntl.ioctl(self.fd, _ioc(3, 0x06, AIR_FRAME), buf)
+        _feature(self.fd, 0x06, buf)
         time.sleep(AIR_READ_DELAY)
-        fcntl.ioctl(self.fd, _ioc(3, 0x07, AIR_FRAME), buf)
+        _feature(self.fd, 0x07, buf)
         if frame:
             return bytes(buf)
         if buf[3] not in (0x00, 0x08):  # 00 beschäftigt (Swarm ignoriert das beim Lesen), 08 ok

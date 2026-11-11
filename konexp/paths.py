@@ -1,11 +1,11 @@
-"""Pfade für Laufzeitdaten (XDG) und optionale lokale Ressourcen."""
+"""Pfade für Laufzeitdaten (XDG, Windows: %APPDATA%) und optionale lokale Ressourcen."""
 import os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def data_dir():
-    base = os.environ.get('XDG_DATA_HOME') or os.path.expanduser('~/.local/share')
+    base = os.environ.get('XDG_DATA_HOME') or os.environ.get('APPDATA') or os.path.expanduser('~/.local/share')
     return os.path.join(base, 'konexp')
 
 

@@ -1,6 +1,7 @@
 """dump ohne bekannte Maus: nur Geräteliste aus sysfs, gefiltert nach ROCCAT / Turtle Beach."""
 import json
 import os
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -9,6 +10,7 @@ from konexp import cli, reports
 from konexp.device import checksum_ok
 
 
+@unittest.skipIf(sys.platform == 'win32', 'sysfs')
 class DumpTest(unittest.TestCase):
     def test_unknown_mouse(self):
         uevent = {'hidraw1': 'HID_ID=0003:000010F5:00007001\n', 'hidraw2': 'HID_ID=0003:0000046D:0000C52B\n'}
