@@ -609,10 +609,17 @@ class DeviceBackend:
 
     def poll_active(self):
         """Nicht blockierend: None, wenn gerade ein Worker läuft oder die Maus fehlt."""
+        return self._poll(lambda: self.dev.active_profile())
+
+    def battery(self):
+        """(Prozent, per Funk) oder None; nicht blockierend wie poll_active."""
+        return self._poll(lambda: self.dev.battery())
+
+    def _poll(self, fn):
         if self.dev is None or not self.lock.acquire(blocking=False):
             return None
         try:
-            return self.dev.active_profile()
+            return fn()
         except OSError:
             return None
         finally:
@@ -711,6 +718,9 @@ class DemoBackend:
 
     def poll_active(self):
         return self.snap.r05[2]
+
+    def battery(self):
+        return (90, True) if self.snap.model == 'Kone XP Air' else None
 
 
 def merge_onto(fresh, orig, cur):

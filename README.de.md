@@ -89,7 +89,7 @@ Die Kone XP Air speichert dieselben Datenformate wie die Kone XP, nur mit andere
 ([docs/PROTOCOL-XP-AIR.md](docs/PROTOCOL-XP-AIR.md)). An einer echten Maus bestätigt: Lesen per Kabel
 und Dongle, Schreiben der Profil-Einstellungen per Kabel. Tasten, Debounce und Profilwechsel laufen genauso,
 sind aber noch unbestätigt. Nicht unterstützt: Licht der
-Ladestation, Makros, Akkuanzeige.
+Ladestation, Makros. Der Akkustand steht in `status` und in der Statusleiste der GUI.
 
 Wenn etwas nicht stimmt: bitte ausführen (liest nur, ändert nichts) und die Datei an ein GitHub-Issue hängen:
 

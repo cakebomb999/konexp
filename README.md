@@ -88,7 +88,7 @@ Backups are stored in `~/.local/share/konexp/backup/`.
 The Kone XP Air stores the same data formats as the Kone XP, wrapped in a different transport
 ([docs/PROTOCOL-XP-AIR.md](docs/PROTOCOL-XP-AIR.md)). Reading is confirmed on a real mouse over cable
 and dongle, writing the profile settings over the cable. Buttons, debounce and profile switching are written
-the same way but not yet confirmed. Not supported: charging dock lighting, macros, battery display.
+the same way but not yet confirmed. Not supported: charging dock lighting, macros. Battery level shows in `status` and the GUI status bar.
 
 If something looks wrong, please run this (reads only, changes nothing) and attach the file to a GitHub issue:
 

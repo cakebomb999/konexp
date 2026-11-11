@@ -98,6 +98,13 @@ class TransportTest(unittest.TestCase):
         self.assertTrue(all(f[1] == 1 for f in self.fake.sets))
         self.assertTrue(all(f[4] == 2 for f in self.fake.sets if f[3] == 0x06))
 
+    def test_battery(self):
+        # Datenbytes von air_44 aus einem echten Dongle-Dump (Issue, 2026-10-15)
+        self.fake.regs[0x44][:] = bytes.fromhex('01015aff000000143250143250e40b3d6c')
+        self.assertEqual(air(self.fake).battery(), (90, True))
+        self.fake.regs[0x44][:] = bytes.fromhex('01005aff000000143250143250cd0b3d6c')  # Kabel-Dump, 27 s davor
+        self.assertEqual(air(self.fake).battery(), (90, False))
+
     def test_wired_target(self):
         dev = air(self.fake, pid=device.AIR_WIRED)
         dev.read_settings(0)

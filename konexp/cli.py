@@ -38,6 +38,9 @@ def status(dev):
     active = dev.active_profile()
     print(f'{dev.NAME} ({dev.node})' + (' – ' + tr('nur Lesen') if dev.readonly else ''))
     print(tr('aktives Profil: {num} (Index {idx})').format(num=active + 1, idx=active))
+    b = dev.battery()
+    if b:
+        print(tr('Akku {pct} %').format(pct=b[0]) + ('' if b[1] else ' ' + tr('(Kabel)')))
     for p in range(5):
         s = Settings(dev.read_settings(p))
         b = Buttons(dev.read_buttons(p))

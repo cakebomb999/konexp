@@ -21,6 +21,7 @@ from .widgets import ColorButton, swatch_icon
 from .worker import Task
 
 POLL_MS = 2000
+BATTERY_MS = 60000  # selten: jede Abfrage geht per Funk an die Maus
 
 
 class MainWindow(QMainWindow):
@@ -105,13 +106,19 @@ class MainWindow(QMainWindow):
         self.progress = QProgressBar()
         self.progress.setMaximumWidth(220)
         self.progress.hide()
+        self.battery_label = QLabel()
         self.statusBar().addWidget(self.status_label, 1)
+        self.statusBar().addPermanentWidget(self.battery_label)
         self.statusBar().addPermanentWidget(self.progress)
 
         self._menus()
         self.poll = QTimer(self)
         self.poll.setInterval(POLL_MS)
         self.poll.timeout.connect(self.poll_active)
+        self.batt_start = None  # (Zeit, %) seit letztem Laden/Kabel, für die Entladerate
+        self.batt_timer = QTimer(self)
+        self.batt_timer.setInterval(BATTERY_MS)
+        self.batt_timer.timeout.connect(self.update_battery)
         self.refresh_all()
         QTimer.singleShot(0, self.reload)
 
@@ -281,6 +288,8 @@ class MainWindow(QMainWindow):
         self.profile = self.config.active
         self.pbuttons[self.profile].setChecked(True)
         self.refresh_all()
+        self.batt_timer.start()
+        QTimer.singleShot(0, self.update_battery)  # erst nach _on_finished, sonst ist der Worker noch busy
 
     def discard(self):
         if self.config and self.config.dirty:
@@ -370,6 +379,25 @@ class MainWindow(QMainWindow):
             self.status(tr('Profil an der Maus gewechselt → P{n}').format(n=a + 1))
             self.refresh_chrome()
 
+    def update_battery(self, now=None):
+        if self.busy:
+            return
+        try:
+            b = self.backend.battery()
+        except KoneXPError:
+            b = None
+        if b is None:
+            return
+        pct, wireless = b
+        now = time.time() if now is None else now
+        if not wireless or self.batt_start is None or pct > self.batt_start[1]:
+            self.batt_start = (now, pct)
+        text = tr('Akku {pct} %').format(pct=pct) + ('' if wireless else ' ' + tr('(Kabel)'))
+        t0, p0 = self.batt_start
+        if p0 - pct >= 2:  # Auflösung 1 %: erst ab 2 % Abfall halbwegs aussagekräftig
+            text += ' · ' + tr('~{rate:.1f} %/h').format(rate=(p0 - pct) * 3600 / (now - t0))
+        self.battery_label.setText(text)
+
     def pick_profile_color(self):
         if self.config is None:
             return
@@ -423,6 +451,7 @@ class MainWindow(QMainWindow):
                 e.ignore()
                 return
         self.poll.stop()
+        self.batt_timer.stop()
         if self.task is not None:
             self.task.wait()
         self.backend.close()

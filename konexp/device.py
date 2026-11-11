@@ -183,6 +183,10 @@ class KoneXP:
     def active_profile(self):
         return self.get(0x05)[2]
 
+    def battery(self):
+        """Kabelmaus: kein Akku."""
+        return None
+
     def read_settings(self, profile):
         self.select(profile, SEL_SETTINGS)
         return self.get(0x06)
@@ -389,6 +393,11 @@ class KoneXPAir(KoneXP):
     def active_profile(self):
         active, self.profile_count = self.query(0x45, 2)
         return active
+
+    def battery(self):
+        """Status 0x44: (Akku in %, per Funk). Byte 1 = 0 am Kabel/Laden."""
+        s = self.query(0x44, 3)
+        return s[2], bool(s[1])
 
     def read_settings(self, profile):
         return self._block(0x06, profile)

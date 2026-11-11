@@ -146,6 +146,18 @@ class GuiTest(unittest.TestCase):
         w.poll_active()
         self.assertEqual(w.config.active, 1)
 
+    def test_battery_rate(self):
+        w = self.win
+        w.batt_start = None
+        with mock.patch.object(self.be, 'battery', side_effect=[(90, True), (89, True), (87, True), (87, False)]):
+            w.update_battery(now=0)
+            w.update_battery(now=1800)
+            self.assertNotIn('%/h', w.battery_label.text())  # 1 % Abfall: noch keine Rate
+            w.update_battery(now=3600)
+            self.assertIn('~3.0 %/h', w.battery_label.text())
+            w.update_battery(now=3700)  # am Kabel: Rate neu
+            self.assertNotIn('%/h', w.battery_label.text())
+
     def test_calibrate(self):
         w = self.win
         Q = main_window.QMessageBox
@@ -166,6 +178,7 @@ class AirGuiTest(GuiTest):
     def test_tabs_and_expert(self):
         w = self.win
         self.assertIn('Kone XP Air', w.windowTitle())
+        self.assertTrue(wait(lambda: '90 %' in w.battery_label.text()))
         w.act_expert.setChecked(True)
         for i in range(w.tabs.count()):
             w.tabs.setCurrentIndex(i)
