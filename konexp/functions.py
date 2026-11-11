@@ -33,9 +33,6 @@ NAMES = {
     (0x0b, 0x08): tr('Mikrofon stumm (Host)'),
 }
 
-# Typen, deren Funktion auf der Maus selbst läuft (keine Host-Software nötig)
-ON_DEVICE = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a}
-
 MODIFIERS = ((1, tr('Strg')), (2, 'Shift'), (4, 'Alt'), (8, 'Win'))
 MACRO_MODES = {1: tr('solange gedrückt'), 2: tr('bei Druck')}
 
@@ -53,7 +50,3 @@ def describe(entry):
     if typ == 0x0b and (typ, b2) not in NAMES:
         return tr('Host-Funktion 0x{code:02x}').format(code=b2)
     return NAMES.get((typ, b2)) or tr('unbekannt typ 0x{typ:02x} b2 0x{code:02x}').format(typ=typ, code=b2)
-
-
-def entry_for(typ, b2, b1=0, b0=0):
-    return (b0, b1, b2, typ)

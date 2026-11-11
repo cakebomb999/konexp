@@ -87,6 +87,8 @@ class Settings(_Report):
 
     def set_dpi(self, stage, value, y=True):
         """Setzt DPI einer Stufe. Swarm schreibt nur X; wir setzen Y standardmäßig mit."""
+        if not 0 <= stage <= 4:
+            raise ValueError(tr('Wert {val} außerhalb {lo}..{hi}').format(val=stage, lo=0, hi=4))
         if not (DPI_MIN <= value <= DPI_MAX and value % DPI_STEP == 0):
             raise ValueError(tr('DPI {value}: erlaubt {lo}..{hi} in {step}er-Schritten').format(
                 value=value, lo=DPI_MIN, hi=DPI_MAX, step=DPI_STEP))

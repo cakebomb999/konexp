@@ -22,6 +22,13 @@ class DumpTest(unittest.TestCase):
         self.assertEqual(out['error'], 'nicht gefunden')
 
 
+class ArgsTest(unittest.TestCase):
+    def test_bad_number_is_an_error_not_a_crash(self):
+        with mock.patch.object(cli, 'open_device', side_effect=AssertionError('Gerät nicht anfassen')), \
+                mock.patch('sys.stderr'):
+            self.assertEqual(cli.main(['dpi', '0', '1', '0800']), 1)
+
+
 class MacroTest(unittest.TestCase):
     # Profil 2 Taste 14, von Swarm geschrieben (Preset „Autoclicker“), von der Maus gelesen
     SWARM = bytes.fromhex('081304020e4175746f636c69636b6572' + '00' * 29 + '4c696e6b736b6c69636b' + '00' * 22

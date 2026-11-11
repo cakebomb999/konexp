@@ -3,6 +3,7 @@ import string
 
 from ..functions import MODIFIERS
 from ..i18n import tr
+from ..reports import MOUSE_KEYS
 
 USAGES = {}
 for _i, _c in enumerate(string.ascii_uppercase):
@@ -29,9 +30,9 @@ USAGES.update({
 USAGES.update({0xe0 + i: n for i, n in enumerate((tr('Strg links'), tr('Shift links'), tr('Alt links'), tr('Win links'),
                                                   tr('Strg rechts'), tr('Shift rechts'), tr('AltGr'),
                                                   tr('Win rechts')))})
-# Nur im Makro: Maustasten (reports.MOUSE_KEYS)
-MOUSE = dict(zip((0xf0, 0xf1, 0xf2, 0xf3, 0xf4), (tr('Maus links'), tr('Maus rechts'), tr('Maus Mitte'),
-                                                  tr('Maus Taste 4'), tr('Maus Taste 5'))))
+# Nur im Makro: Maustasten
+MOUSE = dict(zip(MOUSE_KEYS, (tr('Maus links'), tr('Maus rechts'), tr('Maus Mitte'), tr('Maus Taste 4'),
+                              tr('Maus Taste 5'))))
 
 # Linux-evdev-Keycode -> HID-Usage, erzeugt aus linux/input-event-codes.h und der HID-Usage-Tabelle (Page 0x07).
 # Qt liefert unter X11 und Wayland nativeScanCode = evdev + 8.

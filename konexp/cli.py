@@ -1,22 +1,11 @@
-"""Kommandozeile: python3 -m konexp <befehl> …
-
-  status                      alle Profile: aktive DPI-Stufe, DPI, Polling, Licht, DPI-/Profil-Tasten
-  profile <0-4>               aktives Profil setzen
-  dpi <profil> <stufe> <dpi>  DPI einer Stufe setzen (X und Y)
-  dpi-active <profil> <stufe> aktive DPI-Stufe setzen
-  restore <datei.bin>         gesichertes Backup zurückschreiben
-  dump [datei.json]           Diagnose-Datei für ein GitHub-Issue (nur Lesen, auch für unbekannte Mäuse)
-  macro <profil> <taste> [shift] <schritte…>
-                              Endlos-Makro solange gedrückt; +f0/-f0 Taste (HID hex, f0 = Linksklick)
-                              drücken/loslassen, Zahl = Pause in ms. Beispiel: macro 0 14 +f0 1000 -f0 1500
-"""
+"""Kommandozeile: python3 -m konexp <befehl> … (Befehle: USAGE)"""
 import glob
 import json
 import os
 import sys
 import time
 
-from .device import AIR_BLOCKS, AIR_DONGLE, KoneXPAir, KoneXPError, checksum_ok, open_device
+from .device import AIR_BLOCKS, AIR_DONGLE, CHECKSUMMED, KoneXPAir, KoneXPError, checksum_ok, open_device
 from .functions import describe
 from .i18n import tr
 from .paths import BACKUP_DIR
@@ -37,6 +26,12 @@ USAGE = tr('''Kommandozeile: python3 -m konexp <befehl> …
                               Endlos-Makro solange gedrückt; +f0/-f0 Taste (HID hex, f0 = Linksklick)
                               drücken/loslassen, Zahl = Pause in ms. Beispiel: macro 0 14 +f0 1000 -f0 1500
 ''')
+
+
+def _profile(p):
+    if not 0 <= p <= 4:
+        raise ValueError(tr('Profil 0..4'))
+    return p
 
 
 def status(dev):
@@ -144,7 +139,7 @@ def set_macro(dev, args):
     bricht 0x08 ab, zeigt keine Taste auf ein halbes Makro."""
     if isinstance(dev, KoneXPAir):
         raise KoneXPError(tr('Makros der Kone XP Air werden noch nicht unterstützt'))
-    p, k = int(args[0]), int(args[1])
+    p, k = _profile(int(args[0])), int(args[1])
     shift = len(args) > 2 and args[2] == 'shift'
     steps = parse_steps(' '.join(args[3 if shift else 2:]))
     if not 0 <= k < N_BUTTONS:
@@ -158,7 +153,7 @@ def set_macro(dev, args):
 
 def main(argv=None):
     args = (argv or sys.argv[1:]) or ['status']
-    cmd, rest = args[0], [int(a, 0) for a in args[1:] if a.lstrip('-').isdigit() or a.startswith('0x')]
+    cmd = args[0]
     if cmd == 'dump':
         path = args[1] if len(args) > 1 else f'konexp-dump-{time.strftime("%Y%m%d-%H%M%S")}.json'
         try:
@@ -169,6 +164,7 @@ def main(argv=None):
         with dev:
             return dump(dev, path)
     try:
+        rest = [int(a, 0) for a in args[1:] if a.lstrip('-').isdigit() or a.startswith('0x')]
         with open_device(backup_dir=BACKUP_DIR) as dev:
             if cmd == 'status':
                 status(dev)
@@ -177,26 +173,29 @@ def main(argv=None):
                 print(tr('Profil {num} aktiv').format(num=rest[0]))
             elif cmd == 'dpi':
                 p, stage, value = rest
-                s = Settings(dev.read_settings(p))
+                s = Settings(dev.read_settings(_profile(p)))
                 s.set_dpi(stage, value)
                 dev.write(s.to_bytes())
                 print(tr('P{p} Stufe {stage}: {value} DPI').format(p=p, stage=stage, value=value))
             elif cmd == 'dpi-active':
                 p, stage = rest
-                s = Settings(dev.read_settings(p))
+                s = Settings(dev.read_settings(_profile(p)))
                 s.dpi_active = stage
                 dev.write(s.to_bytes())
                 print(tr('P{p}: aktive Stufe {stage} ({dpi} DPI)').format(p=p, stage=stage, dpi=s.dpi(stage)))
             elif cmd == 'macro':
                 set_macro(dev, args[1:])
             elif cmd == 'restore':
-                data = open(args[1], 'rb').read()
+                with open(args[1], 'rb') as f:
+                    data = f.read()
+                if data[0] in CHECKSUMMED and not checksum_ok(data):  # beschädigte Datei nicht neu summieren
+                    raise ValueError(tr('kein gültiger Report 0x{rid:02x}').format(rid=data[0]))
                 dev.write(data)
                 print(tr('{path} zurückgeschrieben').format(path=args[1]))
             else:
                 print(USAGE)
                 return 2
-    except (KoneXPError, ValueError, IndexError) as e:
+    except (KoneXPError, ValueError, IndexError, OSError) as e:
         print(tr('Fehler: {err}').format(err=e), file=sys.stderr)
         return 1
     return 0

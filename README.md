@@ -42,7 +42,7 @@ cd konexp
 Allow access to the mouse without root (once):
 
 ```sh
-sudo cp udev/70-kone-xp.rules /etc/udev/rules.d/
+sudo cp konexp/udev/70-kone-xp.rules /etc/udev/rules.d/
 sudo udevadm control --reload
 sudo udevadm trigger
 ```

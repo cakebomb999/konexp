@@ -30,7 +30,6 @@ class DiffDialog(QDialog):
         for r, c in enumerate(changes):
             for col, text in enumerate((c.profile_label, f'0x{c.report:02x}', c.field, c.old, c.new)):
                 t.setItem(r, col, QTableWidgetItem(text))
-        t.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
         t.resizeColumnsToContents()
         t.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
         self.table = t

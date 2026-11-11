@@ -19,5 +19,5 @@ build() {
 package() {
   cd "$pkgname-$pkgver"
   python -m installer --destdir="$pkgdir" dist/*.whl
-  install -Dm644 udev/70-kone-xp.rules "$pkgdir/usr/lib/udev/rules.d/70-kone-xp.rules"
+  install -Dm644 konexp/udev/70-kone-xp.rules "$pkgdir/usr/lib/udev/rules.d/70-kone-xp.rules"
 }

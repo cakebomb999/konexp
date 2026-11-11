@@ -20,10 +20,6 @@ class TabBase(QWidget):
         self.config, self.profile = config, profile
         self.refresh()
 
-    def set_expert(self, on):
-        self.expert = on
-        self.refresh()
-
     @contextmanager
     def loading(self):
         old, self._loading = self._loading, True

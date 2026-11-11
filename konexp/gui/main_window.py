@@ -257,6 +257,8 @@ class MainWindow(QMainWindow):
     def _on_finished(self):
         self.progress.hide()
         self.refresh_chrome()
+        if self.act_live.isChecked() and self.config:  # auch nach Fehlern wieder verfolgen
+            self.poll.start()
 
     def _on_failed(self, label, msg):
         self.status(tr('{label} fehlgeschlagen').format(label=label))
@@ -278,8 +280,6 @@ class MainWindow(QMainWindow):
         self.profile = self.config.active
         self.pbuttons[self.profile].setChecked(True)
         self.refresh_all()
-        if self.act_live.isChecked():
-            self.poll.start()
 
     def discard(self):
         if self.config and self.config.dirty:
@@ -322,8 +322,6 @@ class MainWindow(QMainWindow):
                                     'der Rest nicht (bleibt als Änderung markiert).').format(err=err, n=len(done)))
         else:
             self.status(tr('{n} Report(s) geschrieben und verifiziert').format(n=len(done)))
-        if self.act_live.isChecked():
-            self.poll.start()
 
     def set_active(self):
         p = self.profile
@@ -333,8 +331,6 @@ class MainWindow(QMainWindow):
             self.config.active = p
             self.status(tr('P{n} ist jetzt aktiv').format(n=p + 1))
             self.refresh_chrome()
-            if self.act_live.isChecked():
-                self.poll.start()
         self.run_task(lambda prog: self.backend.set_active_profile(p), done, tr('Profil aktivieren'))
 
     def poll_active(self):

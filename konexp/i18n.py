@@ -45,7 +45,7 @@ def set_language(lang=None):
     global _lang, _catalog
     lang = lang or os.environ.get('KONEXP_LANG') or saved_language() or DEFAULT_LANG
     if lang not in LANGUAGES:
-        lang = SOURCE_LANG
+        lang = DEFAULT_LANG
     _lang = lang
     _catalog = {} if lang == SOURCE_LANG else {k: v for k, (v, _f) in read_po(po_path(lang)).items() if v}
     return lang

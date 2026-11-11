@@ -37,7 +37,7 @@ konexp-gui = "konexp.gui.__main__:main"
 include = ["konexp*"]
 
 [tool.setuptools.package-data]
-konexp = ["locale/*.po"]
+konexp = ["locale/*.po", "udev/*.rules"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

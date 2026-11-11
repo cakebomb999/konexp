@@ -231,6 +231,16 @@ if __name__ == '__main__':
     unittest.main()
 
 
+class StageRangeTest(unittest.TestCase):
+    def test_dpi_stage_out_of_range(self):
+        from konexp.reports import Settings
+        s = Settings(defaults.settings(0))
+        for stage in (-1, 5, 7):
+            with self.assertRaises(ValueError):
+                s.set_dpi(stage, 800)
+        self.assertEqual(s.to_bytes(), defaults.settings(0))
+
+
 class MergeTest(unittest.TestCase):
     """Änderungen an der Maus seit dem Laden dürfen durch Übernehmen nicht zurückgesetzt werden."""
 
@@ -247,5 +257,9 @@ class MergeTest(unittest.TestCase):
         written = be.writes[-1]
         self.assertEqual(written[0x06], 4)              # Gerätestand bleibt
         self.assertEqual(int.from_bytes(written[0x0f:0x11], 'little') * 50, 6400)
+        for key, data in done:
+            c.mark_written(key, data)
+        self.assertFalse(c.dirty)                       # Gerätestand übernommen, keine Phantom-Änderung
+        self.assertEqual(c.settings[0].dpi_active, 4)
         self.assertEqual(merge_onto(b'\x01\x02\x00\x00', b'\x01\x02\x00\x00', b'\x01\x09\x00\x00'),
                          b'\x01\x09\x00\x00')

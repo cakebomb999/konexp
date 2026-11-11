@@ -10,7 +10,7 @@ def data_dir():
 
 
 BACKUP_DIR = os.path.join(data_dir(), 'backup')
-UDEV_RULE = os.path.join(ROOT, 'udev', '70-kone-xp.rules')
+UDEV_RULE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'udev', '70-kone-xp.rules')
 
 # Optional: Grafiken aus einer lokal installierten ROCCAT-Swarm-Kopie (proprietär, nicht im Repo).
 # Ohne sie zeichnet die GUI eine eigene Skizze.

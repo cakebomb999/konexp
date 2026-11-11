@@ -209,7 +209,8 @@ class KoneXP:
         if not self.backup_dir:
             return
         os.makedirs(self.backup_dir, exist_ok=True)
-        name = f'{time.strftime("%Y%m%d-%H%M%S")}-r{data[0]:02x}-before.bin'
+        # mit Millisekunden: zwei Writes desselben Reports in einer Sekunde überschreiben sich sonst
+        name = f'{time.strftime("%Y%m%d-%H%M%S")}-{time.time_ns() // 10**6 % 1000:03d}-r{data[0]:02x}-before.bin'
         with open(os.path.join(self.backup_dir, name), 'wb') as f:
             f.write(data)
 

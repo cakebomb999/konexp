@@ -44,9 +44,6 @@ class ColorButton(QPushButton):
         self.setIcon(swatch_icon(self._color, 24))
         self.setToolTip(self._color.name())
 
-    def color(self):
-        return QColor(self._color)
-
 
 def _fit(src_w, src_h, rect):
     s = min(rect.width() / src_w, rect.height() / src_h)

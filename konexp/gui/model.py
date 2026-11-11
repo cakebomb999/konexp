@@ -15,7 +15,8 @@ from .. import defaults
 from ..device import AIR_WRITE, SEL_SETTINGS, KoneXPError, checksum_ok, open_device
 from ..i18n import tr
 from ..functions import MACRO_MODES, NAMES, describe
-from ..reports import (BUTTONS, BUTTONS_AIR, DPI_STEP, EFFECTS, EFFECTS_AIR, LED_COUNT, N_BUTTONS, POLLING_HZ, SLEEP_EFFECTS,
+from ..reports import (BUTTONS, BUTTONS_AIR, DPI_STEP, EFFECTS, EFFECTS_AIR, LED_COUNT, LED_DPI, LED_WHEEL, N_BUTTONS,
+                       POLLING_HZ, SLEEP_EFFECTS,
                        Advanced, Buttons, Settings, button_names, format_steps, macro, parse_macro)
 from .hidkeys import shortcut_text
 
@@ -45,7 +46,6 @@ LED_IMAGES = ['LED-02', 'LED-01', 'LED-04', 'LED-03', 'LED-06', 'LED-05', 'LED-0
               'LED-16', 'LED-15', 'Wheel-LED', 'DPI_LED']
 LED_GRID = ([(i // 2, i % 2) for i in range(8)] + [(4, 0), (6, 0)]
             + [(7 + (i - 10) // 2, (i - 10) % 2) for i in range(10, 18)] + [(5, 0), (5, 1)])
-LED_WHEEL, LED_DPI = 18, 19
 LED_GROUPS = {
     tr('alle'): list(range(LED_COUNT)),
     tr('Leiste links'): list(range(0, 9)),
@@ -393,6 +393,8 @@ class Config:
         if key[0] == R08:
             self.macros.pop((data[3], data[4]), None)
             return
+        # an der Maus geänderte Bytes in den Editor übernehmen, sonst gelten sie als ungespeicherte Änderung
+        self.obj(key).raw[:] = merge_onto(data, self.orig[key], self.obj(key).raw)
         self.orig[key] = bytes(data)
 
     def revert(self, key=None):
