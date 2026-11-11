@@ -80,7 +80,7 @@ def air(fake, pid=device.AIR_DONGLE, readonly=True):
 class TransportTest(unittest.TestCase):
     def setUp(self):
         self.fake = FakeAir()
-        patches = [mock.patch.object(device.fcntl, 'ioctl', self.fake.ioctl),
+        patches = [mock.patch.object(device, '_feature', self.fake.ioctl),
                    mock.patch.object(device.time, 'sleep', lambda _s: None)]
         for p in patches:
             p.start()

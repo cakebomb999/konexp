@@ -1,6 +1,7 @@
 """Model/Diff/Schreibplan/Backup ohne Maus (DemoBackend = Dumps)."""
 import json
 import os
+import sys
 import tempfile
 import unittest
 
@@ -224,7 +225,8 @@ class DeviceErrorTest(unittest.TestCase):
         from konexp.gui.model import UDEV_HINT, DeviceBackend
         with self.assertRaises(KoneXPError):
             DeviceBackend(node='/dev/does-not-exist').read_all()
-        self.assertIn('70-kone-xp.rules', UDEV_HINT)
+        if sys.platform != 'win32':
+            self.assertIn('70-kone-xp.rules', UDEV_HINT)
 
 
 if __name__ == '__main__':

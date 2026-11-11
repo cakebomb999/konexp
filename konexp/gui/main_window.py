@@ -272,7 +272,7 @@ class MainWindow(QMainWindow):
     def _on_failed(self, label, msg):
         self.status(tr('{label} fehlgeschlagen').format(label=label))
         hint = ('' if self.backend.demo
-                else '\n\n' + UDEV_HINT + '\n\n' + tr('Ohne Maus testen: python3 -m konexp.gui --demo'))
+                else ''.join('\n\n' + t for t in (UDEV_HINT, tr('Ohne Maus testen: python3 -m konexp.gui --demo')) if t))
         QMessageBox.critical(self, label, tr('{label} fehlgeschlagen:\n{msg}').format(label=label, msg=msg) + hint)
 
     # --- Laden / Schreiben -----------------------------------------------

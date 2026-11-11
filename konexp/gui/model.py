@@ -7,6 +7,7 @@ Geräte-Zugriff läuft ausschließlich über ein Backend:
 import datetime
 import json
 import os
+import sys
 import threading
 import time
 from dataclasses import dataclass
@@ -31,7 +32,7 @@ DISABLED = (0, 0, 0, 0)
 DCU_MODES = {0: 'Very Low', 1: 'Low', 2: tr('kalibriert (Custom)')}
 EASY_AIM_MIN, EASY_AIM_MAX = 100, 19000
 
-UDEV_HINT = tr(
+UDEV_HINT = '' if sys.platform == 'win32' else tr(  # Windows braucht keine Rechte-Regel
     'Zugriff auf die Maus fehlt. udev-Regel installieren:\n'
     '  sudo cp {rule} /etc/udev/rules.d/\n'
     '  sudo udevadm control --reload && sudo udevadm trigger\n'

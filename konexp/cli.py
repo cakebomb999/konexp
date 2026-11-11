@@ -5,8 +5,8 @@ import os
 import sys
 import time
 
-from .device import (AIR_BLOCKS, AIR_DONGLE, CHECKSUMMED, KoneXPAir, KoneXPError, battery_soc, checksum_ok,
-                     open_device)
+from .device import (AIR_BLOCKS, AIR_DONGLE, CHECKSUMMED, WINDOWS, KoneXPAir, KoneXPError, battery_soc, checksum_ok,
+                     open_device, swarm_warning)
 from .functions import describe
 from .i18n import tr
 from .paths import BACKUP_DIR
@@ -73,7 +73,11 @@ def _sysfs(node):
 
 
 def _hid_devices():
-    """Alle hidraw-Knoten von ROCCAT und Turtle Beach, nur aus sysfs: braucht keine udev-Regel, sendet nichts."""
+    """Alle HID-Knoten von ROCCAT und Turtle Beach, nur aus sysfs bzw. hidapi: braucht keine udev-Regel, sendet nichts."""
+    if WINDOWS:  # hidapi-Felder statt sysfs; Report-Descriptor liefert enumerate nicht
+        import hid
+        return {d['path'].decode(): {k: v for k, v in d.items() if k != 'path'}
+                for v in DUMP_VENDORS for d in hid.enumerate(v)}
     out = {}
     for d in sorted(glob.glob('/sys/class/hidraw/hidraw*')):
         info = _sysfs(d)
@@ -159,6 +163,8 @@ def set_macro(dev, args):
 def main(argv=None):
     args = (argv or sys.argv[1:]) or ['status']
     cmd = args[0]
+    if warn := swarm_warning():
+        print(tr('Warnung: {msg}').format(msg=warn), file=sys.stderr)
     if cmd == 'dump':
         path = args[1] if len(args) > 1 else f'konexp-dump-{time.strftime("%Y%m%d-%H%M%S")}.json'
         try:

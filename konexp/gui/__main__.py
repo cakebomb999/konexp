@@ -9,7 +9,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog='python3 -m konexp.gui', description=tr('Kone-XP-Konfiguration'))
     ap.add_argument('--demo', nargs='?', const='xp', choices=('xp', 'air'),
                     help=tr('ohne Maus: Werksdaten + Beispielprofil, Writes nur im Speicher'))
-    ap.add_argument('--node', help=tr('hidraw-Gerät (Standard: automatisch)'))
+    ap.add_argument('--node', help=tr('HID-Gerät, /dev/hidrawN bzw. hidapi-Pfad (Standard: automatisch)'))
     ap.add_argument('--quit-after', type=int, metavar='MS', help=tr('nach MS Millisekunden beenden (Tests)'))
     ap.add_argument('--screenshot', metavar='DATEI', 
                     help=tr('vor dem Beenden Screenshot speichern (mit --quit-after)'))
@@ -32,6 +32,11 @@ def main(argv=None):
     backend = DemoBackend(air=args.demo == 'air') if args.demo else DeviceBackend(args.node)
     win = MainWindow(backend)
     win.show()
+    if not args.demo:
+        from ..device import swarm_warning
+        if warn := swarm_warning():
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.warning(win, 'Swarm', warn)
     if args.quit_after:
         def finish():
             if args.screenshot:

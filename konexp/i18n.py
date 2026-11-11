@@ -21,7 +21,7 @@ _lang = SOURCE_LANG
 
 
 def _settings_file():
-    base = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config')
+    base = os.environ.get('XDG_CONFIG_HOME') or os.environ.get('APPDATA') or os.path.expanduser('~/.config')
     return os.path.join(base, 'konexp', 'language')
 
 

@@ -29,15 +29,15 @@ msgstr ""
 "                              endless macro while held; +f0/-f0 press/release key (HID hex, f0 = left click),\n"
 "                              number = pause in ms. Example: macro 0 14 +f0 1000 -f0 1500\n"
 
-#: konexp/cli.py:34 konexp/defaults.py:40 konexp/defaults.py:50 konexp/defaults.py:85 konexp/device.py:280
+#: konexp/cli.py:34 konexp/defaults.py:40 konexp/defaults.py:50 konexp/defaults.py:85 konexp/device.py:348
 msgid "Profil 0..4"
 msgstr "Profile 0..4"
 
-#: konexp/cli.py:146 konexp/device.py:428 konexp/gui/model.py:446
+#: konexp/cli.py:150 konexp/device.py:496 konexp/gui/model.py:447
 msgid "Makros der Kone XP Air werden noch nicht unterstützt"
 msgstr "Kone XP Air macros are not supported yet"
 
-#: konexp/cli.py:151
+#: konexp/cli.py:155
 msgid "macro <profil> <taste 0-14> [shift] <schritte…>"
 msgstr "macro <profile> <button 0-14> [shift] <steps…>"
 
@@ -45,11 +45,11 @@ msgstr "macro <profile> <button 0-14> [shift] <steps…>"
 msgid "aktives Profil: {num} (Index {idx})"
 msgstr "active profile: {num} (index {idx})"
 
-#: konexp/cli.py:100
+#: konexp/cli.py:104
 msgid "Neue Maus oder Problem? Issue öffnen und die Datei anhängen: {url}"
 msgstr "New mouse or a problem? Open an issue and attach the file: {url}"
 
-#: konexp/cli.py:156
+#: konexp/cli.py:160
 msgid "P{p} {name}: Makro geschrieben"
 msgstr "P{p} {name}: macro written"
 
@@ -61,19 +61,23 @@ msgstr "read-only"
 msgid "{mark}P{p}: DPI {dpis} | {hz} Hz | Angle Snapping {snap} | Effekt {effect}"
 msgstr "{mark}P{p}: DPI {dpis} | {hz} Hz | Angle Snapping {snap} | Effect {effect}"
 
-#: konexp/cli.py:99
+#: konexp/cli.py:103
 msgid "{path} gespeichert, {n} Fehler"
 msgstr "{path} saved, {n} error(s)"
+
+#: konexp/cli.py:167
+msgid "Warnung: {msg}"
+msgstr "Warning: {msg}"
 
 #: konexp/cli.py:45 konexp/gui/main_window.py:398
 msgid "(Kabel)"
 msgstr "(cable)"
 
-#: konexp/cli.py:55 konexp/gui/model.py:166
+#: konexp/cli.py:55 konexp/gui/model.py:167
 msgid "an"
 msgstr "on"
 
-#: konexp/cli.py:55 konexp/gui/model.py:182 konexp/gui/model.py:166 konexp/gui/tab_light.py:58
+#: konexp/cli.py:55 konexp/gui/model.py:183 konexp/gui/model.py:167 konexp/gui/tab_light.py:58
 msgid "aus"
 msgstr "off"
 
@@ -81,7 +85,7 @@ msgstr "off"
 msgid "      {name:<18} {func:<28} Easy-Shift: {shift}"
 msgstr "      {name:<18} {func:<28} Easy-Shift: {shift}"
 
-#: konexp/cli.py:204 konexp/cli.py:167
+#: konexp/cli.py:210 konexp/cli.py:173
 msgid "Fehler: {err}"
 msgstr "Error: {err}"
 
@@ -89,99 +93,111 @@ msgstr "Error: {err}"
 msgid "Akku {pct} %"
 msgstr "Battery {pct} %"
 
-#: konexp/cli.py:178
+#: konexp/cli.py:184
 msgid "Profil {num} aktiv"
 msgstr "Profile {num} active"
 
-#: konexp/cli.py:184
+#: konexp/cli.py:190
 msgid "P{p} Stufe {stage}: {value} DPI"
 msgstr "P{p} stage {stage}: {value} DPI"
 
-#: konexp/cli.py:190
+#: konexp/cli.py:196
 msgid "P{p}: aktive Stufe {stage} ({dpi} DPI)"
 msgstr "P{p}: active stage {stage} ({dpi} DPI)"
 
-#: konexp/cli.py:199
+#: konexp/cli.py:205
 msgid "{path} zurückgeschrieben"
 msgstr "{path} restored"
 
-#: konexp/cli.py:197 konexp/reports.py:304 konexp/reports.py:27
+#: konexp/cli.py:203 konexp/reports.py:304 konexp/reports.py:27
 msgid "kein gültiger Report 0x{rid:02x}"
 msgstr "not a valid report 0x{rid:02x}"
 
-#: konexp/device.py:123
-msgid "Kone XP / Kone XP Air (USB 1e7d:2c8b, 2cb2, 2cb6) nicht gefunden – angeschlossen? Prüfen mit: lsusb"
-msgstr "Kone XP / Kone XP Air (USB 1e7d:2c8b, 2cb2, 2cb6) not found – connected? Check with: lsusb"
-
-#: konexp/device.py:194
+#: konexp/device.py:262
 msgid "Timeout: Gerät bleibt busy"
 msgstr "Timeout: device remains busy"
 
-#: konexp/device.py:283 konexp/device.py:460
+#: konexp/device.py:128
+msgid "Swarm läuft ({names}) – vorher beenden, sonst können Lese- und Schreibzugriffe durcheinandergeraten."
+msgstr "Swarm is running ({names}) – close it first, otherwise reads and writes can get mixed up."
+
+#: konexp/device.py:185
+msgid "Kone XP / Kone XP Air (USB 1e7d:2c8b, 2cb2, 2cb6) nicht gefunden – angeschlossen? Prüfen mit: {check}"
+msgstr "Kone XP / Kone XP Air (USB 1e7d:2c8b, 2cb2, 2cb6) not found – connected? Check with: {check}"
+
+#: konexp/device.py:351 konexp/device.py:528
 msgid "Profilwechsel nicht übernommen"
 msgstr "Profile switch not applied"
 
-#: konexp/device.py:437
+#: konexp/device.py:505
 msgid "Kone XP Air: nur Lesen, Schreiben ist mit KONEXP_AIR_WRITE=0 abgeschaltet."
 msgstr "Kone XP Air: read-only, writing is disabled by KONEXP_AIR_WRITE=0."
 
-#: konexp/device.py:121
+#: konexp/device.py:183
 msgid "Maus gefunden, aber nicht das Konfigurations-Interface: {nodes}"
 msgstr "Mouse found, but not its configuration interface: {nodes}"
 
-#: konexp/device.py:191
+#: konexp/device.py:186
+msgid "Geräte-Manager"
+msgstr "Device Manager"
+
+#: konexp/device.py:259
 msgid "Gerät meldet Fehler (Ack 0x02)"
 msgstr "Device reports error (Ack 0x02)"
 
-#: konexp/device.py:406
+#: konexp/device.py:474
 msgid "Report 0x{rid:02x} gibt es bei der Kone XP Air nicht"
 msgstr "The Kone XP Air has no report 0x{rid:02x}"
 
-#: konexp/device.py:173 konexp/device.py:444 konexp/gui/model.py:683
+#: konexp/device.py:241 konexp/device.py:512 konexp/gui/model.py:684
 msgid "Report 0x{rid:02x} ist gesperrt"
 msgstr "Report 0x{rid:02x} is locked"
 
-#: konexp/device.py:175
+#: konexp/device.py:243
 msgid "Report 0x{rid:02x}: Länge {got} != {want}"
 msgstr "Report 0x{rid:02x}: length {got} != {want}"
 
-#: konexp/device.py:275
+#: konexp/device.py:343
 msgid "Verify fehlgeschlagen für 0x{rid:02x}, Backup zurückgeschrieben"
 msgstr "Verify failed for 0x{rid:02x}, backup restored"
 
-#: konexp/device.py:288
+#: konexp/device.py:356
 msgid "Unbekanntes Kalibrier-Kommando 0x{cmd:02x}"
 msgstr "Unknown calibration command 0x{cmd:02x}"
 
-#: konexp/device.py:356 konexp/device.py:365
+#: konexp/device.py:424 konexp/device.py:433
 msgid "Kommando 0x{cmd:02x} ist gesperrt"
 msgstr "Command 0x{cmd:02x} is blocked"
 
-#: konexp/device.py:360
+#: konexp/device.py:428
 msgid "Gerät bestätigt Kommando 0x{cmd:02x} nicht"
 msgstr "Device did not acknowledge command 0x{cmd:02x}"
 
-#: konexp/device.py:374
+#: konexp/device.py:442
 msgid "Maus antwortet nicht auf 0x{cmd:02x} (Status 0x{st:02x}) – eingeschaltet und mit dem Dongle verbunden?"
 msgstr "Mouse does not answer 0x{cmd:02x} (status 0x{st:02x}) – is it switched on and connected to the dongle?"
 
-#: konexp/device.py:395
+#: konexp/device.py:463
 msgid "Ungültige Antwort auf 0x{cmd:02x} – Maus eingeschaltet und mit dem Dongle verbunden?"
 msgstr "Invalid response to 0x{cmd:02x} – is the mouse switched on and connected to the dongle?"
 
-#: konexp/device.py:457
+#: konexp/device.py:525
 msgid "Profil 0..{n}"
 msgstr "Profile 0..{n}"
 
-#: konexp/device.py:148
+#: konexp/device.py:216
 msgid "Kein Zugriff auf {node} – udev-Regel installiert? ({err})"
 msgstr "No access to {node} — udev rule installed? ({err})"
 
-#: konexp/device.py:267
+#: konexp/device.py:335
 msgid "Schreiben von 0x{rid:02x} abgebrochen ({err}), Backup zurückgeschrieben"
 msgstr "Writing 0x{rid:02x} aborted ({err}), backup written back"
 
-#: konexp/device.py:264
+#: konexp/device.py:213
+msgid "Kein Zugriff auf {node} ({err})"
+msgstr "No access to {node} ({err})"
+
+#: konexp/device.py:332
 msgid "Schreiben von 0x{rid:02x} abgebrochen ({err}); Backup ließ sich nicht zurückschreiben, Datei liegt in {path}"
 msgstr "Writing 0x{rid:02x} aborted ({err}); the backup could not be written back, the file is in {path}"
 
@@ -369,7 +385,7 @@ msgstr "Easy-Aim DPI stage {n}"
 msgid "Profil {n}"
 msgstr "Profile {n}"
 
-#: konexp/functions.py:47 konexp/gui/model.py:114
+#: konexp/functions.py:47 konexp/gui/model.py:115
 msgid "Makro ({mode})"
 msgstr "Macro ({mode})"
 
@@ -445,7 +461,7 @@ msgstr "Thumb 3"
 msgid "Daumen 4"
 msgstr "Thumb 4"
 
-#: konexp/reports.py:177 konexp/gui/main_window.py:309 konexp/gui/model.py:100 konexp/gui/model.py:238
+#: konexp/reports.py:177 konexp/gui/main_window.py:309 konexp/gui/model.py:101 konexp/gui/model.py:239
 msgid "Easy-Shift"
 msgstr "Easy-Shift"
 
@@ -506,8 +522,8 @@ msgid "ohne Maus: Werksdaten + Beispielprofil, Writes nur im Speicher"
 msgstr "without mouse: factory data + example profile, writes to memory only"
 
 #: konexp/gui/__main__.py:12
-msgid "hidraw-Gerät (Standard: automatisch)"
-msgstr "hidraw device (default: automatic)"
+msgid "HID-Gerät, /dev/hidrawN bzw. hidapi-Pfad (Standard: automatisch)"
+msgstr "HID device, /dev/hidrawN or hidapi path (default: automatic)"
 
 #: konexp/gui/__main__.py:13
 msgid "nach MS Millisekunden beenden (Tests)"
@@ -905,10 +921,6 @@ msgstr "Please wait"
 msgid "Es läuft bereits ein Gerätezugriff."
 msgstr "Device access is already in progress."
 
-#: konexp/gui/main_window.py:275
-msgid "Ohne Maus testen: python3 -m konexp.gui --demo"
-msgstr "Test without mouse: python3 -m konexp.gui --demo"
-
 #: konexp/gui/main_window.py:298
 msgid "Alle ungespeicherten Änderungen verwerfen und neu laden?"
 msgstr "Discard all unsaved changes and reload?"
@@ -1023,79 +1035,271 @@ msgstr "Backup saved: {path}"
 msgid "{n} ungespeicherte Änderung(en)"
 msgstr "{n} unsaved change(s)"
 
+#: konexp/gui/main_window.py:275
+msgid "Ohne Maus testen: python3 -m konexp.gui --demo"
+msgstr "Test without mouse: python3 -m konexp.gui --demo"
+
 #: konexp/gui/main_window.py:434
 msgid "Backup ungültig: {err}"
 msgstr "Backup invalid: {err}"
 
-#: konexp/gui/model.py:31
+#: konexp/gui/model.py:32
 msgid "kalibriert (Custom)"
 msgstr "calibrated (custom)"
 
-#: konexp/gui/model.py:50 konexp/gui/model.py:87
+#: konexp/gui/model.py:51 konexp/gui/model.py:88
 msgid "alle"
 msgstr "all"
 
-#: konexp/gui/model.py:51 konexp/gui/model.py:87
+#: konexp/gui/model.py:52 konexp/gui/model.py:88
 msgid "Leiste links"
 msgstr "Left strip"
 
-#: konexp/gui/model.py:52 konexp/gui/model.py:87
+#: konexp/gui/model.py:53 konexp/gui/model.py:88
 msgid "Leiste rechts"
 msgstr "Right strip"
 
-#: konexp/gui/model.py:53 konexp/gui/model.py:80 konexp/gui/model.py:84 konexp/gui/model.py:87
+#: konexp/gui/model.py:54 konexp/gui/model.py:81 konexp/gui/model.py:85 konexp/gui/model.py:88
 msgid "Rad"
 msgstr "Wheel"
 
-#: konexp/gui/model.py:54 konexp/gui/model.py:62
+#: konexp/gui/model.py:55 konexp/gui/model.py:63
 msgid "DPI-LED"
 msgstr "DPI LED"
 
-#: konexp/gui/model.py:98
+#: konexp/gui/model.py:99
 msgid "Allgemein"
 msgstr "General"
 
-#: konexp/gui/model.py:98
+#: konexp/gui/model.py:99
 msgid "Maus / Browser"
 msgstr "Mouse / Browser"
 
-#: konexp/gui/model.py:98
+#: konexp/gui/model.py:99
 msgid "DPI / Easy-Aim"
 msgstr "DPI / Easy-Aim"
 
-#: konexp/gui/model.py:98
+#: konexp/gui/model.py:99
 msgid "Multimedia"
 msgstr "Multimedia"
 
-#: konexp/gui/model.py:99
+#: konexp/gui/model.py:100
 msgid "Navigation / Modifier"
 msgstr "Navigation / Modifier"
 
-#: konexp/gui/model.py:99
+#: konexp/gui/model.py:100
 msgid "System"
 msgstr "System"
 
-#: konexp/gui/model.py:99
+#: konexp/gui/model.py:100
 msgid "Profile / Beleuchtung"
 msgstr "Profile / Lighting"
 
-#: konexp/gui/model.py:100
+#: konexp/gui/model.py:101
 msgid "Easy-Wheel"
 msgstr "Easy-Wheel"
 
-#: konexp/gui/model.py:100
+#: konexp/gui/model.py:101
 msgid "Host-Funktionen (wirken unter Linux nicht)"
 msgstr "Host functions (have no effect on Linux)"
 
-#: konexp/gui/model.py:528
+#: konexp/gui/model.py:529
 msgid "Maus"
 msgstr "Mouse"
 
-#: konexp/gui/model.py:656
+#: konexp/gui/model.py:657
 msgid "Demo"
 msgstr "Demo"
 
-#: konexp/gui/model.py:34
+#: konexp/gui/model.py:61 konexp/gui/model.py:86
+msgid "Mausrad"
+msgstr "Mouse wheel"
+
+#: konexp/gui/model.py:64
+msgid "links"
+msgstr "left"
+
+#: konexp/gui/model.py:64
+msgid "rechts"
+msgstr "right"
+
+#: konexp/gui/model.py:82 konexp/gui/model.py:89
+msgid "◀ links"
+msgstr "◀ left"
+
+#: konexp/gui/model.py:82
+msgid "obere Reihe = vorn (Kabelseite)"
+msgstr "top row = front (cable side)"
+
+#: konexp/gui/model.py:82 konexp/gui/model.py:89
+msgid "rechts ▶"
+msgstr "right ▶"
+
+#: konexp/gui/model.py:86
+msgid "Zone 0 (von Swarm nicht genutzt)"
+msgstr "Zone 0 (not used by Swarm)"
+
+#: konexp/gui/model.py:86
+msgid "Leiste links, vorn"
+msgstr "Left strip, front"
+
+#: konexp/gui/model.py:86
+msgid "Leiste rechts, vorn"
+msgstr "Right strip, front"
+
+#: konexp/gui/model.py:87
+msgid "Leiste links, hinten"
+msgstr "Left strip, rear"
+
+#: konexp/gui/model.py:87
+msgid "Leiste rechts, hinten"
+msgstr "Right strip, rear"
+
+#: konexp/gui/model.py:87
+msgid "Zone 6 (von Swarm nicht genutzt)"
+msgstr "Zone 6 (not used by Swarm)"
+
+#: konexp/gui/model.py:89
+msgid "obere Reihe = vorn"
+msgstr "top row = front"
+
+#: konexp/gui/model.py:199
+msgid "unbekannt 0x03 (Sensitivity X?)"
+msgstr "unknown 0x03 (Sensitivity X?)"
+
+#: konexp/gui/model.py:200
+msgid "unbekannt 0x04 (Sensitivity Y?)"
+msgstr "unknown 0x04 (Sensitivity Y?)"
+
+#: konexp/gui/model.py:201
+msgid "DPI-Stufen aktiv"
+msgstr "DPI stages active"
+
+#: konexp/gui/model.py:202
+msgid "aktive DPI-Stufe"
+msgstr "active DPI stage"
+
+#: konexp/gui/model.py:205 konexp/gui/tab_sensor.py:24
+msgid "Angle Snapping"
+msgstr "Angle Snapping"
+
+#: konexp/gui/model.py:206
+msgid "unbekannt 0x1c"
+msgstr "unknown 0x1c"
+
+#: konexp/gui/model.py:207
+msgid "Polling-Rate"
+msgstr "Polling rate"
+
+#: konexp/gui/model.py:208
+msgid "Lichteffekt"
+msgstr "Lighting effect"
+
+#: konexp/gui/model.py:209
+msgid "Effekt-Geschwindigkeit"
+msgstr "Effect speed"
+
+#: konexp/gui/model.py:210
+msgid "Helligkeit"
+msgstr "Brightness"
+
+#: konexp/gui/model.py:211
+msgid "LED-Timeout (Wert)"
+msgstr "LED timeout (value)"
+
+#: konexp/gui/model.py:212
+msgid "Effekt nach Timeout"
+msgstr "Effect after timeout"
+
+#: konexp/gui/model.py:213
+msgid "Timeout-Flag 0x23"
+msgstr "Timeout flag 0x23"
+
+#: konexp/gui/model.py:221 konexp/gui/model.py:253
+msgid "Profilfarbe aktiv"
+msgstr "Profile color active"
+
+#: konexp/gui/model.py:222
+msgid "unbekannt 0x9d"
+msgstr "unknown 0x9d"
+
+#: konexp/gui/model.py:223 konexp/gui/model.py:254
+msgid "Profilfarbe"
+msgstr "Profile color"
+
+#: konexp/gui/model.py:224 konexp/gui/model.py:265
+msgid "Tasten-Preset-Index"
+msgstr "Button preset index"
+
+#: konexp/gui/model.py:225 konexp/gui/model.py:266
+msgid "AIMO-Parameter"
+msgstr "AIMO parameter"
+
+#: konexp/gui/model.py:226
+msgid "DPI-Stufen-Flag 0xa4"
+msgstr "DPI stages flag 0xa4"
+
+#: konexp/gui/model.py:227
+msgid "unbekannt 0xa5"
+msgstr "unknown 0xa5"
+
+#: konexp/gui/model.py:228
+msgid "Reserve 0xa6–0xab"
+msgstr "Reserved 0xa6–0xab"
+
+#: konexp/gui/model.py:245 konexp/gui/model.py:255
+msgid "Debounce (ms)"
+msgstr "Debounce (ms)"
+
+#: konexp/gui/model.py:253
+msgid "unbekannt 0x48"
+msgstr "unknown 0x48"
+
+#: konexp/gui/model.py:255
+msgid "Debounce aktiv"
+msgstr "Debounce enabled"
+
+#: konexp/gui/model.py:256
+msgid "Debounce 2 (ms)"
+msgstr "Debounce 2 (ms)"
+
+#: konexp/gui/model.py:256
+msgid "Debounce weitere Werte"
+msgstr "Debounce further values"
+
+#: konexp/gui/model.py:263
+msgid "Sensitivity X? (unbekannt)"
+msgstr "Sensitivity X? (unknown)"
+
+#: konexp/gui/model.py:263
+msgid "Sensitivity Y? (unbekannt)"
+msgstr "Sensitivity Y? (unknown)"
+
+#: konexp/gui/model.py:264 konexp/gui/model.py:266 konexp/gui/model.py:267
+msgid "unbekannt"
+msgstr "unknown"
+
+#: konexp/gui/model.py:264
+msgid "Timeout-Flag (GUI setzt 0)"
+msgstr "Timeout flag (GUI sets 0)"
+
+#: konexp/gui/model.py:264 konexp/gui/model.py:267
+msgid "Profilfarbe aktiv?"
+msgstr "Profile color active?"
+
+#: konexp/gui/model.py:265
+msgid "unbekannt (Intensität?)"
+msgstr "Unknown (intensity?)"
+
+#: konexp/gui/model.py:266
+msgid "DPI-Stufen-Flag (Auto?)"
+msgstr "DPI stages flag (auto?)"
+
+#: konexp/gui/model.py:760 konexp/gui/model.py:581
+msgid "fertig"
+msgstr "Done"
+
+#: konexp/gui/model.py:35
 msgid ""
 "Zugriff auf die Maus fehlt. udev-Regel installieren:\n"
 "  sudo cp {rule} /etc/udev/rules.d/\n"
@@ -1107,347 +1311,159 @@ msgstr ""
 "  sudo udevadm control --reload && sudo udevadm trigger\n"
 "Then reconnect the mouse."
 
-#: konexp/gui/model.py:60 konexp/gui/model.py:85
-msgid "Mausrad"
-msgstr "Mouse wheel"
-
-#: konexp/gui/model.py:63
-msgid "links"
-msgstr "left"
-
-#: konexp/gui/model.py:63
-msgid "rechts"
-msgstr "right"
-
-#: konexp/gui/model.py:81 konexp/gui/model.py:88
-msgid "◀ links"
-msgstr "◀ left"
-
-#: konexp/gui/model.py:81
-msgid "obere Reihe = vorn (Kabelseite)"
-msgstr "top row = front (cable side)"
-
-#: konexp/gui/model.py:81 konexp/gui/model.py:88
-msgid "rechts ▶"
-msgstr "right ▶"
-
-#: konexp/gui/model.py:85
-msgid "Zone 0 (von Swarm nicht genutzt)"
-msgstr "Zone 0 (not used by Swarm)"
-
-#: konexp/gui/model.py:85
-msgid "Leiste links, vorn"
-msgstr "Left strip, front"
-
-#: konexp/gui/model.py:85
-msgid "Leiste rechts, vorn"
-msgstr "Right strip, front"
-
-#: konexp/gui/model.py:86
-msgid "Leiste links, hinten"
-msgstr "Left strip, rear"
-
-#: konexp/gui/model.py:86
-msgid "Leiste rechts, hinten"
-msgstr "Right strip, rear"
-
-#: konexp/gui/model.py:86
-msgid "Zone 6 (von Swarm nicht genutzt)"
-msgstr "Zone 6 (not used by Swarm)"
-
-#: konexp/gui/model.py:88
-msgid "obere Reihe = vorn"
-msgstr "top row = front"
-
-#: konexp/gui/model.py:198
-msgid "unbekannt 0x03 (Sensitivity X?)"
-msgstr "unknown 0x03 (Sensitivity X?)"
-
-#: konexp/gui/model.py:199
-msgid "unbekannt 0x04 (Sensitivity Y?)"
-msgstr "unknown 0x04 (Sensitivity Y?)"
-
-#: konexp/gui/model.py:200
-msgid "DPI-Stufen aktiv"
-msgstr "DPI stages active"
-
-#: konexp/gui/model.py:201
-msgid "aktive DPI-Stufe"
-msgstr "active DPI stage"
-
-#: konexp/gui/model.py:204 konexp/gui/tab_sensor.py:24
-msgid "Angle Snapping"
-msgstr "Angle Snapping"
-
-#: konexp/gui/model.py:205
-msgid "unbekannt 0x1c"
-msgstr "unknown 0x1c"
-
-#: konexp/gui/model.py:206
-msgid "Polling-Rate"
-msgstr "Polling rate"
-
-#: konexp/gui/model.py:207
-msgid "Lichteffekt"
-msgstr "Lighting effect"
-
-#: konexp/gui/model.py:208
-msgid "Effekt-Geschwindigkeit"
-msgstr "Effect speed"
-
-#: konexp/gui/model.py:209
-msgid "Helligkeit"
-msgstr "Brightness"
-
-#: konexp/gui/model.py:210
-msgid "LED-Timeout (Wert)"
-msgstr "LED timeout (value)"
-
-#: konexp/gui/model.py:211
-msgid "Effekt nach Timeout"
-msgstr "Effect after timeout"
-
-#: konexp/gui/model.py:212
-msgid "Timeout-Flag 0x23"
-msgstr "Timeout flag 0x23"
-
-#: konexp/gui/model.py:220 konexp/gui/model.py:252
-msgid "Profilfarbe aktiv"
-msgstr "Profile color active"
-
-#: konexp/gui/model.py:221
-msgid "unbekannt 0x9d"
-msgstr "unknown 0x9d"
-
-#: konexp/gui/model.py:222 konexp/gui/model.py:253
-msgid "Profilfarbe"
-msgstr "Profile color"
-
-#: konexp/gui/model.py:223 konexp/gui/model.py:264
-msgid "Tasten-Preset-Index"
-msgstr "Button preset index"
-
-#: konexp/gui/model.py:224 konexp/gui/model.py:265
-msgid "AIMO-Parameter"
-msgstr "AIMO parameter"
-
-#: konexp/gui/model.py:225
-msgid "DPI-Stufen-Flag 0xa4"
-msgstr "DPI stages flag 0xa4"
-
-#: konexp/gui/model.py:226
-msgid "unbekannt 0xa5"
-msgstr "unknown 0xa5"
-
-#: konexp/gui/model.py:227
-msgid "Reserve 0xa6–0xab"
-msgstr "Reserved 0xa6–0xab"
-
-#: konexp/gui/model.py:244 konexp/gui/model.py:254
-msgid "Debounce (ms)"
-msgstr "Debounce (ms)"
-
-#: konexp/gui/model.py:252
-msgid "unbekannt 0x48"
-msgstr "unknown 0x48"
-
-#: konexp/gui/model.py:254
-msgid "Debounce aktiv"
-msgstr "Debounce enabled"
-
-#: konexp/gui/model.py:255
-msgid "Debounce 2 (ms)"
-msgstr "Debounce 2 (ms)"
-
-#: konexp/gui/model.py:255
-msgid "Debounce weitere Werte"
-msgstr "Debounce further values"
-
-#: konexp/gui/model.py:262
-msgid "Sensitivity X? (unbekannt)"
-msgstr "Sensitivity X? (unknown)"
-
-#: konexp/gui/model.py:262
-msgid "Sensitivity Y? (unbekannt)"
-msgstr "Sensitivity Y? (unknown)"
-
-#: konexp/gui/model.py:263 konexp/gui/model.py:265 konexp/gui/model.py:266
-msgid "unbekannt"
-msgstr "unknown"
-
-#: konexp/gui/model.py:263
-msgid "Timeout-Flag (GUI setzt 0)"
-msgstr "Timeout flag (GUI sets 0)"
-
-#: konexp/gui/model.py:263 konexp/gui/model.py:266
-msgid "Profilfarbe aktiv?"
-msgstr "Profile color active?"
-
-#: konexp/gui/model.py:264
-msgid "unbekannt (Intensität?)"
-msgstr "Unknown (intensity?)"
-
-#: konexp/gui/model.py:265
-msgid "DPI-Stufen-Flag (Auto?)"
-msgstr "DPI stages flag (auto?)"
-
-#: konexp/gui/model.py:759 konexp/gui/model.py:580
-msgid "fertig"
-msgstr "Done"
-
-#: konexp/gui/model.py:65
+#: konexp/gui/model.py:66
 msgid "Leiste {side}, Spalte {col}, {row}"
 msgstr "Strip {side}, column {col}, {row}"
 
-#: konexp/gui/model.py:142
+#: konexp/gui/model.py:143
 msgid "ungültiger Shortcut"
 msgstr "invalid shortcut"
 
-#: konexp/gui/model.py:194 konexp/gui/tab_dpi.py:27
+#: konexp/gui/model.py:195 konexp/gui/tab_dpi.py:27
 msgid "Stufe {n}"
 msgstr "Stage {n}"
 
-#: konexp/gui/model.py:279
+#: konexp/gui/model.py:280
 msgid "global"
 msgstr "global"
 
-#: konexp/gui/model.py:491
+#: konexp/gui/model.py:492
 msgid "keine konexp-Backup-Datei"
 msgstr "not a konexp backup file"
 
-#: konexp/gui/model.py:506
+#: konexp/gui/model.py:507
 msgid "Report 0x11: Checksumme falsch"
 msgstr "Report 0x11: checksum incorrect"
 
-#: konexp/gui/model.py:562
+#: konexp/gui/model.py:563
 msgid "aktives Profil (0x05)"
 msgstr "active profile (0x05)"
 
-#: konexp/gui/model.py:573
+#: konexp/gui/model.py:574
 msgid "Debounce (0x11)"
 msgstr "Debounce (0x11)"
 
-#: konexp/gui/model.py:66
+#: konexp/gui/model.py:67
 msgid "vorn"
 msgstr "front"
 
-#: konexp/gui/model.py:66
+#: konexp/gui/model.py:67
 msgid "hinten"
 msgstr "back"
 
-#: konexp/gui/model.py:112
+#: konexp/gui/model.py:113
 msgid "Shortcut {keys}"
 msgstr "Shortcut {keys}"
 
-#: konexp/gui/model.py:117 konexp/gui/model.py:127
+#: konexp/gui/model.py:118 konexp/gui/model.py:128
 msgid "{name} – wirkt unter Linux nicht"
 msgstr "{name} – has no effect on Linux"
 
-#: konexp/gui/model.py:162
+#: konexp/gui/model.py:163
 msgid "Stufen"
 msgstr "stages"
 
-#: konexp/gui/model.py:174 konexp/gui/model.py:178
+#: konexp/gui/model.py:175 konexp/gui/model.py:179
 msgid "unbekannt ({n})"
 msgstr "unknown ({n})"
 
-#: konexp/gui/model.py:376
+#: konexp/gui/model.py:377
 msgid "Schleife"
 msgstr "loop"
 
-#: konexp/gui/model.py:672
+#: konexp/gui/model.py:673
 msgid "Demo-Daten"
 msgstr "Demo data"
 
-#: konexp/gui/model.py:681 konexp/gui/model.py:700 konexp/gui/model.py:705
+#: konexp/gui/model.py:682 konexp/gui/model.py:701 konexp/gui/model.py:706
 msgid "Kone XP Air: nur Lesen"
 msgstr "Kone XP Air: read-only"
 
-#: konexp/gui/model.py:134
+#: konexp/gui/model.py:135
 msgid "Easy-Aim: {lo}..{hi} in {step}er-Schritten"
 msgstr "Easy-Aim: {lo}..{hi} in {step}-step increments"
 
-#: konexp/gui/model.py:216 konexp/gui/model.py:250
+#: konexp/gui/model.py:217 konexp/gui/model.py:251
 msgid "LED {i} Byte +0"
 msgstr "LED {i} byte +0"
 
-#: konexp/gui/model.py:217
+#: konexp/gui/model.py:218
 msgid "LED {i} Farbe ({label})"
 msgstr "LED {i} color ({label})"
 
-#: konexp/gui/model.py:218
+#: konexp/gui/model.py:219
 msgid "LED {i} Byte +5"
 msgstr "LED {i} byte +5"
 
-#: konexp/gui/model.py:237
+#: konexp/gui/model.py:238
 msgid "Taste {n} „{name}“ ({layer})"
 msgstr "Button {n} “{name}” ({layer})"
 
-#: konexp/gui/model.py:251
+#: konexp/gui/model.py:252
 msgid "LED-Zone {n} Farbe"
 msgstr "LED zone {n} color"
 
-#: konexp/gui/model.py:751
+#: konexp/gui/model.py:752
 msgid "schreibe {label}"
 msgstr "Writing {label}"
 
-#: konexp/gui/model.py:129
+#: konexp/gui/model.py:130
 msgid "typ 0x{t:02x}"
 msgstr "type 0x{t:02x}"
 
-#: konexp/gui/model.py:202
+#: konexp/gui/model.py:203
 msgid "DPI Stufe {n} (X)"
 msgstr "DPI stage {n} (X)"
 
-#: konexp/gui/model.py:203
+#: konexp/gui/model.py:204
 msgid "DPI Stufe {n} (Y)"
 msgstr "DPI stage {n} (Y)"
 
-#: konexp/gui/model.py:238
+#: konexp/gui/model.py:239
 msgid "normal"
 msgstr "normal"
 
-#: konexp/gui/model.py:376
+#: konexp/gui/model.py:377
 msgid "{n}×"
 msgstr "{n}×"
 
-#: konexp/gui/model.py:439
+#: konexp/gui/model.py:440
 msgid "Taste {n} (Easy-Shift-Ebene) auf „Deaktiviert“ gesetzt (Easy-Shift-Regel)."
 msgstr "Button {n} (Easy-Shift layer) set to “Disabled” (Easy-Shift rule)."
 
-#: konexp/gui/model.py:483
+#: konexp/gui/model.py:484
 msgid "Backup gehört zu einem anderen Modell ({model})"
 msgstr "Backup belongs to a different model ({model})"
 
-#: konexp/gui/model.py:567
+#: konexp/gui/model.py:568
 msgid "P{n} Einstellungen (0x06)"
 msgstr "P{n} settings (0x06)"
 
-#: konexp/gui/model.py:570
+#: konexp/gui/model.py:571
 msgid "P{n} Tasten (0x07)"
 msgstr "P{n} buttons (0x07)"
 
-#: konexp/gui/model.py:114
+#: konexp/gui/model.py:115
 msgid "Modus {n}"
 msgstr "mode {n}"
 
-#: konexp/gui/model.py:292
+#: konexp/gui/model.py:293
 msgid "Byte 0x{off:02x}"
 msgstr "byte 0x{off:02x}"
 
-#: konexp/gui/model.py:377
+#: konexp/gui/model.py:378
 msgid "Makro {name}"
 msgstr "Macro {name}"
 
-#: konexp/gui/model.py:498
+#: konexp/gui/model.py:499
 msgid "Report 0x{rid:02x} an Position {p} gehört zu Profil {q}"
 msgstr "Report 0x{rid:02x} at position {p} belongs to profile {q}"
 
-#: konexp/gui/model.py:501
+#: konexp/gui/model.py:502
 msgid "Report 0x{rid:02x} P{n}: Checksumme falsch"
 msgstr "Report 0x{rid:02x} P{n}: checksum incorrect"
 
-#: konexp/gui/model.py:553
+#: konexp/gui/model.py:554
 msgid "E/A-Fehler: {err}"
 msgstr "I/O error: {err}"
 
