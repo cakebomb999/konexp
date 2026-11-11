@@ -612,7 +612,7 @@ class DeviceBackend:
         return self._poll(lambda: self.dev.active_profile())
 
     def battery(self):
-        """(Prozent, per Funk) oder None; nicht blockierend wie poll_active."""
+        """(Prozent, per Funk, mV) oder None; nicht blockierend wie poll_active."""
         return self._poll(lambda: self.dev.battery())
 
     def _poll(self, fn):
@@ -720,7 +720,7 @@ class DemoBackend:
         return self.snap.r05[2]
 
     def battery(self):
-        return (90, True) if self.snap.model == 'Kone XP Air' else None
+        return (90, True, 4130) if self.snap.model == 'Kone XP Air' else None
 
 
 def merge_onto(fresh, orig, cur):

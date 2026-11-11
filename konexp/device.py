@@ -53,6 +53,24 @@ AIR_WRITABLE = {0x43, 0x45, 0x46, 0x47, 0x4f}
 AIR_SOFTWARE = 0x4e  # „Software aktiv“: Swarm sendet [01 00 00 ff] beim Öffnen, [00 00 00 ff] beim Schließen
 # Schreiben an echter Hardware bestätigt (Profilblock per Kabel). Abschalten: KONEXP_AIR_WRITE=0
 AIR_WRITE = os.environ.get('KONEXP_AIR_WRITE') != '0'
+# Akku-Tabelle der Maus-Firmware FW_V0.051 (0xc861c in s1): % je 10 mV ab 3095 mV
+AIR_BATTERY_SOC = bytes([
+    0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4,
+    4, 4, 4, 4, 4, 5, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 11, 12, 13, 13, 14, 15, 16, 18, 19, 22, 25, 28, 32, 36,
+    40, 44, 47, 51, 53, 56, 58, 60, 62, 64, 66, 67, 69, 71, 72, 74, 76, 77, 79, 81, 82, 84, 85, 85, 86, 86, 86,
+    87, 88, 88, 89, 90, 91, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 100])
+
+
+def battery_mv(raw):
+    """ADC-Rohwert -> mV, Ganzzahlrechnung wie die Firmware."""
+    return ((1008000 * raw) >> 14) * 0x5b05c71 >> 32
+
+
+def battery_soc(mv):
+    """mV -> genauer Akkustand in %, wie die Firmware (vor Rundung auf 10 und ohne „nur fallend“)."""
+    if mv >= 4201:
+        return 100
+    return 0 if mv < 3100 else AIR_BATTERY_SOC[(mv - 3095) // 10]
 
 
 class KoneXPError(Exception):
@@ -395,9 +413,10 @@ class KoneXPAir(KoneXP):
         return active
 
     def battery(self):
-        """Status 0x44: (Akku in %, per Funk). Byte 1 = 0 am Kabel/Laden."""
-        s = self.query(0x44, 3)
-        return s[2], bool(s[1])
+        """Status 0x44: (Akku in % auf 10 gerundet, per Funk, Spannung in mV).
+        Byte 1 = 0 am Kabel/Laden; Bytes 13–14 = ADC-Rohwert, beim Laden von der Firmware korrigiert."""
+        s = self.query(0x44, 15)
+        return s[2], bool(s[1]), battery_mv(int.from_bytes(s[13:15], 'little'))
 
     def read_settings(self, profile):
         return self._block(0x06, profile)

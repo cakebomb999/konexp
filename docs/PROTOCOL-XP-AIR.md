@@ -65,12 +65,17 @@ Feature-Report `0x06`, immer 30 Bytes inkl. Report-ID, SET und GET. *sicher*
 | `0x48` | Block | 1043 je Profil × Taste | Makro (Format wie Report `0x08`); von konexp nicht genutzt | sicher |
 | `0x43` | lesen/schreiben | 19 | Debounce, s. u. | sicher |
 | `0x4f` | lesen/schreiben | 2 | Lift-off (DCU) `[modus 0–2, x]`; Kalibrierung `[02, ff/00/01]` | sicher |
-| `0x44` | lesen | 17 | Status: Byte 0 Ack, Byte 2 Akkustand in % (gesehen: `5a` = 90), Byte 1 = 0 am Kabel/Laden, 1 per Funk | sicher / Byte 1 bestätigt |
+| `0x44` | lesen | 17 | Status: Byte 0 Ack, Byte 1 = 0 am Kabel/Laden, 1 per Funk, Byte 2 Akkustand in % auf 10 gerundet, Bytes 13–14 ADC-Rohwert u16 LE (s. u.); Bytes 3–12, 15–16 offen | sicher / Byte 1 bestätigt / 13–14 wahrscheinlich |
 | `0x35` | lesen | 13 | Firmware der Maus: BCD-Bytes 5, 7, 6, 9 → `((b5·10+b7)·10+b6)·10+b9`; echte Maus ergibt 501, Plugin liefert `FW_V0.051` | sicher / Bedeutung offen |
 | `0x13` | lesen, Ziel 0 | 2 | Firmware des Dongles | sicher |
 | `0x25` | lesen, Ziel 0 | 4 | Signalstärke (Byte 2), nur Dongle | sicher |
 | `0x4c`, `0x4d`, `0x4e` | schreiben | | LED-Vorschau, direkte LED-Steuerung, Software-Modus an/aus | wahrscheinlich |
 | `0x4a` | lesen/schreiben | 14 | Easy-Shift/Easy-Aim-Laufzeitzustand | wahrscheinlich |
+
+**Akku** (Maus-Firmware FW_V0.051, Funktion bei `0x9a278` in Slot s1, Basis `0x82000`; gegen zwei Dumps geprüft):
+Rohwert beim Laden um 50 (über 2976: 30) Zähler korrigiert; `mV = ((raw·1008000) >> 14) / 45`; Prozent aus
+einer Tabelle (`0xc861c`, je 10 mV ab 3095 mV, unter 3100 mV 0 %, ab 4201 mV 100 %); ohne Ladegerät nur fallend;
+für Byte 2 auf 10 gerundet. Unter 3500 mV dreimal in Folge setzt sie ein Akku-schwach-Flag. *wahrscheinlich*
 
 **Nie senden** (konexp sperrt sie): `0x49` (Subkommando `01` = Werksreset; weitere Systemfunktionen),
 `0x01` (Pairing), `0x12` (Wechsel in den Bootloader), `0x31`–`0x34` (Firmware-Update),

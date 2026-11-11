@@ -5,7 +5,8 @@ import os
 import sys
 import time
 
-from .device import AIR_BLOCKS, AIR_DONGLE, CHECKSUMMED, KoneXPAir, KoneXPError, checksum_ok, open_device
+from .device import (AIR_BLOCKS, AIR_DONGLE, CHECKSUMMED, KoneXPAir, KoneXPError, battery_soc, checksum_ok,
+                     open_device)
 from .functions import describe
 from .i18n import tr
 from .paths import BACKUP_DIR
@@ -40,7 +41,8 @@ def status(dev):
     print(tr('aktives Profil: {num} (Index {idx})').format(num=active + 1, idx=active))
     b = dev.battery()
     if b:
-        print(tr('Akku {pct} %').format(pct=b[0]) + ('' if b[1] else ' ' + tr('(Kabel)')))
+        print(tr('Akku {pct} %').format(pct=battery_soc(b[2])) + f' · {b[2]} mV'
+              + ('' if b[1] else ' ' + tr('(Kabel)')))
     for p in range(5):
         s = Settings(dev.read_settings(p))
         b = Buttons(dev.read_buttons(p))

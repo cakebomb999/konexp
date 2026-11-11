@@ -101,9 +101,15 @@ class TransportTest(unittest.TestCase):
     def test_battery(self):
         # Datenbytes von air_44 aus einem echten Dongle-Dump (Issue, 2026-10-15)
         self.fake.regs[0x44][:] = bytes.fromhex('01015aff000000143250143250e40b3d6c')
-        self.assertEqual(air(self.fake).battery(), (90, True))
+        self.assertEqual(air(self.fake).battery(), (90, True, 4161))
         self.fake.regs[0x44][:] = bytes.fromhex('01005aff000000143250143250cd0b3d6c')  # Kabel-Dump, 27 s davor
-        self.assertEqual(air(self.fake).battery(), (90, False))
+        self.assertEqual(air(self.fake).battery(), (90, False, 4130))
+
+    def test_battery_soc(self):
+        # Rundung auf 10 passt zu Byte 2 = 90 im Kabel-Dump (94 %); Grenzen wie in der Firmware
+        self.assertEqual([device.battery_soc(mv) for mv in (3099, 3100, 4130, 4161, 4200, 4201)],
+                         [0, 0, 94, 97, 100, 100])
+        self.assertEqual(len(device.AIR_BATTERY_SOC), (4200 - 3095) // 10 + 1)
 
     def test_wired_target(self):
         dev = air(self.fake, pid=device.AIR_WIRED)

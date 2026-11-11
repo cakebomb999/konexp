@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (QButtonGroup, QColorDialog, QDialog, QFileDialog,
                                QFrame, QMessageBox, QProgressBar, QPushButton, QScrollArea, QTabWidget, QVBoxLayout,
                                QWidget)
 
-from ..device import DCU_ACCEPT, DCU_DISCARD, DCU_START, KoneXPError
+from ..device import DCU_ACCEPT, DCU_DISCARD, DCU_START, KoneXPError, battery_soc
 from ..i18n import LANGUAGES, language, save_language, tr
 from .dialogs import DiffDialog
 from .model import BACKUP_DIR, NPROFILES, UDEV_HINT, Config, load_backup, run_plan, save_backup
@@ -22,6 +22,7 @@ from .worker import Task
 
 POLL_MS = 2000
 BATTERY_MS = 60000  # selten: jede Abfrage geht per Funk an die Maus
+BATTERY_RATE_MIN_S = 1800  # Rate erst nach 30 min, sonst dominiert das Messrauschen
 
 
 class MainWindow(QMainWindow):
@@ -388,13 +389,15 @@ class MainWindow(QMainWindow):
             b = None
         if b is None:
             return
-        pct, wireless = b
+        _, wireless, mv = b  # Byte 2 ist auf 10 % gerundet; genauer Wert aus der Spannung
+        pct = battery_soc(mv)
         now = time.time() if now is None else now
-        if not wireless or self.batt_start is None or pct > self.batt_start[1]:
+        if not wireless or self.batt_start is None or pct > self.batt_start[1] + 2:  # +2: Messrauschen
             self.batt_start = (now, pct)
-        text = tr('Akku {pct} %').format(pct=pct) + ('' if wireless else ' ' + tr('(Kabel)'))
+        text = (tr('Akku {pct} %').format(pct=pct) + f' · {mv} mV'
+                + ('' if wireless else ' ' + tr('(Kabel)')))
         t0, p0 = self.batt_start
-        if p0 - pct >= 2:  # Auflösung 1 %: erst ab 2 % Abfall halbwegs aussagekräftig
+        if now - t0 >= BATTERY_RATE_MIN_S and p0 > pct:
             text += ' · ' + tr('~{rate:.1f} %/h').format(rate=(p0 - pct) * 3600 / (now - t0))
         self.battery_label.setText(text)
 
