@@ -22,7 +22,8 @@ geschrieben und gelten danach auch ohne laufende Software.
   Write wird gesichert, danach zurückgelesen und bei Abweichung automatisch wiederhergestellt
 - Backup/Restore aller Profile, Zurücksetzen auf Werkseinstellungen, Demo-Modus ohne Maus
 
-Noch nicht unterstützt: Makro-Editor (Makros werden angezeigt und bleiben erhalten), Lift-off-Kalibrierung,
+Makro-Editor: Tasten → „Makro…“ (Tasten, Maustasten, Pausen, Aufnahme, Schleife solange gedrückt oder N-mal); CLI `macro` für Schleifen.
+Noch nicht unterstützt: Lift-off-Kalibrierung,
 AIMO (Software-Beleuchtung), Host-Funktionen wie „Programm öffnen“ (führt unter Windows Swarm aus).
 
 Die Oberfläche ist standardmäßig Englisch. Deutsch per `--lang de` (GUI), `KONEXP_LANG=de` (GUI und CLI)
@@ -77,6 +78,7 @@ python3 -m konexp profile 2              # Profil 3 aktivieren (Index 0–4)
 python3 -m konexp dpi 2 4 3200           # Profil 3, Stufe 5 auf 3200 DPI
 python3 -m konexp dpi-active 2 4         # Profil 3: Stufe 5 aktiv
 python3 -m konexp restore <backup.bin>   # gesicherten Report zurückschreiben
+python3 -m konexp macro 0 14 +f0 1000 -f0 1500  # Profil 1, Taste 14: halten = links 1 s, Pause 1,5 s, Schleife
 python3 -m konexp dump                   # alles als Diagnose-Datei (JSON) speichern, nur Lesen
 ```
 

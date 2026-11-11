@@ -6,6 +6,9 @@
   dpi-active <profil> <stufe> aktive DPI-Stufe setzen
   restore <datei.bin>         gesichertes Backup zurückschreiben
   dump [datei.json]           Diagnose-Datei für ein GitHub-Issue (nur Lesen, auch für unbekannte Mäuse)
+  macro <profil> <taste> [shift] <schritte…>
+                              Endlos-Makro solange gedrückt; +f0/-f0 Taste (HID hex, f0 = Linksklick)
+                              drücken/loslassen, Zahl = Pause in ms. Beispiel: macro 0 14 +f0 1000 -f0 1500
 """
 import glob
 import json
@@ -17,7 +20,7 @@ from .device import AIR_BLOCKS, AIR_DONGLE, KoneXPAir, KoneXPError, checksum_ok,
 from .functions import describe
 from .i18n import tr
 from .paths import BACKUP_DIR
-from .reports import Buttons, Settings, button_names
+from .reports import N_BUTTONS, Buttons, Settings, button_names, macro, parse_steps
 
 DUMP_VENDORS = (0x1E7D, 0x10F5)  # ROCCAT, Turtle Beach
 ISSUE_URL = 'https://github.com/cakebomb999/konexp/issues/new?template=device.yml'
@@ -30,6 +33,9 @@ USAGE = tr('''Kommandozeile: python3 -m konexp <befehl> …
   dpi-active <profil> <stufe> aktive DPI-Stufe setzen
   restore <datei.bin>         gesichertes Backup zurückschreiben
   dump [datei.json]           Diagnose-Datei für ein GitHub-Issue (nur Lesen, auch für unbekannte Mäuse)
+  macro <profil> <taste> [shift] <schritte…>
+                              Endlos-Makro solange gedrückt; +f0/-f0 Taste (HID hex, f0 = Linksklick)
+                              drücken/loslassen, Zahl = Pause in ms. Beispiel: macro 0 14 +f0 1000 -f0 1500
 ''')
 
 
@@ -133,6 +139,23 @@ def _read(dev, out):
     step('select_active', lambda: dev.select(dev.active_profile(), 0x80))  # wie nach status
 
 
+def set_macro(dev, args):
+    """Makro schreiben, dann Taste darauf legen (Typ 07, Modus 1). Reihenfolge 0x08 vor 0x07:
+    bricht 0x08 ab, zeigt keine Taste auf ein halbes Makro."""
+    if isinstance(dev, KoneXPAir):
+        raise KoneXPError(tr('Makros der Kone XP Air werden noch nicht unterstützt'))
+    p, k = int(args[0]), int(args[1])
+    shift = len(args) > 2 and args[2] == 'shift'
+    steps = parse_steps(' '.join(args[3 if shift else 2:]))
+    if not 0 <= k < N_BUTTONS:
+        raise ValueError(tr('macro <profil> <taste 0-14> [shift] <schritte…>'))
+    dev.write(macro(p, k + N_BUTTONS * shift, steps))
+    b = Buttons(dev.read_buttons(p))
+    b.set_entry(k, (0, 1, 1, 0x07), shift)
+    dev.write(b.to_bytes())
+    print(tr('P{p} {name}: Makro geschrieben').format(p=p, name=button_names(False)[k]))
+
+
 def main(argv=None):
     args = (argv or sys.argv[1:]) or ['status']
     cmd, rest = args[0], [int(a, 0) for a in args[1:] if a.lstrip('-').isdigit() or a.startswith('0x')]
@@ -164,6 +187,8 @@ def main(argv=None):
                 s.dpi_active = stage
                 dev.write(s.to_bytes())
                 print(tr('P{p}: aktive Stufe {stage} ({dpi} DPI)').format(p=p, stage=stage, dpi=s.dpi(stage)))
+            elif cmd == 'macro':
+                set_macro(dev, args[1:])
             elif cmd == 'restore':
                 data = open(args[1], 'rb').read()
                 dev.write(data)

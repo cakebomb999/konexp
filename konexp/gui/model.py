@@ -16,13 +16,14 @@ from ..device import AIR_WRITE, SEL_SETTINGS, KoneXPError, checksum_ok, open_dev
 from ..i18n import tr
 from ..functions import MACRO_MODES, NAMES, describe
 from ..reports import (BUTTONS, BUTTONS_AIR, DPI_STEP, EFFECTS, EFFECTS_AIR, LED_COUNT, N_BUTTONS, POLLING_HZ, SLEEP_EFFECTS,
-                       Advanced, Buttons, Settings)
+                       Advanced, Buttons, Settings, button_names, format_steps, macro, parse_macro)
 from .hidkeys import shortcut_text
 
 from ..paths import BACKUP_DIR, RES_DIR, UDEV_RULE  # noqa: F401 (Re-Export für GUI-Module)
 
 NPROFILES = 5
-R06, R07, R11 = 0x06, 0x07, 0x11
+R06, R07, R08, R11 = 0x06, 0x07, 0x08, 0x11
+MACRO_LOOP, MACRO_ONCE = (0, 1, 1, 0x07), (0, 1, 2, 0x07)  # Makro solange gedrückt / bei Druck
 EASY_SHIFT = (0x00, 0x00, 0x01, 0x0a)
 EASY_SHIFT_KEY = 13
 DISABLED = (0, 0, 0, 0)
@@ -326,6 +327,7 @@ class Config:
         self.buttons = [Buttons(snap.r07[p]) for p in range(NPROFILES)]
         self.advanced = Advanced(snap.r11)
         self.readonly = snap.readonly
+        self.macros = {}  # (profil, slot) -> Report 0x08, vorgemerkt bis „Übernehmen“
 
     @property
     def air(self):
@@ -353,10 +355,10 @@ class Config:
 
     @property
     def dirty(self):
-        return bool(self.dirty_keys())
+        return bool(self.dirty_keys() or self.macros)
 
     def profile_dirty(self, p):
-        return self.is_key_dirty((R06, p)) or self.is_key_dirty((R07, p))
+        return self.is_key_dirty((R06, p)) or self.is_key_dirty((R07, p)) or any(mp == p for mp, _ in self.macros)
 
     def changed_offsets(self, key):
         cur, old = self.obj(key).raw, self.orig[key]
@@ -368,16 +370,35 @@ class Config:
             rid, p = key
             for field, a, b in diff_report(rid, self.orig[key], bytes(self.obj(key).raw), self.air):
                 out.append(Change(p, rid, field, a, b))
+        for (p, slot), raw in sorted(self.macros.items()):
+            name = button_names(self.air)[slot % N_BUTTONS] + (' (Easy-Shift)' if slot >= N_BUTTONS else '')
+            m = parse_macro(raw)
+            mode = tr('Schleife') if m['repeat'] is None else tr('{n}×').format(n=m['repeat'])
+            out.append(Change(p, R08, tr('Makro {name}').format(name=name), '',
+                              f"{m['name']} ({mode}): {format_steps(m['steps'])}"))
         return out
 
     def write_plan(self):
-        return [(k, self.current(k)) for k in self.dirty_keys()]
+        """Wie Swarm je Profil 0x07 vor 0x06, Makros (0x08) aber vor 0x07: bricht ein Makro ab,
+        zeigt keine Taste auf einen alten Slot-Inhalt."""
+        plan = []
+        for k in self.KEYS:
+            if k[0] == R07:
+                plan += [((R08, p), raw) for (p, _s), raw in sorted(self.macros.items()) if p == k[1]]
+            if self.is_key_dirty(k):
+                plan.append((k, self.current(k)))
+        return plan
 
     def mark_written(self, key, data):
+        if key[0] == R08:
+            self.macros.pop((data[3], data[4]), None)
+            return
         self.orig[key] = bytes(data)
 
     def revert(self, key=None):
         keys = [key] if key else self.KEYS
+        if key is None:
+            self.macros.clear()
         for k in keys:
             rid, p = k
             cls = {R06: Settings, R07: Buttons, R11: Advanced}[rid]
@@ -410,10 +431,21 @@ class Config:
         notes = []
         b = self.buttons[p]
         b.set_entry(k, tuple(entry), shift)
+        self.macros.pop((p, k + N_BUTTONS * shift), None)  # Taste weg vom Makro: vorgemerktes Makro verwerfen
         if not shift and entry[3] == 0x0a and b.entry(k, True) != DISABLED:
             b.set_entry(k, DISABLED, True)
             notes.append(tr('Taste {n} (Easy-Shift-Ebene) auf „Deaktiviert“ gesetzt (Easy-Shift-Regel).')
                          .format(n=k + 1))
+        return notes
+
+    def set_macro(self, p, k, shift, steps, name='konexp', repeat=None):
+        """Makro auf Taste k legen (reports.macro: repeat None = Schleife solange gedrückt, sonst n-mal bei Druck)."""
+        if self.air:
+            raise ValueError(tr('Makros der Kone XP Air werden noch nicht unterstützt'))
+        slot = k + N_BUTTONS * shift
+        raw = macro(p, slot, steps, name=name, repeat=repeat)
+        notes = self.set_button(p, k, shift, MACRO_LOOP if repeat is None else MACRO_ONCE)
+        self.macros[(p, slot)] = raw
         return notes
 
     def easy_shift_ok(self, p):
@@ -427,6 +459,7 @@ class Config:
         else:
             self.settings[p] = Settings(defaults.settings(p))
             self.buttons[p] = Buttons(defaults.buttons(p))
+        self.macros = {k: v for k, v in self.macros.items() if k[0] != p}
 
     # --- Backup ----------------------------------------------------------
 
@@ -448,6 +481,7 @@ class Config:
             raise ValueError(tr('Backup gehört zu einem anderen Modell ({model})').format(
                 model=d.get('model', 'Kone XP')))
         self.settings, self.buttons, self.advanced = s, b, a
+        self.macros.clear()
 
 
 def parse_backup(d):
@@ -563,6 +597,10 @@ class DeviceBackend:
                 return self._guard(lambda: dev.read_buttons(p))
             return self._guard(lambda: dev.get(rid))
 
+    def read_macro(self, p, slot):
+        with self.lock:
+            return self._guard(lambda: self._open().read_macro(p, slot))
+
     def poll_active(self):
         """Nicht blockierend: None, wenn gerade ein Worker läuft oder die Maus fehlt."""
         if self.dev is None or not self.lock.acquire(blocking=False):
@@ -610,6 +648,7 @@ class DemoBackend:
         self.snap = demo_snapshot(air)
         self.lock = threading.Lock()
         self.writes = []
+        self.macros = {}
 
     def close(self):
         pass
@@ -639,12 +678,18 @@ class DemoBackend:
             self.snap.r07[data[2]] = bytes(data)
         elif rid == R11:
             self.snap.r11 = bytes(data)
+        elif rid == R08:
+            self.macros[(data[3], data[4])] = bytes(data)
         return bytes(data)
 
     def set_active_profile(self, p):
         if self.snap.readonly:
             raise KoneXPError(tr('Kone XP Air: nur Lesen'))
         self.snap.r05 = bytes([0x05, 0x04, p, 0x05])
+
+    def read_macro(self, p, slot):
+        """Geschriebene Makros, sonst Swarms Autoclicker als Beispiel."""
+        return self.macros.get((p, slot)) or macro(p, slot, [1, ('+', 0xf0), 2, ('-', 0xf0)], 'Linksklick', 'Autoclicker')
 
     def read_report(self, key):
         rid, p = key

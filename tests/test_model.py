@@ -187,6 +187,30 @@ class RunPlanTest(unittest.TestCase):
         self.assertIn('0x06 P2', err)
         self.assertEqual([w[0] for w in be.writes], [0x07])  # 0x11 nicht mehr geschrieben
 
+    def test_macro_written_before_buttons(self):
+        be = DemoBackend(delay=0)
+        c = Config(be.read_all())
+        c.set_macro(1, 7, True, [('+', 0xf0), 1000, ('-', 0xf0), 1500])
+        self.assertEqual(c.buttons[1].entry(7, True), (0, 1, 1, 0x07))
+        self.assertEqual([x.field for x in c.changes()][-1], 'Makro Seitentaste vorn (Easy-Shift)')
+        plan = c.write_plan()
+        self.assertEqual([k for k, _ in plan], [(0x08, 1), (R07, 1)])
+        self.assertEqual(plan[0][1][3:5], bytes([1, 7 + 15]))
+        done, err = run_plan(be, plan, base=dict(c.orig))
+        self.assertIsNone(err)
+        for k, data in done:
+            c.mark_written(k, data)
+        self.assertFalse(c.dirty)
+
+    def test_macro_dropped_when_button_changes(self):
+        c = fresh()
+        c.set_macro(0, 7, False, [('+', 0xf0), 50, ('-', 0xf0)], repeat=2)
+        self.assertEqual(c.buttons[0].entry(7), (0, 1, 2, 0x07))
+        c.set_button(0, 7, False, (0, 0, 1, 1))
+        self.assertEqual(c.macros, {})
+        with self.assertRaises(ValueError):
+            c.set_macro(0, 7, False, [1000])
+
     def test_locked_reports(self):
         be = DemoBackend(delay=0)
         for rid in (0x09, 0x0a, 0x0d, 0x10, 0x12, 0x13):

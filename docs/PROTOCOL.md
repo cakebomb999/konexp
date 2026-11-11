@@ -144,8 +144,11 @@ Eintrag `[b0, b1, b2, typ]`:
 | `0x411` | u16 LE | Checksumme |
 
 Tasten-Event, 2 Byte `[d, key]`: Bit 7 von `d` = loslassen, `d & 0x7f` = Pause davor in ms (1–127),
-`key` = HID-Usage. Längere Pausen: 4-Byte-Block `00 <einheit> <u16 LE>` mit Einheit 1/2/3 = 20/50/100 ms.
-Maximal 480 Tasten-Events. Jede Taste/Ebene hat ihre eigene Makrokopie. *Kodierung sicher, an der Maus ungeprüft.*
+`key` = HID-Usage, Maustasten `0xF0` links, `0xF1` rechts, `0xF2` Mitte, `0xF3`/`0xF4` Taste 4/5
+(Namenstabelle in `ROCCAT_Swarm_Monitor.exe` @ `0x41673c`; links auch im Preset „Autoclicker“). Längere Pausen: 4-Byte-Block `00 <einheit> <u16 LE>` mit Einheit 1/2/3 = 20/50/100 ms.
+Maximal 480 Tasten-Events. Jede Taste/Ebene hat ihre eigene Makrokopie. Modus (Eintrag in `0x07`, b2): 1 = Schleife solange gedrückt (`0x04d` = 1), 2 = bei Druck `0x04f`-mal.
+*Kodierung sicher: `konexp.reports.macro`/`parse_macro` bilden drei von Swarm geschriebene Makros byte-gleich ab.
+Lange Pausen-Blöcke an der Maus ungeprüft.*
 
 ## `0x0e`, `0x0f`, `0x11`
 

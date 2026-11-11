@@ -1,29 +1,30 @@
 """Tab Tasten: 15 Tasten × Ebene normal/Easy-Shift (Report 0x07)."""
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QBrush, QColor, QFont
-from PySide6.QtWidgets import (QAbstractItemView, QComboBox, QDialog, QHBoxLayout, QHeaderView, QLabel, QMessageBox,
-                               QTableWidget, QTableWidgetItem, QVBoxLayout)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QComboBox, QDialog, QHBoxLayout, QHeaderView, QLabel,
+                               QMessageBox, QTableWidget, QTableWidgetItem, QVBoxLayout)
 
 from ..i18n import tr
-from ..reports import AIR_BUTTON_ORDER, N_BUTTONS, button_names
-from .dialogs import EasyAimDialog, ShortcutDialog
+from ..device import KoneXPError
+from ..reports import AIR_BUTTON_ORDER, N_BUTTONS, button_names, parse_macro
+from .dialogs import EasyAimDialog, MacroDialog, ShortcutDialog
 from .model import EASY_SHIFT_KEY, R07, easy_aim_entry, entry_text, function_catalog, is_host, shortcut_entry
 from .tab_base import TabBase
 from .widgets import ButtonMap
 
-SHORTCUT, EASYAIM = 'shortcut', 'easyaim'
+SHORTCUT, EASYAIM, MACRO = 'shortcut', 'easyaim', 'macro'
 CATALOG = function_catalog()
 
 
 class FunctionCombo(QComboBox):
-    """Funktionsauswahl. Item-Daten: ('entry', tuple) | SHORTCUT | EASYAIM | None (Überschrift)."""
+    """Funktionsauswahl. Item-Daten: ('entry', tuple) | SHORTCUT | EASYAIM | MACRO | None (Überschrift)."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMaxVisibleItems(30)
         self.entry = None
 
-    def set_entry(self, entry):
+    def set_entry(self, entry, macros=True):
         self.entry = tuple(entry)
         self.blockSignals(True)
         self.clear()
@@ -47,6 +48,8 @@ class FunctionCombo(QComboBox):
         it.setEnabled(False)
         self.addItem('   ' + tr('Tastatur-Shortcut…'), SHORTCUT)
         self.addItem('   ' + tr('Easy-Aim eigener DPI-Wert…'), EASYAIM)
+        if macros:
+            self.addItem('   ' + tr('Makro…'), MACRO)
         for i in range(self.count()):
             if self.itemData(i) == ('entry', self.entry):
                 self.setCurrentIndex(i)
@@ -58,8 +61,9 @@ class FunctionCombo(QComboBox):
 class ButtonsTab(TabBase):
     TITLE = tr('Tasten')
 
-    def __init__(self, parent=None):
+    def __init__(self, read_macro=None, parent=None):
         super().__init__(parent)
+        self.read_macro = read_macro  # (profil, slot) -> Report 0x08 vom Gerät
         lay = QHBoxLayout(self)
         self.map = ButtonMap()
         self.map.buttonClicked.connect(self._select_row)
@@ -90,8 +94,8 @@ class ButtonsTab(TabBase):
         self.info = QLabel()
         self.info.setWordWrap(True)
         right.addWidget(self.info)
-        note = QLabel(tr('Makros werden nur angezeigt (Bearbeitung nicht unterstützt). Host-Funktionen (typ 0b) '
-                        'führt unter Windows Swarm aus – unter Linux passiert nichts.'))
+        note = QLabel(tr('Makros: „Makro…“ in der Liste öffnet den Editor (auch für vorhandene Makros). '
+                        'Host-Funktionen (typ 0b) führt unter Windows Swarm aus – unter Linux passiert nichts.'))
         note.setWordWrap(True)
         note.setStyleSheet('color: gray')
         right.addWidget(note)
@@ -108,9 +112,10 @@ class ButtonsTab(TabBase):
         self.map.set_order(AIR_BUTTON_ORDER if air else range(N_BUTTONS))
         dirty = self.config.changed_offsets((R07, self.profile))
         for (k, shift), combo in self.combos.items():
-            combo.set_entry(b.entry(k, shift))
-            off = 3 + 4 * (k + (N_BUTTONS if shift else 0))
-            changed = any(o in dirty for o in range(off, off + 4))
+            combo.set_entry(b.entry(k, shift), macros=not air)
+            slot = k + (N_BUTTONS if shift else 0)
+            off = 3 + 4 * slot
+            changed = any(o in dirty for o in range(off, off + 4)) or (self.profile, slot) in self.config.macros
             combo.setStyleSheet('font-weight: bold' if changed else '')
         warn = [k for k in range(N_BUTTONS) for sh in (False, True) if is_host(b.entry(k, sh))]
         msgs = []
@@ -128,7 +133,7 @@ class ButtonsTab(TabBase):
         self.map.set_warn(set(warn) | (set() if self.config.easy_shift_ok(self.profile) else {EASY_SHIFT_KEY}))
 
     def is_dirty(self):
-        return self.config.is_key_dirty((R07, self.profile))
+        return self.config.is_key_dirty((R07, self.profile)) or any(p == self.profile for p, _ in self.config.macros)
 
     def _on_activated(self, k, shift, idx):
         combo = self.combos[(k, shift)]
@@ -147,16 +152,20 @@ class ButtonsTab(TabBase):
             dlg = EasyAimDialog(dpi, self)
             if dlg.exec() == QDialog.Accepted:
                 new = easy_aim_entry(dlg.value())
+        elif data == MACRO:
+            m = self._current_macro(k, shift, old)
+            dlg = MacroDialog(m['steps'], m['name'], m['repeat'], self) if m else MacroDialog(parent=self)
+            if dlg.exec() == QDialog.Accepted and self._easy_shift_ok(k, shift, (0, 1, 1, 0x07)):
+                steps, name, repeat = dlg.value()
+                notes = self.config.set_macro(self.profile, k, shift, steps, name, repeat)
+                if notes:
+                    QMessageBox.information(self, tr('Tasten'), '\n'.join(notes))
+                self.edit()
         else:
             new = data[1]
         if new is not None and tuple(new) != old:
-            if k == EASY_SHIFT_KEY and not shift and new[3] != 0x0a:
-                r = QMessageBox.warning(
-                    self, tr('Easy-Shift-Taste'),
-                    tr('Taste 14 ist die Easy-Shift-Taste. Ohne sie ist die Easy-Shift-Ebene aller Tasten '
-                       'nicht mehr erreichbar.\n\nTrotzdem ändern?'), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                if r != QMessageBox.Yes:
-                    new = None
+            if not self._easy_shift_ok(k, shift, new):
+                new = None
         if new is not None and tuple(new) != old:
             notes = self.config.set_button(self.profile, k, shift, new)
             if notes:
@@ -164,3 +173,29 @@ class ButtonsTab(TabBase):
             self.edit()
         # Combo nach dem Signal neu aufbauen (nicht innerhalb des eigenen activated-Handlers)
         QTimer.singleShot(0, self.refresh)
+
+    def _easy_shift_ok(self, k, shift, new):
+        if k != EASY_SHIFT_KEY or shift or new[3] == 0x0a:
+            return True
+        r = QMessageBox.warning(
+            self, tr('Easy-Shift-Taste'),
+            tr('Taste 14 ist die Easy-Shift-Taste. Ohne sie ist die Easy-Shift-Ebene aller Tasten '
+               'nicht mehr erreichbar.\n\nTrotzdem ändern?'), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        return r == QMessageBox.Yes
+
+    def _current_macro(self, k, shift, entry):
+        """Vorgemerktes Makro, sonst das der Maus (nur wenn die Taste schon ein Makro ist), sonst None."""
+        slot = k + (N_BUTTONS if shift else 0)
+        raw = self.config.macros.get((self.profile, slot))
+        if raw is None and entry[3] == 0x07 and self.read_macro:
+            QApplication.setOverrideCursor(Qt.WaitCursor)
+            try:
+                raw = self.read_macro(self.profile, slot)  # shortcut: synchron im GUI-Thread (~0,3 s), reicht für 1 Report
+            except (KoneXPError, OSError) as e:
+                QMessageBox.warning(self, tr('Makro'), tr('Makro der Maus nicht lesbar: {err}').format(err=e))
+            finally:
+                QApplication.restoreOverrideCursor()
+        try:
+            return parse_macro(raw) if raw else None
+        except ValueError:
+            return None

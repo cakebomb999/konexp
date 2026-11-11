@@ -22,7 +22,8 @@ software running.
   read back afterwards and restored automatically if the result differs
 - Backup/restore of all profiles, reset to factory defaults, demo mode without a mouse
 
-Not supported yet: macro editor (existing macros are shown and preserved), lift-off calibration,
+Macro editor: Buttons → “Macro…” (keys, mouse buttons, pauses, recording, loop while held or play N times); CLI `macro` for loops.
+Not supported yet: lift-off calibration,
 AIMO (software-driven lighting), host functions such as "open program" (Swarm runs those on Windows).
 
 The user interface is in English by default; German is available via `--lang de` (GUI), `KONEXP_LANG=de`
@@ -77,6 +78,7 @@ python3 -m konexp profile 2              # activate profile 3 (index 0–4)
 python3 -m konexp dpi 2 4 3200           # profile 3, stage 5 to 3200 DPI
 python3 -m konexp dpi-active 2 4         # profile 3: make stage 5 active
 python3 -m konexp restore <backup.bin>   # write a saved report back
+python3 -m konexp macro 0 14 +f0 1000 -f0 1500  # profile 1, button 14: hold = left 1 s, pause 1.5 s, loop
 python3 -m konexp dump                   # save everything as a diagnostic JSON file (read-only)
 ```
 

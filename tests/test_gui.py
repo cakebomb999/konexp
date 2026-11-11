@@ -10,7 +10,7 @@ os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 
 from PySide6.QtWidgets import QApplication, QDialog  # noqa: E402
 
-from konexp.gui import dialogs, main_window, model  # noqa: E402
+from konexp.gui import dialogs, main_window, model, tab_buttons  # noqa: E402
 from konexp.gui.model import R06, R07, R11, DemoBackend  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -90,6 +90,52 @@ class GuiTest(unittest.TestCase):
         self.assertEqual([(d[0], d[2] if d[0] != 0x11 else None) for d in self.be.writes],
                          [(R07, 0), (R06, 2), (R11, None)])
         self.assertFalse(w.tabs.tabText(3).endswith('*'))
+
+    def test_macro_from_combo(self):
+        w = self.win
+        buttons = w.tab_list[3]
+        combo = buttons.combos[(9, False)]
+        idx = combo.findData(tab_buttons.MACRO)
+        if w.config.air:  # Air: Makros nicht unterstützt, Option fehlt
+            self.assertEqual(idx, -1)
+            return
+        self.assertGreater(idx, 0)
+        with mock.patch.object(dialogs.MacroDialog, 'exec', lambda self: QDialog.Accepted), \
+                mock.patch.object(dialogs.DiffDialog, 'exec', lambda self: QDialog.Accepted):
+            buttons._on_activated(9, False, idx)
+            self.assertIn((2, 9), w.config.macros)
+            w.apply()
+            self.assertTrue(wait(lambda: not w.busy and not w.config.dirty))
+        self.assertEqual([d[0] for d in self.be.writes], [0x08, R07])
+        self.assertEqual(self.be.writes[0][0x51:0x57].hex(), '01f0b2f00000')  # Vorgabe: Klick links, 50 ms
+
+    def test_macro_editor(self):
+        from PySide6.QtCore import QEvent, Qt
+        from PySide6.QtGui import QKeyEvent
+        if self.win.config.air:
+            return
+        buttons = self.win.tab_list[3]
+        # Demo-P3 Taste 15 ist ein Makro: Editor lädt es vom Backend (Swarm-Autoclicker)
+        m = buttons._current_macro(14, False, self.win.config.buttons[2].entry(14))
+        self.assertEqual((m['name'], m['repeat'], m['steps']), ('Linksklick', None, [1, ('+', 0xf0), 2, ('-', 0xf0)]))
+        dlg = dialogs.MacroDialog(m['steps'], m['name'], m['repeat'])
+        dlg.table.selectRow(3)
+        dlg._add_pause()                       # hinter Zeile 3
+        self.assertEqual(dlg.steps[-1], 100)
+        dlg._move(-1)
+        self.assertEqual(dlg.steps[3:], [100, ('-', 0xf0)])
+        dlg._remove()
+        dlg._toggle_record()
+        for typ in (QEvent.KeyPress, QEvent.KeyRelease):  # Scancode 38 = evdev 30 = HID 0x04 (A)
+            dlg.event(QKeyEvent(typ, Qt.Key_A, Qt.NoModifier, 38, 0, 0))
+        dlg._toggle_record()
+        self.assertEqual([x for x in dlg.steps if isinstance(x, tuple)][-2:], [('+', 0x04), ('-', 0x04)])
+        dlg.mode.setCurrentIndex(1)
+        dlg.repeat.setValue(3)
+        steps, name, repeat = dlg.value()
+        self.assertEqual((name, repeat), ('Linksklick', 3))
+        self.win.config.set_macro(2, 14, False, steps, name, repeat)
+        self.assertEqual(self.win.config.buttons[2].entry(14), (0, 1, 2, 0x07))
 
     def test_set_active_and_poll(self):
         w = self.win

@@ -70,7 +70,7 @@ class MainWindow(QMainWindow):
 
         # Tabs
         self.tabs = QTabWidget()
-        self.tab_list = [DpiTab(), SensorTab(), LightTab(), ButtonsTab(), ExpertTab()]
+        self.tab_list = [DpiTab(), SensorTab(), LightTab(), ButtonsTab(read_macro=lambda p, slot: self.backend.read_macro(p, slot)), ExpertTab()]
         self.tab_pages = {}
         for t in self.tab_list:
             # Scrollbereich: bei kleinem Fenster scrollen statt Inhalte auf 0 Höhe zu quetschen

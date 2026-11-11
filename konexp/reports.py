@@ -217,3 +217,104 @@ class Advanced(_Report):
         self.raw[4] = v
         self.raw[2] = 1
         self.raw[5:0x11] = bytes([0x0a]) * 12
+
+
+# --- Report 0x08 ----------------------------------------------------------
+
+MACRO_SIZE, MACRO_EVENTS, MACRO_END = 1043, 0x51, 0x411
+# Maustasten im Makro (ROCCAT_Swarm_Monitor.exe, Namenstabelle bei 0x41673c): links, rechts, Mitte, Taste 4, 5
+MOUSE_KEYS = (0xf0, 0xf1, 0xf2, 0xf3, 0xf4)
+PAUSE_UNITS = {1: 20, 2: 50, 3: 100}  # Pausen-Block 00 <einheit> <u16 LE>
+MACRO_MAX_PAUSE = 0xffff * 100
+
+
+def parse_steps(text):
+    """'+f0 1000 -f0 1500' -> [('+', 0xf0), 1000, ('-', 0xf0), 1500]. Taste = HID-Usage hex, Zahl = Pause in ms."""
+    steps = []
+    for t in text.split():
+        try:
+            if t[0] in '+-':
+                key = int(t[1:], 16)
+                if not 0 < key <= 0xff:
+                    raise ValueError
+                steps.append((t[0], key))
+            else:
+                steps.append(int(t))
+                if not 0 <= steps[-1] <= MACRO_MAX_PAUSE:
+                    raise ValueError
+        except ValueError:
+            raise ValueError(tr('Makro-Schritt „{step}“: erwartet +f0 / -f0 (Taste hex) oder Pause in ms').format(
+                step=t)) from None
+    return steps
+
+
+def format_steps(steps):
+    return ' '.join(f'{s[0]}{s[1]:02x}' if isinstance(s, tuple) else str(s) for s in steps)
+
+
+def _pause_block(ms):
+    """Größte Einheit, die ms exakt teilt (sonst 20 ms, gerundet)."""
+    unit = next((u for u in (3, 2, 1) if ms % PAUSE_UNITS[u] == 0), 1)
+    n = min(round(ms / PAUSE_UNITS[unit]), 0xffff) or 1
+    return bytes([0, unit]) + n.to_bytes(2, 'little')
+
+
+def macro(profile, slot, steps, name='konexp', group='konexp', repeat=None):
+    """Report 0x08. repeat=None: Schleife solange gedrückt (wie Swarms Autoclicker), sonst n-mal bei Druck.
+
+    steps: ('+', key) drücken, ('-', key) loslassen, int = Pause in ms vor dem nächsten Event.
+    Pause davor 1–127 ms steckt im Event-Byte; längere: Block + Rest im Event (exakt, Rest 1–100 ms)."""
+    if not any(isinstance(s, tuple) for s in steps):
+        raise ValueError(tr('Makro ohne Tasten-Event'))
+    if repeat is not None and not 1 <= repeat <= 0xffff:
+        raise ValueError(tr('Wiederholungen 1..65535'))
+    out, pause = bytearray(), 0
+    for s in steps:
+        if isinstance(s, int):
+            pause += s
+            if pause > MACRO_MAX_PAUSE:
+                raise ValueError(tr('Makro-Pause zu lang'))
+            continue
+        updown, key = s
+        if pause > 127:
+            n = (pause - 1) // 100
+            out += bytes([0, 3]) + n.to_bytes(2, 'little')
+            pause -= 100 * n
+        out += bytes([max(pause, 1) | (0x80 if updown == '-' else 0), key])
+        pause = 0
+    if pause:  # Pause am Ende: nur als Block, Raster 20/50/100 ms
+        out += _pause_block(pause)
+    if len(out) + 2 > MACRO_END - MACRO_EVENTS:
+        raise ValueError(tr('Makro zu lang'))
+    raw = bytearray(MACRO_SIZE)
+    raw[:5] = bytes([0x08, 0x13, 0x04, profile, slot])
+    raw[0x05:0x2c] = group.encode()[:39].ljust(39, b'\0')
+    raw[0x2d:0x4c] = name.encode()[:31].ljust(31, b'\0')
+    raw[0x4d] = repeat is None
+    raw[0x4f:0x51] = (repeat or 0).to_bytes(2, 'little')
+    raw[MACRO_EVENTS:MACRO_EVENTS + len(out)] = out
+    return with_checksum(raw)
+
+
+def parse_macro(raw):
+    """Report 0x08 -> dict(name, group, repeat, steps); Gegenstück zu macro(). repeat None = Schleife."""
+    if len(raw) != MACRO_SIZE or raw[0] != 0x08:
+        raise ValueError(tr('kein gültiger Report 0x{rid:02x}').format(rid=0x08))
+    text = lambda a, b: bytes(raw[a:b]).split(b'\0')[0].decode(errors='replace')  # noqa: E731
+    steps, pause, o = [], 0, MACRO_EVENTS
+    while o + 1 < MACRO_END:
+        d, key = raw[o], raw[o + 1]
+        if d == 0 and key == 0:
+            break
+        if d == 0:
+            pause += PAUSE_UNITS.get(key, 0) * int.from_bytes(raw[o + 2:o + 4], 'little')
+            o += 4
+            continue
+        pause += d & 0x7f
+        steps += [pause, ('-' if d & 0x80 else '+', key)]
+        pause, o = 0, o + 2
+    if pause:
+        steps.append(pause)
+    loop = int.from_bytes(raw[0x4d:0x4f], 'little')
+    return dict(name=text(0x2d, 0x4d), group=text(0x05, 0x2d), steps=steps,
+                repeat=None if loop else int.from_bytes(raw[0x4f:0x51], 'little'))
