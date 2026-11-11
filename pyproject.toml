@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "konexp"
-version = "0.1.0"
+version = "0.2.0"
 description = "Linux-Konfiguration für die ROCCAT Kone XP (DPI, Sensor, Beleuchtung, Tasten)"
 readme = "README.md"
 license = "GPL-3.0-or-later"
