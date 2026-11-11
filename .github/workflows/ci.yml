@@ -8,8 +8,7 @@ on:
 
 jobs:
   test:
-    # shortcut: ubuntu-26.04-Image löst *.ubuntu.com nicht auf (apt schlägt fehl), zurück auf ubuntu-latest wenn behoben
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         python: ['3.10', '3.13']
